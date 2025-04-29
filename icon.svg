@@ -1,0 +1,69 @@
+<svg width="100" height="100" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g clip-path="url(#clip0_4303_1230)" transform="translate(-2,16)">
+<g clip-path="url(#clip1_4303_1230)">
+<path fill-rule="evenodd" clip-rule="evenodd" d="M52.3538 1.92306C52.7994 0.764487 53.9125 0 55.1539 0H75C75.9884 0 76.9134 0.486845 77.4729 1.30159C78.0325 2.11634 78.1549 3.15442 77.8001 4.07694L67.0604 32H93C94.225 32 95.327 32.7448 95.7837 33.8815C96.2404 35.0182 95.9602 36.3184 95.0757 37.166L47.0757 83.166C46.0614 84.138 44.5084 84.276 43.3386 83.4979C42.1688 82.7199 41.6957 81.2343 42.2 79.9231L54.4781 48H39C38.0116 48 37.0866 47.5132 36.5271 46.6984C35.9675 45.8837 35.8452 44.8456 36.2 43.9231L52.3538 1.92306Z" fill="url(#paint2_linear_4303_1230)"/>
+</g>
+</g>
+<g id="logo" transform="translate(60, 60)">
+  <g id="gear">
+    <circle r="44" fill="none" stroke="url(#paint2_linear_4303_1230)" stroke-width="5" />
+    <g id="cogs">
+      <polygon id="cog" stroke="url(#paint2_linear_4303_1230)" stroke-width="5" stroke-linejoin="round" points="46,3 51,0 46,-3" />
+      <use xlink:href="#cog" transform="rotate(11.25)" />
+      <use xlink:href="#cog" transform="rotate(22.50)" />
+      <use xlink:href="#cog" transform="rotate(33.75)" />
+      <use xlink:href="#cog" transform="rotate(45.00)" />
+      <use xlink:href="#cog" transform="rotate(56.25)" />
+      <use xlink:href="#cog" transform="rotate(67.50)" />
+      <use xlink:href="#cog" transform="rotate(78.75)" />
+      <use xlink:href="#cog" transform="rotate(90.00)" />
+      <use xlink:href="#cog" transform="rotate(101.25)" />
+      <use xlink:href="#cog" transform="rotate(112.50)" />
+      <use xlink:href="#cog" transform="rotate(123.75)" />
+      <use xlink:href="#cog" transform="rotate(135.00)" />
+      <use xlink:href="#cog" transform="rotate(146.25)" />
+      <use xlink:href="#cog" transform="rotate(157.50)" />
+      <use xlink:href="#cog" transform="rotate(168.75)" />
+      <use xlink:href="#cog" transform="rotate(180.00)" />
+      <use xlink:href="#cog" transform="rotate(191.25)" />
+      <use xlink:href="#cog" transform="rotate(202.50)" />
+      <use xlink:href="#cog" transform="rotate(213.75)" />
+      <use xlink:href="#cog" transform="rotate(225.00)" />
+      <use xlink:href="#cog" transform="rotate(236.25)" />
+      <use xlink:href="#cog" transform="rotate(247.50)" />
+      <use xlink:href="#cog" transform="rotate(258.75)" />
+      <use xlink:href="#cog" transform="rotate(270.00)" />
+      <use xlink:href="#cog" transform="rotate(281.25)" />
+      <use xlink:href="#cog" transform="rotate(292.50)" />
+      <use xlink:href="#cog" transform="rotate(303.75)" />
+      <use xlink:href="#cog" transform="rotate(315.00)" />
+      <use xlink:href="#cog" transform="rotate(326.25)" />
+      <use xlink:href="#cog" transform="rotate(337.50)" />
+      <use xlink:href="#cog" transform="rotate(348.75)" />
+    </g>
+
+  </g>
+</g>
+<defs>
+<linearGradient id="paint0_linear_4303_1230" x1="29.3743" y1="43.8066" x2="44.9485" y2="96.2016" gradientUnits="userSpaceOnUse">
+<stop stop-color="#003E92"/>
+<stop offset="0.75" stop-color="#7A41DC"/>
+<stop offset="1" stop-color="#0078D4"/>
+</linearGradient>
+<linearGradient id="paint1_linear_4303_1230" x1="24.8802" y1="3.90205e-07" x2="43.9581" y2="59.4288" gradientUnits="userSpaceOnUse">
+<stop stop-color="#0078D4"/>
+<stop offset="0.75" stop-color="#7A41DC"/>
+<stop offset="1" stop-color="#003E92"/>
+</linearGradient>
+<linearGradient id="paint2_linear_4303_1230" x1="36" y1="13.5" x2="92.9251" y2="73.4213" gradientUnits="userSpaceOnUse">
+<stop stop-color="#4DD2FF"/>
+<stop offset="1" stop-color="#24CDB9"/>
+</linearGradient>
+<clipPath id="clip0_4303_1230">
+<rect width="96" height="96" fill="white"/>
+</clipPath>
+<clipPath id="clip1_4303_1230">
+<rect width="96" height="96" fill="white"/>
+</clipPath>
+</defs>
+</svg>
