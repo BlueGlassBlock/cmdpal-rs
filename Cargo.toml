@@ -20,10 +20,7 @@ rustdoc-args = ["--cfg", "docsrs"]
 
 [dependencies]
 ambassador = "0.4.1"
-macro_rules_attribute = "0.2.0"
 tracing = "0.1.41"
-tracing-appender = "0.2.3"
-tracing-subscriber = "0.3.19"
 windows = { version = "0.61.1", features = ["Storage_Streams", "System", "Win32_System_Com", "Win32_System_WinRT"] }
 windows-core = "0.61.0"
 windows-future = "0.2.0"
