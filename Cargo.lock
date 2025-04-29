@@ -35,6 +35,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "cmdpal-systest"
+version = "0.1.0"
+dependencies = [
+ "ambassador",
+ "cmdpal",
+ "macro_rules_attribute",
+ "tracing",
+ "tracing-appender",
+ "tracing-subscriber",
+ "windows",
+ "windows-core",
+ "windows-future",
+]
+
+[[package]]
 name = "crossbeam-channel"
 version = "0.5.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"

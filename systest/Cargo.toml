@@ -1,22 +1,13 @@
 [package]
-name = "cmdpal"
+name = "cmdpal-systest"
 version = "0.1.0"
 edition = "2024"
 authors = ["Nyuan Zhang <blueglassblock@outlook.com>"]
 license = "MIT OR Apache-2.0"
 categories = ["os::windows-apis", "api-bindings"]
 keywords = ["powertoys", "command-palette"]
-exclude = [
-    ".github",
-]
-description = "Rust SDK for PowerToys Command Palette"
+exclude = [".github"]
 repository = "https://github.com/BlueGlassBlock/cmdpal-rs"
-
-[package.metadata.docs.rs]
-default-target = "x86_64-pc-windows-msvc"
-features = ["unstable-doc"]
-targets = []
-rustdoc-args = ["--cfg", "docsrs"]
 
 [dependencies]
 ambassador = "0.4.1"
@@ -24,12 +15,15 @@ macro_rules_attribute = "0.2.0"
 tracing = "0.1.41"
 tracing-appender = "0.2.3"
 tracing-subscriber = "0.3.19"
-windows = { version = "0.61.1", features = ["Storage_Streams", "System", "Win32_System_Com", "Win32_System_WinRT"] }
+windows = { version = "0.61.1", features = [
+    "Storage_Streams",
+    "System",
+    "Win32_System_Com",
+    "Win32_System_SystemInformation",
+    "Win32_System_WinRT",
+    "Win32_UI_WindowsAndMessaging",
+] }
 windows-core = "0.61.0"
 windows-future = "0.2.0"
+cmdpal = { path = ".." }
 
-[features]
-unstable-doc = []
-
-[workspace]
-members = ["systest"]

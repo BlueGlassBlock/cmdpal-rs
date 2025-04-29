@@ -13,7 +13,7 @@ use windows_core::{ComObject, Interface};
 const EXTENSION_GUID: windows_core::GUID =
     windows_core::GUID::from_u128(0x255c6090_dbec_4008_b865_3f08765e727b);
 
-const MD_CONTENT: &str = include_str!("./../README.md");
+const MD_CONTENT: &str = include_str!("../../README.md");
 
 fn com_main() -> Result<()> {
     tracing::info!("Hello, world!");
