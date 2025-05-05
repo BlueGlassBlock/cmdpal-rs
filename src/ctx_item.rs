@@ -1,9 +1,6 @@
 use crate::cmd_item::CommandItem;
 use crate::{bindings::*, notify::*};
-use windows::core::{
-    ComObject, ComObjectInner, ComObjectInterface, Error, IInspectable, IUnknownImpl as _, Result,
-    implement,
-};
+use windows::core::{ComObject, Error, IInspectable, IUnknownImpl as _, Result, implement};
 
 #[implement(ISeparatorContextItem, IContextItem)]
 pub struct SeparatorContextItem;
@@ -12,24 +9,16 @@ impl ISeparatorContextItem_Impl for SeparatorContextItem_Impl {}
 impl IContextItem_Impl for SeparatorContextItem_Impl {}
 
 #[implement(ICommandContextItem, IContextItem, ICommandItem, INotifyPropChanged)]
-pub struct CommandContextItem<TC>
-where
-    TC: ComObjectInner + 'static,
-    TC::Outer: ICommand_Impl + ComObjectInterface<ICommand>,
-{
-    cmd: ComObject<CommandItem<TC>>,
+pub struct CommandContextItem {
+    pub cmd_item: ComObject<CommandItem>,
     critical: NotifyLock<bool>,
     shortcut: NotifyLock<Option<KeyChord>>,
 }
 
-impl<TC> CommandContextItem_Impl<TC>
-where
-    TC: ComObjectInner + 'static,
-    TC::Outer: ICommand_Impl + ComObjectInterface<ICommand>,
-{
+impl CommandContextItem_Impl {
     pub(crate) fn emit_self_prop_changed(&self, prop: &str) {
         let sender: IInspectable = self.to_interface();
-        self.cmd.emit_prop_changed(&sender, prop);
+        self.cmd_item.emit_prop_changed(&sender, prop);
     }
 
     pub fn critical(&self) -> Result<NotifyLockReadGuard<'_, bool>> {
@@ -49,64 +38,36 @@ where
             .write(|| self.emit_self_prop_changed("RequestedShortcut"))
     }
 }
-impl<TC> ICommandContextItem_Impl for CommandContextItem_Impl<TC>
-where
-    TC: ComObjectInner + 'static,
-    TC::Outer: ICommand_Impl + ComObjectInterface<ICommand>,
-{
+impl ICommandContextItem_Impl for CommandContextItem_Impl {
     fn IsCritical(&self) -> windows_core::Result<bool> {
         self.critical.read().map(|x| *x)
     }
     fn RequestedShortcut(&self) -> windows_core::Result<KeyChord> {
-        self.shortcut
-            .read()?
-            .map(|x| x)
-            .ok_or(Error::empty())
+        self.shortcut.read()?.map(|x| x).ok_or(Error::empty())
     }
 }
 
-impl<TC> ICommandItem_Impl for CommandContextItem_Impl<TC>
-where
-    TC: ComObjectInner + 'static,
-    TC::Outer: ICommand_Impl + ComObjectInterface<ICommand>,
-{
+impl ICommandItem_Impl for CommandContextItem_Impl {
     ambassador_impl_ICommandItem_Impl! {
-        body_struct(< >, ComObject<CommandItem<TC>>, cmd)
+        body_struct(< >, ComObject<CommandItem>, cmd_item)
     }
 }
 
-impl<TC> IContextItem_Impl for CommandContextItem_Impl<TC>
-where
-    TC: ComObjectInner + 'static,
-    TC::Outer: ICommand_Impl + ComObjectInterface<ICommand>,
-{
-}
+impl IContextItem_Impl for CommandContextItem_Impl {}
 
-impl<TC> INotifyPropChanged_Impl for CommandContextItem_Impl<TC>
-where
-    TC: ComObjectInner + 'static,
-    TC::Outer: ICommand_Impl + ComObjectInterface<ICommand>,
-{
+impl INotifyPropChanged_Impl for CommandContextItem_Impl {
     ambassador_impl_INotifyPropChanged_Impl! {
-        body_struct(< >, ComObject<CommandItem<TC>>, cmd)
+        body_struct(< >, ComObject<CommandItem>, cmd_item)
     }
 }
 
-pub enum ContextItem<TC>
-where
-    TC: ComObjectInner + 'static,
-    TC::Outer: ICommand_Impl + ComObjectInterface<ICommand>,
-{
+pub enum ContextItem {
     Separator(ComObject<SeparatorContextItem>),
-    Command(ComObject<CommandContextItem<TC>>),
+    Command(ComObject<CommandContextItem>),
 }
 
-impl<TC> From<&ContextItem<TC>> for IContextItem
-where
-    TC: ComObjectInner + 'static,
-    TC::Outer: ICommand_Impl + ComObjectInterface<ICommand>,
-{
-    fn from(item: &ContextItem<TC>) -> Self {
+impl From<&ContextItem> for IContextItem {
+    fn from(item: &ContextItem) -> Self {
         match item {
             ContextItem::Separator(item) => item.to_interface(),
             ContextItem::Command(item) => item.to_interface(),

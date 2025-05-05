@@ -1,8 +1,8 @@
 use crate::bindings::*;
 use crate::cmd::CommandResult;
-use crate::notify::NotifyLock;
+use crate::notify::*;
 use windows::Foundation::TypedEventHandler;
-use windows::core::{ComObject, Event, HSTRING, IInspectable, implement};
+use windows::core::{ComObject, Event, HSTRING, IInspectable, implement, IUnknownImpl as _};
 
 pub type SubmitFn = Box<
     dyn Fn(&FormContent_Impl, &HSTRING, &HSTRING) -> windows_core::Result<ComObject<CommandResult>>,
@@ -15,6 +15,38 @@ pub struct FormContent {
     state_json: NotifyLock<HSTRING>,
     submit: SubmitFn,
     event: Event<TypedEventHandler<IInspectable, IPropChangedEventArgs>>,
+}
+
+impl FormContent_Impl {
+    pub(crate) fn emit_self_prop_changed(&self, prop: &str) {
+        let sender: IInspectable = self.to_interface();
+        let arg: IPropChangedEventArgs = PropChangedEventArgs(prop.into()).into();
+        self.event.call(|handler| handler.Invoke(&sender, &arg));
+    }
+
+    pub fn template_json(&self) -> windows_core::Result<NotifyLockReadGuard<'_, HSTRING>> {
+        self.template_json.read()
+    }
+
+    pub fn template_json_mut(&self) -> windows_core::Result<NotifyLockWriteGuard<'_, HSTRING, impl Fn()>> {
+        self.template_json.write(|| self.emit_self_prop_changed("TemplateJson"))
+    }
+
+    pub fn data_json(&self) -> windows_core::Result<NotifyLockReadGuard<'_, HSTRING>> {
+        self.data_json.read()
+    }
+
+    pub fn data_json_mut(&self) -> windows_core::Result<NotifyLockWriteGuard<'_, HSTRING, impl Fn()>> {
+        self.data_json.write(|| self.emit_self_prop_changed("DataJson"))
+    }
+
+    pub fn state_json(&self) -> windows_core::Result<NotifyLockReadGuard<'_, HSTRING>> {
+        self.state_json.read()
+    }
+
+    pub fn state_json_mut(&self) -> windows_core::Result<NotifyLockWriteGuard<'_, HSTRING, impl Fn()>> {
+        self.state_json.write(|| self.emit_self_prop_changed("StateJson"))
+    }
 }
 
 impl IFormContent_Impl for FormContent_Impl {

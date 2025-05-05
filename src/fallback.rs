@@ -1,5 +1,3 @@
-
-use super::cmd::BaseCommand;
 use super::cmd_item::CommandItem;
 use crate::bindings::*;
 use crate::notify::*;
@@ -25,12 +23,19 @@ where
     }
 }
 
+impl<F> FallbackQuerier for F
+where F: Fn(&HSTRING) -> Result<()> + 'static {
+    fn update_query(&self, query: &HSTRING) -> Result<()> {
+        self(query)
+    }
+}
+
 #[implement(IFallbackCommandItem, ICommandItem, INotifyPropChanged)]
 pub struct FallbackCommandItem<Q>
 where
     Q: FallbackQuerier + 'static,
 {
-    command: ComObject<CommandItem<BaseCommand>>,
+    pub cmd_item: ComObject<CommandItem>,
     handler: ComObject<FallbackHandler<Q>>,
     title: NotifyLock<HSTRING>,
 }
@@ -45,7 +50,7 @@ where
 
     pub fn title_mut(&self) -> Result<NotifyLockWriteGuard<'_, HSTRING, impl Fn()>> {
         self.title.write(|| {
-            self.command
+            self.cmd_item
                 .emit_prop_changed(&self.to_interface(), "DisplayTitle")
         })
     }
@@ -68,7 +73,7 @@ where
     Q: FallbackQuerier + 'static,
 {
     ambassador_impl_ICommandItem_Impl! {
-        body_struct(< >, ComObject<CommandItem<BaseCommand>>, command)
+        body_struct(< >, ComObject<CommandItem>, cmd_item)
     }
 }
 
@@ -77,6 +82,6 @@ where
     Q: FallbackQuerier + 'static,
 {
     ambassador_impl_INotifyPropChanged_Impl! {
-        body_struct(< >, ComObject<CommandItem<BaseCommand>>, command)
+        body_struct(< >, ComObject<CommandItem>, cmd_item)
     }
 }

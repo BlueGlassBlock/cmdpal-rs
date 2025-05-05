@@ -1,9 +1,10 @@
 use crate::bindings::*;
-use crate::notify::NotifyLock;
+use crate::notify::*;
 use std::sync::RwLock;
 use windows::core::AgileReference;
+use windows::core::{ComObject, Event, IInspectable, IUnknownImpl as _, implement};
 use windows::{Foundation::TypedEventHandler, Win32::Foundation::E_INVALIDARG};
-use windows_core::{ComObject, Event, IInspectable, implement};
+
 pub(crate) static EXTENSION_HOST: RwLock<Option<AgileReference<IExtensionHost>>> =
     RwLock::new(None);
 
@@ -12,6 +13,34 @@ pub struct ProgressState {
     indeterminate: NotifyLock<bool>,
     percentage: NotifyLock<u32>,
     event: Event<TypedEventHandler<IInspectable, IPropChangedEventArgs>>,
+}
+
+impl ProgressState_Impl {
+    pub(crate) fn emit_self_prop_changed(&self, prop: &str) {
+        let sender: IInspectable = self.to_interface();
+        let arg: IPropChangedEventArgs = PropChangedEventArgs(prop.into()).into();
+        self.event.call(|handler| handler.Invoke(&sender, &arg));
+    }
+
+    pub fn indeterminate(&self) -> windows_core::Result<NotifyLockReadGuard<'_, bool>> {
+        self.indeterminate.read()
+    }
+
+    pub fn indeterminate_mut(
+        &self,
+    ) -> windows_core::Result<NotifyLockWriteGuard<'_, bool, impl Fn()>> {
+        self.indeterminate
+            .write(|| self.emit_self_prop_changed("IsIndeterminate"))
+    }
+
+    pub fn percentage(&self) -> windows_core::Result<NotifyLockReadGuard<'_, u32>> {
+        self.percentage.read()
+    }
+
+    pub fn percentage_mut(&self) -> windows_core::Result<NotifyLockWriteGuard<'_, u32, impl Fn()>> {
+        self.percentage
+            .write(|| self.emit_self_prop_changed("ProgressPercent"))
+    }
 }
 
 impl INotifyPropChanged_Impl for ProgressState_Impl {
@@ -76,7 +105,6 @@ impl From<MessageState> for crate::bindings::MessageState {
     }
 }
 
-
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum StatusContext {
     Page,
@@ -109,6 +137,48 @@ pub struct StatusMessage {
     progress: NotifyLock<ComObject<ProgressState>>,
     message: NotifyLock<windows_core::HSTRING>,
     event: Event<TypedEventHandler<IInspectable, IPropChangedEventArgs>>,
+}
+
+impl StatusMessage_Impl {
+    pub(crate) fn emit_self_prop_changed(&self, prop: &str) {
+        let sender: IInspectable = self.to_interface();
+        let arg: IPropChangedEventArgs = PropChangedEventArgs(prop.into()).into();
+        self.event.call(|handler| handler.Invoke(&sender, &arg));
+    }
+
+    pub fn state(&self) -> windows_core::Result<NotifyLockReadGuard<'_, MessageState>> {
+        self.state.read()
+    }
+
+    pub fn state_mut(
+        &self,
+    ) -> windows_core::Result<NotifyLockWriteGuard<'_, MessageState, impl Fn()>> {
+        self.state.write(|| self.emit_self_prop_changed("State"))
+    }
+
+    pub fn progress(
+        &self,
+    ) -> windows_core::Result<NotifyLockReadGuard<'_, ComObject<ProgressState>>> {
+        self.progress.read()
+    }
+
+    pub fn progress_mut(
+        &self,
+    ) -> windows_core::Result<NotifyLockWriteGuard<'_, ComObject<ProgressState>, impl Fn()>> {
+        self.progress
+            .write(|| self.emit_self_prop_changed("Progress"))
+    }
+
+    pub fn message(&self) -> windows_core::Result<NotifyLockReadGuard<'_, windows_core::HSTRING>> {
+        self.message.read()
+    }
+
+    pub fn message_mut(
+        &self,
+    ) -> windows_core::Result<NotifyLockWriteGuard<'_, windows_core::HSTRING, impl Fn()>> {
+        self.message
+            .write(|| self.emit_self_prop_changed("Message"))
+    }
 }
 
 impl IStatusMessage_Impl for StatusMessage_Impl {

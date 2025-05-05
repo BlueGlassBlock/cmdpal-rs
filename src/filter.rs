@@ -1,7 +1,8 @@
+use crate::bindings::*;
 use crate::icon::IconInfo;
 use crate::utils::map_array;
-use crate::{bindings::*, notify::NotifyLock};
-use windows::core::{ComObject, HSTRING, implement};
+use std::sync::RwLock;
+use windows::{core::{implement, ComObject, HSTRING}, Win32::Foundation::ERROR_LOCK_VIOLATION};
 use windows_core::Error;
 
 #[implement(ISeparatorFilterItem, IFilterItem)]
@@ -52,14 +53,14 @@ impl From<&Filter> for IFilterItem {
 #[implement(IFilters)]
 pub struct Filters {
     filters: Vec<Filter>,
-    index: NotifyLock<usize>,
+    index: RwLock<usize>,
 }
 
 impl IFilters_Impl for Filters_Impl {
     fn CurrentFilterId(&self) -> windows_core::Result<windows_core::HSTRING> {
         let filter = self
             .filters
-            .get(*self.index.read()?)
+            .get(*self.index.read().map_err(|_| Error::from(ERROR_LOCK_VIOLATION))?)
             .ok_or(Error::empty())?;
         match filter {
             Filter::Separator(_) => Err(Error::empty()),
@@ -79,7 +80,8 @@ impl IFilters_Impl for Filters_Impl {
                 Filter::Separator(_) => continue,
                 Filter::Item(item) => {
                     if item.Id()? == *value {
-                        *self.index.write(|| {})? = i;
+                        let mut guard = self.index.write().map_err(|_| Error::from(ERROR_LOCK_VIOLATION))?;
+                        *guard = i;
                         return Ok(());
                     }
                 }

@@ -7,7 +7,7 @@ pub type SearchTextUpdateFn = Box<dyn Fn(&DynamicListPage_Impl, HSTRING, HSTRING
 
 #[implement(IDynamicListPage, IListPage, IPage, INotifyItemsChanged, INotifyPropChanged, ICommand)]
 pub struct DynamicListPage {
-    list_page: ComObject<ListPage>,
+    pub list_page: ComObject<ListPage>,
     update_fn: SearchTextUpdateFn,
 }
 

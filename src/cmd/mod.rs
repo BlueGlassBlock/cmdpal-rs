@@ -60,7 +60,7 @@ impl INotifyPropChanged_Impl for BaseCommand_Impl {
 }
 
 impl BaseCommand_Impl {
-    pub(crate) fn emit_prop_changed(&self, sender: IInspectable, prop: &str) {
+    pub fn emit_prop_changed(&self, sender: IInspectable, prop: &str) {
         let args: IPropChangedEventArgs = PropChangedEventArgs(prop.into()).into();
         self.event
             .call(|handler| handler.Invoke(&sender, &args.clone()));

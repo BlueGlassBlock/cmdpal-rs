@@ -10,7 +10,7 @@ pub struct ContentPage {
     commands: NotifyLock<Vec<IContextItem>>,
     contents: NotifyLock<Vec<IContent>>,
     details: NotifyLock<Option<ComObject<Details>>>,
-    base: ComObject<super::BasePage>,
+    pub base: ComObject<super::BasePage>,
     item_event: Event<TypedEventHandler<IInspectable, IItemsChangedEventArgs>>,
 }
 
@@ -36,7 +36,7 @@ impl ContentPage {
 }
 
 impl ContentPage_Impl {
-    pub(crate) fn emit_items_changed(&self, sender: IInspectable, total_items: i32) {
+    pub fn emit_items_changed(&self, sender: IInspectable, total_items: i32) {
         let args: IItemsChangedEventArgs = ItemsChangedEventArgs(total_items).into();
         self.item_event
             .call(|handler| handler.Invoke(&sender, &args));
