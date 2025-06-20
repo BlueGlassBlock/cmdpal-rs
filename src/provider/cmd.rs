@@ -1,10 +1,9 @@
-
 use crate::bindings::*;
-use windows::core::{implement, ComObject};
-use windows::Foundation::{IClosable, IClosable_Impl, TypedEventHandler};
-use windows_core::{Event, IInspectable};
 use crate::icon::IconInfo;
-use crate::utils::map_array;
+use crate::utils::{OkOrEmpty, map_array};
+use windows::Foundation::{IClosable, IClosable_Impl, TypedEventHandler};
+use windows::core::{ComObject, implement};
+use windows_core::{Event, HSTRING, IInspectable};
 
 #[implement(ICommandProvider, IClosable, INotifyItemsChanged)]
 pub struct CommandProvider {
@@ -18,33 +17,96 @@ pub struct CommandProvider {
     event: Event<TypedEventHandler<IInspectable, IItemsChangedEventArgs>>,
 }
 
-impl CommandProvider {
-    pub fn new(
-        id: impl Into<windows_core::HSTRING>,
-        display_name: impl Into<windows_core::HSTRING>,
-        icon: Option<ComObject<IconInfo>>,
-        settings: Option<ICommandSettings>,
-        frozen: bool,
-        top_level: Vec<ICommandItem>,
-        fallbacks: Vec<IFallbackCommandItem>,
-    ) -> Self {
-        let id = id.into();
-        let display_name = display_name.into();
-        let icon = icon;
-        let settings = settings;
-        let top_level = top_level.into_iter().collect();
-        let fallbacks = fallbacks.into_iter().collect();
+pub struct CommandProviderBuilder {
+    id: windows_core::HSTRING,
+    display_name: windows_core::HSTRING,
+    icon: Option<ComObject<IconInfo>>,
+    settings: Option<ICommandSettings>,
+    frozen: bool,
+    top_level: Vec<ICommandItem>,
+    fallbacks: Vec<IFallbackCommandItem>,
+}
 
-        CommandProvider {
-            id,
-            display_name,
-            icon,
-            settings,
-            frozen,
-            top_level,
-            fallbacks,
-            event: Event::new(),
+impl CommandProviderBuilder {
+    pub fn new() -> Self {
+        CommandProviderBuilder {
+            id: HSTRING::new(),
+            display_name: HSTRING::new(),
+            icon: None,
+            settings: None,
+            frozen: false,
+            top_level: Vec::new(),
+            fallbacks: Vec::new(),
         }
+    }
+
+    pub fn id(mut self, id: impl Into<windows_core::HSTRING>) -> Self {
+        self.id = id.into();
+        self
+    }
+
+    pub fn display_name(mut self, display_name: impl Into<windows_core::HSTRING>) -> Self {
+        self.display_name = display_name.into();
+        self
+    }
+
+    pub fn icon(mut self, icon: ComObject<IconInfo>) -> Self {
+        self.icon = Some(icon);
+        self
+    }
+
+    pub fn settings(mut self, settings: ICommandSettings) -> Self {
+        self.settings = Some(settings);
+        self
+    }
+
+    pub fn frozen(mut self, frozen: bool) -> Self {
+        self.frozen = frozen;
+        self
+    }
+
+    pub fn top_level(mut self, top_level: Vec<ICommandItem>) -> Self {
+        self.top_level = top_level;
+        self
+    }
+
+    pub fn add_top_level(mut self, item: ICommandItem) -> Self {
+        self.top_level.push(item);
+        self
+    }
+
+    pub fn fallbacks(mut self, fallbacks: Vec<IFallbackCommandItem>) -> Self {
+        self.fallbacks = fallbacks;
+        self
+    }
+
+    pub fn add_fallback(mut self, item: IFallbackCommandItem) -> Self {
+        self.fallbacks.push(item);
+        self
+    }
+
+    pub fn build_unmanaged(self) -> windows_core::Result<CommandProvider> {
+        Ok(CommandProvider {
+            id: self.id,
+            display_name: self.display_name,
+            icon: self.icon,
+            settings: self.settings,
+            frozen: self.frozen,
+            top_level: self.top_level,
+            fallbacks: self.fallbacks,
+            event: Event::new(),
+        })
+    }
+
+    pub fn build(self) -> windows_core::Result<ComObject<CommandProvider>> {
+        let provider = self.build_unmanaged()?;
+        Ok(provider.into())
+    }
+}
+
+impl Default for CommandProviderBuilder {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -58,16 +120,11 @@ impl ICommandProvider_Impl for CommandProvider_Impl {
     }
 
     fn Icon(&self) -> windows_core::Result<crate::bindings::IIconInfo> {
-        self.icon
-            .clone()
-            .map(|icon| icon.to_interface())
-            .ok_or(windows_core::Error::empty())
+        self.icon.clone().map(|icon| icon.to_interface()).or_or_empty()
     }
 
     fn Settings(&self) -> windows_core::Result<ICommandSettings> {
-        self.settings
-            .clone()
-            .ok_or(windows_core::Error::empty())
+        self.settings.clone().or_or_empty()
     }
 
     fn Frozen(&self) -> windows_core::Result<bool> {
@@ -87,9 +144,9 @@ impl ICommandProvider_Impl for CommandProvider_Impl {
     }
 
     fn InitializeWithHost(
-            &self,
-            host: windows_core::Ref<'_, IExtensionHost>,
-        ) -> windows_core::Result<()> {
+        &self,
+        host: windows_core::Ref<'_, IExtensionHost>,
+    ) -> windows_core::Result<()> {
         crate::host::set_ext_host(host.ok()?);
         Ok(())
     }
@@ -104,10 +161,7 @@ impl IClosable_Impl for CommandProvider_Impl {
 impl INotifyItemsChanged_Impl for CommandProvider_Impl {
     fn ItemsChanged(
         &self,
-        handler: windows_core::Ref<
-            '_,
-            TypedEventHandler<IInspectable, IItemsChangedEventArgs>,
-        >,
+        handler: windows_core::Ref<'_, TypedEventHandler<IInspectable, IItemsChangedEventArgs>>,
     ) -> windows_core::Result<i64> {
         self.event.add(handler.ok()?)
     }

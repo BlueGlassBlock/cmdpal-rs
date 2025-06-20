@@ -1,8 +1,11 @@
-use crate::bindings::*;
 use crate::icon::IconInfo;
 use crate::utils::map_array;
+use crate::{bindings::*, utils::OkOrEmpty};
 use std::sync::RwLock;
-use windows::{core::{implement, ComObject, HSTRING}, Win32::Foundation::ERROR_LOCK_VIOLATION};
+use windows::{
+    Win32::Foundation::ERROR_LOCK_VIOLATION,
+    core::{ComObject, HSTRING, implement},
+};
 use windows_core::Error;
 
 #[implement(ISeparatorFilterItem, IFilterItem)]
@@ -20,10 +23,7 @@ pub struct FilterItem {
 
 impl IFilter_Impl for FilterItem_Impl {
     fn Icon(&self) -> windows_core::Result<IIconInfo> {
-        self.icon
-            .as_ref()
-            .map(|icon| icon.to_interface())
-            .ok_or(windows_core::Error::empty())
+        self.icon.as_ref().map(|icon| icon.to_interface()).or_or_empty()
     }
 
     fn Id(&self) -> windows_core::Result<windows_core::HSTRING> {
@@ -60,8 +60,13 @@ impl IFilters_Impl for Filters_Impl {
     fn CurrentFilterId(&self) -> windows_core::Result<windows_core::HSTRING> {
         let filter = self
             .filters
-            .get(*self.index.read().map_err(|_| Error::from(ERROR_LOCK_VIOLATION))?)
-            .ok_or(Error::empty())?;
+            .get(
+                *self
+                    .index
+                    .read()
+                    .map_err(|_| Error::from(ERROR_LOCK_VIOLATION))?,
+            )
+            .or_or_empty()?;
         match filter {
             Filter::Separator(_) => Err(Error::empty()),
             Filter::Item(item) => item.Id(),
@@ -80,7 +85,10 @@ impl IFilters_Impl for Filters_Impl {
                 Filter::Separator(_) => continue,
                 Filter::Item(item) => {
                     if item.Id()? == *value {
-                        let mut guard = self.index.write().map_err(|_| Error::from(ERROR_LOCK_VIOLATION))?;
+                        let mut guard = self
+                            .index
+                            .write()
+                            .map_err(|_| Error::from(ERROR_LOCK_VIOLATION))?;
                         *guard = i;
                         return Ok(());
                     }

@@ -1,6 +1,8 @@
 use crate::{bindings::*, page::content::ContentPage};
 use windows::core::{ComObject, implement};
 
+// TODO: Add serde-based wrapper
+
 #[implement(ICommandSettings)]
 pub struct CommandSettings(pub ComObject<ContentPage>);
 

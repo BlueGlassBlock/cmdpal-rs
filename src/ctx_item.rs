@@ -1,6 +1,7 @@
 use crate::cmd_item::CommandItem;
+use crate::utils::OkOrEmpty;
 use crate::{bindings::*, notify::*};
-use windows::core::{ComObject, Error, IInspectable, IUnknownImpl as _, Result, implement};
+use windows::core::{ComObject, IInspectable, IUnknownImpl as _, Result, implement};
 
 #[implement(ISeparatorContextItem, IContextItem)]
 pub struct SeparatorContextItem;
@@ -43,7 +44,7 @@ impl ICommandContextItem_Impl for CommandContextItem_Impl {
         self.critical.read().map(|x| *x)
     }
     fn RequestedShortcut(&self) -> windows_core::Result<KeyChord> {
-        self.shortcut.read()?.map(|x| x).ok_or(Error::empty())
+        self.shortcut.read()?.map(|x| x).or_or_empty()
     }
 }
 

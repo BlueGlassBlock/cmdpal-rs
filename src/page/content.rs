@@ -1,9 +1,9 @@
 use crate::bindings::*;
 use crate::details::Details;
 use crate::notify::*;
-use crate::utils::map_array;
+use crate::utils::{OkOrEmpty, map_array};
 use windows::Foundation::TypedEventHandler;
-use windows::core::{ComObject, Event, IInspectable, implement, Result, IUnknownImpl as _};
+use windows::core::{ComObject, Event, IInspectable, IUnknownImpl as _, Result, implement};
 
 #[implement(IContentPage, IPage, ICommand, INotifyPropChanged, INotifyItemsChanged)]
 pub struct ContentPage {
@@ -14,24 +14,61 @@ pub struct ContentPage {
     item_event: Event<TypedEventHandler<IInspectable, IItemsChangedEventArgs>>,
 }
 
-impl ContentPage {
-    pub fn new(
-        commands: Vec<IContextItem>,
-        contents: Vec<IContent>,
-        details: Option<ComObject<Details>>,
-        base: ComObject<super::BasePage>,
-    ) -> Self {
-        let commands = NotifyLock::new(commands);
-        let contents = NotifyLock::new(contents);
-        let details = NotifyLock::new(details);
+pub struct ContentPageBuilder {
+    base: ComObject<super::BasePage>,
+    commands: Vec<IContextItem>,
+    contents: Vec<IContent>,
+    details: Option<ComObject<Details>>,
+}
 
-        ContentPage {
-            commands,
-            contents,
-            details,
+impl ContentPageBuilder {
+    pub fn new(base: ComObject<super::BasePage>) -> Self {
+        ContentPageBuilder {
             base,
+            commands: Vec::new(),
+            contents: Vec::new(),
+            details: None,
+        }
+    }
+
+    pub fn commands(mut self, commands: Vec<IContextItem>) -> Self {
+        self.commands = commands;
+        self
+    }
+
+    pub fn add_command(mut self, command: IContextItem) -> Self {
+        self.commands.push(command);
+        self
+    }
+
+    pub fn contents(mut self, contents: Vec<IContent>) -> Self {
+        self.contents = contents;
+        self
+    }
+
+    pub fn add_content(mut self, content: IContent) -> Self {
+        self.contents.push(content);
+        self
+    }
+
+    pub fn details(mut self, details: ComObject<Details>) -> Self {
+        self.details = Some(details);
+        self
+    }
+
+    pub fn build_unmanaged(self) -> ContentPage {
+        ContentPage {
+            base: self.base,
+            commands: NotifyLock::new(self.commands),
+            contents: NotifyLock::new(self.contents),
+            details: NotifyLock::new(self.details),
             item_event: Event::new(),
         }
+    }
+
+    pub fn build(self) -> ComObject<ContentPage> {
+        let obj = self.build_unmanaged();
+        ComObject::new(obj)
     }
 }
 
@@ -69,7 +106,11 @@ impl ContentPage_Impl {
     pub fn details_mut(
         &self,
     ) -> Result<NotifyLockWriteGuard<'_, Option<ComObject<Details>>, impl Fn()>> {
-        self.details.write(|| self.base.command.emit_prop_changed(self.to_interface(), "Details"))
+        self.details.write(|| {
+            self.base
+                .command
+                .emit_prop_changed(self.to_interface(), "Details")
+        })
     }
 }
 
@@ -87,7 +128,7 @@ impl IContentPage_Impl for ContentPage_Impl {
             .read()?
             .clone()
             .map(|x| x.to_interface())
-            .ok_or(windows_core::Error::empty())
+            .or_or_empty()
     }
 }
 

@@ -4,9 +4,9 @@ use crate::{
     details::{Details, Tag},
     filter::Filters,
     notify::*,
-    utils::{GridProperties, map_array},
+    utils::{GridProperties, OkOrEmpty, map_array},
 };
-use windows::core::{ComObject, Error, IInspectable, IUnknownImpl as _, Result, implement};
+use windows::core::{ComObject, IInspectable, IUnknownImpl as _, Result, implement};
 use windows_core::HSTRING;
 
 use super::BasePage;
@@ -20,13 +20,72 @@ pub struct ListItem {
     suggestion: NotifyLock<HSTRING>,
 }
 
+pub struct ListItemBuilder {
+    cmd_item: ComObject<CommandItem>,
+    details: Option<ComObject<Details>>,
+    tags: Vec<ComObject<Tag>>,
+    section: Option<HSTRING>,
+    suggestion: Option<HSTRING>,
+}
+
+impl ListItemBuilder {
+    pub fn new(cmd_item: ComObject<CommandItem>) -> Self {
+        ListItemBuilder {
+            cmd_item,
+            details: None,
+            tags: Vec::new(),
+            section: None,
+            suggestion: None,
+        }
+    }
+
+    pub fn details(mut self, details: ComObject<Details>) -> Self {
+        self.details = Some(details);
+        self
+    }
+
+    pub fn tags(mut self, tags: impl IntoIterator<Item = ComObject<Tag>>) -> Self {
+        self.tags = tags.into_iter().collect();
+        self
+    }
+
+    pub fn add_tag(mut self, tag: ComObject<Tag>) -> Self {
+        self.tags.push(tag);
+        self
+    }
+
+    pub fn section(mut self, section: impl Into<HSTRING>) -> Self {
+        self.section = Some(section.into());
+        self
+    }
+
+    pub fn suggestion(mut self, suggestion: impl Into<HSTRING>) -> Self {
+        self.suggestion = Some(suggestion.into());
+        self
+    }
+
+    pub fn build_unmanaged(self) -> ListItem {
+        ListItem {
+            cmd_item: self.cmd_item,
+            details: NotifyLock::new(self.details),
+            tags: NotifyLock::new(self.tags),
+            section: NotifyLock::new(self.section.unwrap_or_else(|| HSTRING::new())),
+            suggestion: NotifyLock::new(self.suggestion.unwrap_or_else(|| HSTRING::new())),
+        }
+    }
+
+    pub fn build(self) -> ComObject<ListItem> {
+        self.build_unmanaged().into()
+    }
+}
+
 impl IListItem_Impl for ListItem_Impl {
     fn Details(&self) -> windows_core::Result<IDetails> {
         self.details
             .read()?
             .as_ref()
             .map(|d| d.to_interface())
-            .ok_or(Error::empty())
+            .or_or_empty()
     }
     fn Tags(&self) -> windows_core::Result<windows_core::Array<ITag>> {
         Ok(map_array(&self.tags.read()?, |t| Some(t.to_interface())))
@@ -53,7 +112,7 @@ impl INotifyPropChanged_Impl for ListItem_Impl {
 
 #[implement(IListPage, IPage, ICommand, INotifyPropChanged, INotifyItemsChanged)]
 pub struct ListPage {
-    base: ComObject<BasePage>,
+    pub base: ComObject<BasePage>,
     empty_content: NotifyLock<ComObject<CommandItem>>,
     filters: NotifyLock<ComObject<Filters>>,
     items: NotifyLock<Vec<ComObject<ListItem>>>,
@@ -62,6 +121,80 @@ pub struct ListPage {
     search_text: NotifyLock<HSTRING>,
     show_details: NotifyLock<bool>,
     item_event: ItemsChangedEventHandler,
+}
+
+pub struct ListPageBuilder {
+    base: ComObject<BasePage>,
+    empty_content: ComObject<CommandItem>,
+    filters: ComObject<Filters>,
+    grid_properties: ComObject<GridProperties>,
+    items: Vec<ComObject<ListItem>>,
+    placeholder: Option<HSTRING>,
+    search_text: Option<HSTRING>,
+    show_details: Option<bool>,
+}
+
+impl ListPageBuilder {
+    pub fn new(
+        base: ComObject<BasePage>,
+        empty_content: ComObject<CommandItem>,
+        filters: ComObject<Filters>,
+        grid_properties: ComObject<GridProperties>,
+    ) -> Self {
+        ListPageBuilder {
+            base,
+            empty_content,
+            filters,
+            items: Vec::new(),
+            grid_properties,
+            placeholder: None,
+            search_text: None,
+            show_details: None,
+        }
+    }
+
+    pub fn items(mut self, items: Vec<ComObject<ListItem>>) -> Self {
+        self.items = items;
+        self
+    }
+
+    pub fn add_item(mut self, item: ComObject<ListItem>) -> Self {
+        self.items.push(item);
+        self
+    }
+
+    pub fn placeholder(mut self, placeholder: impl Into<HSTRING>) -> Self {
+        self.placeholder = Some(placeholder.into());
+        self
+    }
+
+    pub fn search_text(mut self, search_text: impl Into<HSTRING>) -> Self {
+        self.search_text = Some(search_text.into());
+        self
+    }
+
+    pub fn show_details(mut self, show_details: bool) -> Self {
+        self.show_details = Some(show_details);
+        self
+    }
+
+    pub fn build_unmanaged(self) -> ListPage {
+        ListPage {
+            base: self.base,
+            empty_content: NotifyLock::new(self.empty_content),
+            filters: NotifyLock::new(self.filters),
+            items: NotifyLock::new(self.items),
+            grid_properties: NotifyLock::new(self.grid_properties),
+            placeholder: NotifyLock::new(self.placeholder.unwrap_or_else(|| HSTRING::new())),
+            search_text: NotifyLock::new(self.search_text.unwrap_or_else(|| HSTRING::new())),
+            show_details: NotifyLock::new(self.show_details.unwrap_or(false)),
+            item_event: ItemsChangedEventHandler::new(),
+        }
+    }
+
+    pub fn build(self) -> ComObject<ListPage> {
+        self.build_unmanaged().into()
+    }
 }
 
 impl ListPage_Impl {

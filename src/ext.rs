@@ -1,11 +1,35 @@
 use crate::bindings::*;
 use windows::Foundation::{IClosable, IClosable_Impl};
 use windows::Win32::Foundation::E_NOTIMPL;
-use windows_core::{implement, IInspectable};
+use windows_core::{IInspectable, implement};
 
 #[implement(IExtension, IClosable)]
 pub struct Extension {
     pub cmd_provider: ICommandProvider,
+}
+
+impl From<crate::provider::cmd::CommandProvider> for Extension {
+    fn from(value: crate::provider::cmd::CommandProvider) -> Self {
+        Self {
+            cmd_provider: value.into(),
+        }
+    }
+}
+
+impl From<&crate::provider::cmd::CommandProvider_Impl> for Extension {
+    fn from(value: &crate::provider::cmd::CommandProvider_Impl) -> Self {
+        Self {
+            cmd_provider: windows::core::IUnknownImpl::to_interface(value)
+        }
+    }
+}
+
+impl From<ICommandProvider> for Extension {
+    fn from(provider: ICommandProvider) -> Self {
+        Self {
+            cmd_provider: provider,
+        }
+    }
 }
 
 impl IClosable_Impl for Extension_Impl {

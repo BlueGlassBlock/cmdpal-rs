@@ -2,7 +2,7 @@ use crate::bindings::*;
 use windows::Storage::Streams::{IBuffer, IRandomAccessStream, InMemoryRandomAccessStream, RandomAccessStreamReference};
 use windows::core::HSTRING;
 use windows::core::implement;
-use crate::utils::FrozenBuffer;
+use crate::utils::{FrozenBuffer, OkOrEmpty};
 
 #[implement(IIconData)]
 #[derive(Debug, Clone)]
@@ -19,7 +19,7 @@ impl IIconData_Impl for IconData_Impl {
     fn Data(
         &self,
     ) -> windows_core::Result<windows::Storage::Streams::IRandomAccessStreamReference> {
-        let stream = self.data.as_ref().ok_or(windows_core::Error::empty())?;
+        let stream = self.data.as_ref().or_or_empty()?;
         RandomAccessStreamReference::CreateFromStream(stream).map(Into::into)
     }
 }

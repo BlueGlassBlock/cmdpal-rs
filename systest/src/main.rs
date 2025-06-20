@@ -1,12 +1,8 @@
 use cmdpal::icon::{IconData, IconInfo};
 use cmdpal::*;
 use windows::Win32;
-use windows::Win32::System::Com::*;
-use windows::Win32::UI::WindowsAndMessaging::{
-    DispatchMessageW, GetMessageW, MSG, TranslateMessage,
-};
 use windows::core::{Result, h};
-use windows_core::{ComObject, Interface};
+use windows_core::ComObject;
 
 //255c6090-dbec-4008-b865-3f08765e727b
 //0x255c6090_dbec_4008_b865_3f08765e727b
@@ -24,7 +20,7 @@ fn com_main() -> Result<()> {
         loop {
             let time = Win32::System::SystemInformation::GetLocalTime();
             let time = format!(
-                "{}-{}-{} {}:{}:{}",
+                "{}-{}-{} {:02}:{:02}:{:02}",
                 time.wYear, time.wMonth, time.wDay, time.wHour, time.wMinute, time.wSecond
             );
             if let Ok(mut body) = task_box.body_mut() {
@@ -33,85 +29,47 @@ fn com_main() -> Result<()> {
             std::thread::sleep(std::time::Duration::from_secs(1));
         }
     });
-    unsafe {
-        CoInitializeEx(None, COINIT_MULTITHREADED).ok()?;
-        let global_options: IGlobalOptions =
-            CoCreateInstance(&CLSID_GlobalOptions, None, CLSCTX_INPROC_SERVER)?;
-        global_options.Set(COMGLB_RO_SETTINGS, COMGLB_FAST_RUNDOWN.0 as usize)?;
-        let factory: IClassFactory = cmdpal::ext_factory::ExtensionClassFactory(
-            cmdpal::ext::Extension {
-                cmd_provider: cmdpal::provider::cmd::CommandProvider::new(
-                    "BlueG.PEP",
-                    "PEP Viewer",
-                    Some(IconInfo::from(IconData::from(h!("\u{e8a5}").clone())).into()),
-                    None,
-                    true,
-                    vec![
-                        cmdpal::cmd_item::CommandItem::new(
-                            Some(IconInfo::from(IconData::from(h!("\u{f6fa}").clone())).into()),
-                            "View PEP",
-                            "Open a PEP by number",
-                            cmdpal::page::content::ContentPage::new(
-                                vec![],
-                                vec![
-                                    cmdpal::content::markdown::MarkdownContent::new(
-                                        MD_CONTENT.into(),
-                                    )
-                                    .into(),
-                                    md_box.to_interface(),
-                                ],
-                                Some(
-                                    cmdpal::details::Details::new(
-                                        None,
-                                        "Details Title!",
-                                        "Details body!",
-                                        vec![],
-                                    )
-                                    .into(),
-                                ),
-                                cmdpal::page::BasePage::new(
-                                    "Search for PEP",
-                                    false,
-                                    None,
-                                    cmdpal::cmd::BaseCommand::new("Page", "", None).into(),
-                                )
-                                .into(),
-                            )
-                            .into(),
-                            vec![],
-                        )
-                        .into(),
-                    ],
-                    vec![],
-                )
-                .into(),
-            }
-            .into(),
+    let cmd = cmdpal::page::content::ContentPageBuilder::new(
+        cmdpal::page::BasePageBuilder::new(
+            cmdpal::cmd::BaseCommandBuilder::new()
+                .name("Example Page")
+                .icon(IconInfo::from(IconData::from(h!("\u{f6fa}").clone())).into())
+                .id("BlueG.PEP.ExamplePage")
+                .build(),
         )
-        .into();
-        CoRegisterClassObject(
-            &EXTENSION_GUID,
-            &factory,
-            CLSCTX_LOCAL_SERVER,
-            REGCLS_MULTIPLEUSE | REGCLS_SUSPENDED,
-        )?;
-        CoResumeClassObjects()?;
-        tracing::info!("Class object registered");
-        let ext: crate::bindings::IExtension = CoCreateInstance(&EXTENSION_GUID, None, CLSCTX_ALL)?;
-        tracing::info!("Extension created");
-        let provider: crate::bindings::ICommandProvider = ext
-            .GetProvider(crate::bindings::ProviderType::Commands)?
-            .cast()?;
-        tracing::info!("Provider created");
-        let id = provider.Id()?;
-        tracing::info!("Provider ID: {:?}", id);
-        let mut msg: MSG = MSG::default();
-        while GetMessageW(&mut msg, None, 0, 0).as_bool() {
-            if TranslateMessage(&msg).as_bool() {
-                DispatchMessageW(&msg);
-            }
-        }
-    }
+        .loading(false)
+        .title("PEP Example Page")
+        .build(),
+    )
+    .details(
+        cmdpal::details::DetailsBuilder::new()
+            .title("Details Title")
+            .body("Details Body")
+            .build(),
+    )
+    .add_content(cmdpal::content::markdown::MarkdownContent::new(MD_CONTENT.into()).into())
+    .add_content(md_box.to_interface())
+    .build();
+    let provider = cmdpal::provider::cmd::CommandProviderBuilder::new()
+        .id("BlueG.PEP")
+        .display_name("PEP Viewer")
+        .icon(IconInfo::from(IconData::from(h!("\u{e8a5}").clone())).into())
+        .frozen(true)
+        .add_top_level(
+            cmdpal::cmd_item::CommandItemBuilder::new(cmd.to_interface())
+                .icon(IconInfo::from(IconData::from(h!("\u{f6fa}").clone())).into())
+                .title("View PEP")
+                .subtitle("Open a PEP by number")
+                .build()
+                .to_interface(),
+        )
+        .build()?;
+    ExtRegistry::new()
+        .register(
+            EXTENSION_GUID,
+            cmdpal::ext::Extension::from(&*provider),
+        )
+        .serve()?;
     tracing::info!("Exiting...");
     Ok(())
 }

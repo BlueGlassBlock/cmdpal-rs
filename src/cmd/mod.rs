@@ -1,24 +1,64 @@
 pub mod common;
 
 use crate::bindings::*;
-use crate::notify::*;
-use windows::core::implement;
-use windows_core::ComObject;
-use windows_core::HSTRING;
-use windows_core::IInspectable;
-use windows_core::IUnknownImpl as _;
-
 pub use crate::cmd_result::CommandResult;
 use crate::icon::IconInfo;
+use crate::notify::*;
+use crate::utils::OkOrEmpty;
+use windows::Foundation::TypedEventHandler;
+use windows::core::{ComObject, Event, HSTRING, IInspectable, IUnknownImpl as _, implement};
 
 #[implement(ICommand, INotifyPropChanged)]
 pub struct BaseCommand {
-    name: NotifyLock<windows_core::HSTRING>,
-    id: NotifyLock<windows_core::HSTRING>,
+    name: NotifyLock<HSTRING>,
+    id: NotifyLock<HSTRING>,
     icon: NotifyLock<Option<ComObject<IconInfo>>>,
-    event: windows_core::Event<
-        windows::Foundation::TypedEventHandler<windows_core::IInspectable, IPropChangedEventArgs>,
-    >,
+    event: Event<TypedEventHandler<IInspectable, IPropChangedEventArgs>>,
+}
+
+pub struct BaseCommandBuilder {
+    name: HSTRING,
+    id: HSTRING,
+    icon: Option<ComObject<IconInfo>>,
+}
+
+impl BaseCommandBuilder {
+    pub fn new() -> Self {
+        Self {
+            name: HSTRING::new(),
+            id: HSTRING::new(),
+            icon: None,
+        }
+    }
+
+    pub fn name(mut self, name: impl Into<HSTRING>) -> Self {
+        self.name = name.into();
+        self
+    }
+
+    pub fn id(mut self, id: impl Into<HSTRING>) -> Self {
+        self.id = id.into();
+        self
+    }
+
+    pub fn icon(mut self, icon: ComObject<IconInfo>) -> Self {
+        self.icon = Some(icon);
+        self
+    }
+
+    pub fn build_unmanaged(self) -> BaseCommand {
+        BaseCommand {
+            name: NotifyLock::new(self.name),
+            id: NotifyLock::new(self.id),
+            icon: NotifyLock::new(self.icon),
+            event: windows_core::Event::new(),
+        }
+    }
+
+    pub fn build(self) -> ComObject<BaseCommand> {
+        let obj = self.build_unmanaged();
+        ComObject::new(obj)
+    }
 }
 
 impl ICommand_Impl for BaseCommand_Impl {
@@ -35,7 +75,7 @@ impl ICommand_Impl for BaseCommand_Impl {
             .read()?
             .as_ref()
             .map(|icon| icon.to_interface())
-            .ok_or(windows_core::Error::empty())
+            .or_or_empty()
     }
 }
 
@@ -101,20 +141,5 @@ impl BaseCommand_Impl {
     ) -> windows_core::Result<NotifyLockWriteGuard<'_, Option<ComObject<IconInfo>>, impl Fn()>>
     {
         self.icon.write(|| self.emit_self_prop_changed("Icon"))
-    }
-}
-
-impl BaseCommand {
-    pub fn new(
-        name: impl Into<HSTRING>,
-        id: impl Into<HSTRING>,
-        icon: Option<ComObject<IconInfo>>,
-    ) -> Self {
-        Self {
-            name: NotifyLock::new(name.into()),
-            id: NotifyLock::new(id.into()),
-            icon: NotifyLock::new(icon),
-            event: windows_core::Event::new(),
-        }
     }
 }

@@ -54,7 +54,6 @@ pub fn map_array<T: windows::core::Type<T>, S>(
     arr
 }
 
-
 impl From<Option<Color>> for OptionalColor {
     fn from(value: Option<Color>) -> Self {
         match value {
@@ -67,5 +66,17 @@ impl From<Option<Color>> for OptionalColor {
                 Color: Color::default(),
             },
         }
+    }
+}
+
+pub trait OkOrEmpty {
+    type Target;
+    fn or_or_empty(self) -> windows_core::Result<Self::Target>;
+}
+
+impl<T> OkOrEmpty for Option<T> {
+    type Target = T;
+    fn or_or_empty(self) -> windows_core::Result<Self::Target> {
+        self.ok_or(windows_core::Error::empty())
     }
 }

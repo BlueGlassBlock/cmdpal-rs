@@ -1,8 +1,8 @@
 use crate::bindings::*;
 use crate::icon::IconInfo;
+use crate::utils::map_array;
 use windows::core::{ComObject, Result, implement};
 use windows_core::HSTRING;
-use crate::utils::map_array;
 
 #[implement(ITag)]
 pub struct Tag {
@@ -13,12 +13,77 @@ pub struct Tag {
     tooltip: HSTRING,
 }
 
+pub struct TagBuilder {
+    icon: Option<ComObject<IconInfo>>,
+    text: Option<HSTRING>,
+    foreground: Option<Color>,
+    background: Option<Color>,
+    tooltip: Option<HSTRING>,
+}
+
+impl TagBuilder {
+    pub fn new() -> Self {
+        TagBuilder {
+            icon: None,
+            text: None,
+            foreground: None,
+            background: None,
+            tooltip: None,
+        }
+    }
+
+    pub fn icon(mut self, icon: ComObject<IconInfo>) -> Self {
+        self.icon = Some(icon);
+        self
+    }
+
+    pub fn text(mut self, text: impl Into<HSTRING>) -> Self {
+        self.text = Some(text.into());
+        self
+    }
+
+    pub fn foreground(mut self, color: Color) -> Self {
+        self.foreground = Some(color);
+        self
+    }
+
+    pub fn background(mut self, color: Color) -> Self {
+        self.background = Some(color);
+        self
+    }
+
+    pub fn tooltip(mut self, tooltip: impl Into<HSTRING>) -> Self {
+        self.tooltip = Some(tooltip.into());
+        self
+    }
+
+    pub fn build_unmanaged(self) -> Tag {
+        Tag {
+            icon: self.icon,
+            text: self.text.unwrap_or_else(|| HSTRING::new()),
+            foreground: self.foreground,
+            background: self.background,
+            tooltip: self.tooltip.unwrap_or_else(|| HSTRING::new()),
+        }
+    }
+
+    pub fn build(self) -> ComObject<Tag> {
+        self.build_unmanaged().into()
+    }
+}
+
+impl Default for TagBuilder {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl ITag_Impl for Tag_Impl {
     fn Icon(&self) -> Result<crate::bindings::IIconInfo> {
         self.icon
             .as_ref()
             .map(|icon| icon.to_interface())
-            .ok_or(windows_core::Error::empty())
+            .ok_or(windows::core::Error::empty())
     }
 
     fn Text(&self) -> Result<windows_core::HSTRING> {
@@ -43,6 +108,40 @@ pub struct DetailsTags {
     tags: Vec<ComObject<Tag>>,
 }
 
+pub struct DetailsTagsBuilder {
+    tags: Vec<ComObject<Tag>>,
+}
+
+impl DetailsTagsBuilder {
+    pub fn new() -> Self {
+        DetailsTagsBuilder { tags: Vec::new() }
+    }
+
+    pub fn add_tag(mut self, tag: ComObject<Tag>) -> Self {
+        self.tags.push(tag);
+        self
+    }
+
+    pub fn tags(mut self, tags: Vec<ComObject<Tag>>) -> Self {
+        self.tags = tags;
+        self
+    }
+
+    pub fn build_unmanaged(self) -> DetailsTags {
+        DetailsTags { tags: self.tags }
+    }
+
+    pub fn build(self) -> ComObject<DetailsTags> {
+        self.build_unmanaged().into()
+    }
+}
+
+impl Default for DetailsTagsBuilder {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl IDetailsData_Impl for DetailsTags_Impl {}
 
 impl IDetailsTags_Impl for DetailsTags_Impl {
@@ -55,6 +154,41 @@ impl IDetailsTags_Impl for DetailsTags_Impl {
 pub struct DetailsLink {
     text: HSTRING,
     link: windows::Foundation::Uri,
+}
+
+pub struct DetailsLinkBuilder {
+    text: Option<HSTRING>,
+    link: windows::Foundation::Uri,
+}
+
+impl DetailsLinkBuilder {
+    pub fn new(link: windows::Foundation::Uri) -> Self {
+        DetailsLinkBuilder {
+            text: None,
+            link,
+        }
+    }
+
+    pub fn text(mut self, text: impl Into<HSTRING>) -> Self {
+        self.text = Some(text.into());
+        self
+    }
+
+    pub fn link(mut self, link: windows::Foundation::Uri) -> Self {
+        self.link = link;
+        self
+    }
+
+    pub fn build_unmanaged(self) -> DetailsLink {
+        DetailsLink {
+            text: self.text.unwrap_or_else(|| HSTRING::new()),
+            link: self.link,
+        }
+    }
+
+    pub fn build(self) -> ComObject<DetailsLink> {
+        self.build_unmanaged().into()
+    }
 }
 
 impl IDetailsData_Impl for DetailsLink_Impl {}
@@ -74,6 +208,16 @@ pub struct DetailsCommand {
     command: ICommand,
 }
 
+impl DetailsCommand {
+    pub fn new_unmanaged(command: ICommand) -> Self {
+        DetailsCommand { command }
+    }
+
+    pub fn new(command: ICommand) -> ComObject<Self> {
+        Self::new_unmanaged(command).into()
+    }
+}
+
 impl IDetailsData_Impl for DetailsCommand_Impl {}
 
 impl IDetailsCommand_Impl for DetailsCommand_Impl {
@@ -84,6 +228,12 @@ impl IDetailsCommand_Impl for DetailsCommand_Impl {
 
 #[implement(IDetailsSeparator, IDetailsData)]
 pub struct DetailsSeparator;
+
+impl DetailsSeparator {
+    pub fn new() -> ComObject<Self> {
+        ComObject::new(Self)
+    }
+}
 
 impl IDetailsData_Impl for DetailsSeparator_Impl {}
 
@@ -113,6 +263,19 @@ pub struct DetailsElement {
     data: DetailsData,
 }
 
+impl DetailsElement {
+    pub fn new_unmanaged(key: impl Into<HSTRING>, data: DetailsData) -> Self {
+        DetailsElement {
+            key: key.into(),
+            data,
+        }
+    }
+
+    pub fn new(key: impl Into<HSTRING>, data: DetailsData) -> ComObject<Self> {
+        Self::new_unmanaged(key, data).into()
+    }
+}
+
 impl IDetailsElement_Impl for DetailsElement_Impl {
     fn Key(&self) -> Result<windows_core::HSTRING> {
         Ok(self.key.clone())
@@ -129,6 +292,68 @@ pub struct Details {
     title: HSTRING,
     body: HSTRING,
     metadata: Vec<ComObject<DetailsElement>>,
+}
+
+pub struct DetailsBuilder {
+    hero_image: Option<ComObject<IconInfo>>,
+    title: Option<HSTRING>,
+    body: Option<HSTRING>,
+    metadata: Vec<ComObject<DetailsElement>>,
+}
+
+impl DetailsBuilder {
+    pub fn new() -> Self {
+        DetailsBuilder {
+            hero_image: None,
+            title: None,
+            body: None,
+            metadata: Vec::new(),
+        }
+    }
+
+    pub fn hero_image(mut self, hero_image: ComObject<IconInfo>) -> Self {
+        self.hero_image = Some(hero_image);
+        self
+    }
+
+    pub fn title(mut self, title: impl Into<HSTRING>) -> Self {
+        self.title = Some(title.into());
+        self
+    }
+
+    pub fn body(mut self, body: impl Into<HSTRING>) -> Self {
+        self.body = Some(body.into());
+        self
+    }
+
+    pub fn metadata(mut self, metadata: Vec<ComObject<DetailsElement>>) -> Self {
+        self.metadata = metadata;
+        self
+    }
+
+    pub fn add_metadata(mut self, element: ComObject<DetailsElement>) -> Self {
+        self.metadata.push(element);
+        self
+    }
+
+    pub fn build_unmanaged(self) -> Details {
+        Details {
+            hero_image: self.hero_image,
+            title: self.title.unwrap_or_else(|| HSTRING::new()),
+            body: self.body.unwrap_or_else(|| HSTRING::new()),
+            metadata: self.metadata,
+        }
+    }
+
+    pub fn build(self) -> ComObject<Details> {
+        self.build_unmanaged().into()
+    }
+}
+
+impl Default for DetailsBuilder {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl Details {
@@ -164,6 +389,8 @@ impl IDetails_Impl for Details_Impl {
     }
 
     fn Metadata(&self) -> Result<windows_core::Array<IDetailsElement>> {
-        Ok(map_array(&self.metadata, |x| x.to_interface::<IDetailsElement>().into()))
+        Ok(map_array(&self.metadata, |x| {
+            x.to_interface::<IDetailsElement>().into()
+        }))
     }
 }

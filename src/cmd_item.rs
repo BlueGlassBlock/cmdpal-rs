@@ -1,5 +1,6 @@
 use crate::icon::IconInfo;
 use crate::notify::*;
+use crate::utils::OkOrEmpty;
 use crate::{bindings::*, utils::map_array};
 use windows::Foundation::TypedEventHandler;
 use windows::core::{
@@ -16,26 +17,66 @@ pub struct CommandItem {
     event: Event<TypedEventHandler<IInspectable, IPropChangedEventArgs>>,
 }
 
-impl CommandItem {
-    pub fn new(
-        icon: Option<ComObject<IconInfo>>,
-        title: impl Into<HSTRING>,
-        subtitle: impl Into<HSTRING>,
-        command: ICommand,
-        more: Vec<IContextItem>,
-    ) -> Self {
-        let title = title.into();
-        let subtitle = subtitle.into();
-        let more = more.into_iter().collect();
+pub struct CommandItemBuilder {
+    icon: Option<ComObject<IconInfo>>,
+    title: Option<HSTRING>,
+    subtitle: Option<HSTRING>,
+    command: ICommand,
+    more: Vec<IContextItem>,
+}
+
+impl CommandItemBuilder {
+    pub fn new(command: ICommand) -> Self {
+        CommandItemBuilder {
+            icon: None,
+            title: None,
+            subtitle: None,
+            command,
+            more: Vec::new(),
+        }
+    }
+
+    pub fn icon(mut self, icon: ComObject<IconInfo>) -> Self {
+        self.icon = Some(icon);
+        self
+    }
+
+    pub fn title(mut self, title: impl Into<HSTRING>) -> Self {
+        self.title = Some(title.into());
+        self
+    }
+
+    pub fn subtitle(mut self, subtitle: impl Into<HSTRING>) -> Self {
+        self.subtitle = Some(subtitle.into());
+        self
+    }
+
+    pub fn more(mut self, more: Vec<IContextItem>) -> Self {
+        self.more = more;
+        self
+    }
+
+    pub fn add_context_item(mut self, item: IContextItem) -> Self {
+        self.more.push(item);
+        self
+    }
+
+    pub fn build_unmanaged(self) -> CommandItem {
+        let title = self.title.unwrap_or_else(|| HSTRING::new());
+        let subtitle = self.subtitle.unwrap_or_else(|| HSTRING::new());
 
         CommandItem {
-            command: NotifyLock::new(command),
-            icon: NotifyLock::new(icon),
+            command: NotifyLock::new(self.command),
+            icon: NotifyLock::new(self.icon),
             title: NotifyLock::new(title),
             subtitle: NotifyLock::new(subtitle),
-            more: NotifyLock::new(more),
+            more: NotifyLock::new(self.more),
             event: Event::new(),
         }
+    }
+
+    pub fn build(self) -> ComObject<CommandItem> {
+        self.build_unmanaged().into()
     }
 }
 
@@ -115,7 +156,7 @@ impl ICommandItem_Impl for CommandItem_Impl {
             .read()?
             .as_ref()
             .map(|icon| icon.to_interface())
-            .ok_or(windows_core::Error::empty())
+            .or_or_empty()
     }
 
     fn Title(&self) -> windows_core::Result<windows_core::HSTRING> {
