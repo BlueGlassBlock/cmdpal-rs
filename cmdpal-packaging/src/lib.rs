@@ -32,6 +32,9 @@ pub fn generate_winmd() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+/// Description struct for the AppxManifest XML file.
+/// This file is necessary to install the extension as a packaged app on Windows,
+/// allowing it to be recognized by the Command Palette.
 pub struct AppxManifest {
     id: String,
     publisher_id: String,
@@ -46,6 +49,7 @@ pub struct AppxManifest {
 }
 
 impl AppxManifest {
+    /// Generates the AppxManifest XML string.
     pub fn generate_xml(&self) -> String {
         let com_classes: Vec<String> = self
             .classes
@@ -150,6 +154,7 @@ impl AppxManifest {
         )
     }
 
+    /// Writes the AppxManifest XML to the cargo artifact directory.
     pub fn write_xml(&self) -> Result<(), Box<dyn std::error::Error>> {
         let artifact_dir = get_cargo_artifact_dir()?;
         let manifest_path = artifact_dir.join("AppxManifest.xml");
@@ -158,6 +163,7 @@ impl AppxManifest {
     }
 }
 
+/// Builder for creating an AppxManifest.
 #[derive(Default)]
 pub struct AppxManifestBuilder {
     id: Option<String>,
@@ -173,61 +179,93 @@ pub struct AppxManifestBuilder {
 }
 
 impl AppxManifestBuilder {
+    /// Creates a new AppxManifestBuilder with default values.
     pub fn new() -> Self {
         Self::default()
     }
 
+    /// Sets the identity name.
+    /// This is the unique identifier for the app.
+    /// See: https://learn.microsoft.com/en-us/uwp/schemas/appxpackage/uapmanifestschema/element-identity#attributes
     pub fn id(mut self, id: impl Into<String>) -> Self {
         self.id = Some(id.into());
         self
     }
 
+    /// Sets the publisher identity.
+    /// Defaults to "CN=Unknown" if not set.
+    /// See: https://learn.microsoft.com/en-us/uwp/schemas/appxpackage/uapmanifestschema/element-identity#attributes
     pub fn publisher_id(mut self, publisher_id: impl Into<String>) -> Self {
         self.publisher_id = Some(publisher_id.into());
         self
     }
 
+    /// Sets the version of the app.
+    /// The version should be in the format "x.y.z.p".
+    /// X mustn't be zero when publishing.
+    /// See: https://learn.microsoft.com/en-us/uwp/schemas/appxpackage/uapmanifestschema/element-identity#attributes
+    /// Defaults to the value of `CARGO_PKG_VERSION`, stripped of any suffixes, and with a ".0" suffix added.
+    /// For example, if `CARGO_PKG_VERSION` is "1.2.3-alpha", the version will be "1.2.3.0".
     pub fn version(mut self, version: impl Into<String>) -> Self {
         self.version = Some(version.into());
         self
     }
 
+    /// Sets the logo path.
+    /// Defaults to Assets\StoreLogo.png if not set.
     pub fn logo(mut self, logo: impl Into<String>) -> Self {
         self.logo = Some(logo.into());
         self
     }
 
+    /// Sets the display name of the app.
+    /// Defaults to the identity name if not set.
     pub fn display_name(mut self, display_name: impl Into<String>) -> Self {
         self.display_name = Some(display_name.into());
         self
     }
 
+    /// Sets the publisher display name.
+    /// Defaults to "Unknown" if not set.
     pub fn publisher_display_name(mut self, publisher_display_name: impl Into<String>) -> Self {
         self.publisher_display_name = Some(publisher_display_name.into());
         self
     }
 
+    /// Sets the description of the app.
     pub fn description(mut self, description: impl Into<String>) -> Self {
         self.description = Some(description.into());
         self
     }
 
+    /// Sets the executable path.
+    /// `infer_executable` will be used if not set which defaults to `CARGO_BIN_NAME.exe`, however it's very unusable.
+    /// Normally should be `$YOUR_CRATE_NAME.exe`.
     pub fn executable(mut self, executable: impl Into<String>) -> Self {
         self.executable = Some(executable.into());
         self
     }
 
+    /// Sets the arguments for the executable when executing.
+    /// Defaults to `-RegisterAsComServer` if not set.
+    /// This argument is used to register the COM server for the extension.
     pub fn arguments(mut self, arguments: impl Into<String>) -> Self {
         self.arguments = Some(arguments.into());
         self
     }
 
+    /// Adds a extension class with a string class GUID.
+    /// The display name is optional and will default to the display name of the app if not provided.
+    /// It's recommended to provide a display name when registering multiple extension classes.
     pub fn class(mut self, class_id: impl Into<String>, display_name: Option<&str>) -> Self {
         let display_name = display_name.map(|d| d.into());
         self.classes.push((class_id.into(), display_name));
         self
     }
 
+    /// Adds a extension class with a u128 class GUID.
+    /// The display name is optional and will default to the display name of the app if not provided.
+    /// It's recommended to provide a display name when registering multiple extension classes.
     pub fn class_u128(self, class_id: u128, display_name: Option<&str>) -> Self {
         let class_id = format!(
             "{:08x}-{:04x}-{:04x}-{:04x}-{:012x}",
@@ -263,6 +301,7 @@ impl AppxManifestBuilder {
             + ".0" // Convert x.x.x  to x.x.x.0
     }
 
+    /// Builds the AppxManifest with the provided values.
     pub fn build(self) -> AppxManifest {
         let id = self.id.expect("id is required");
         let publisher_id = self.publisher_id.unwrap_or_else(|| {
