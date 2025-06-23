@@ -1,6 +1,6 @@
 use crate::bindings::*;
 use crate::icon::IconInfo;
-use crate::utils::{OkOrEmpty, map_array};
+use crate::utils::{ComBuilder, OkOrEmpty, map_array};
 use windows::Foundation::{IClosable, IClosable_Impl, TypedEventHandler};
 use windows::core::{ComObject, implement};
 use windows_core::{Event, HSTRING, IInspectable};
@@ -84,9 +84,11 @@ impl CommandProviderBuilder {
         self.fallbacks.push(item);
         self
     }
+}
 
-    pub fn build_unmanaged(self) -> windows_core::Result<CommandProvider> {
-        Ok(CommandProvider {
+impl ComBuilder<CommandProvider> for CommandProviderBuilder {
+    fn build_unmanaged(self) -> CommandProvider {
+        CommandProvider {
             id: self.id,
             display_name: self.display_name,
             icon: self.icon,
@@ -95,12 +97,7 @@ impl CommandProviderBuilder {
             top_level: self.top_level,
             fallbacks: self.fallbacks,
             event: Event::new(),
-        })
-    }
-
-    pub fn build(self) -> windows_core::Result<ComObject<CommandProvider>> {
-        let provider = self.build_unmanaged()?;
-        Ok(provider.into())
+        }
     }
 }
 
@@ -120,11 +117,14 @@ impl ICommandProvider_Impl for CommandProvider_Impl {
     }
 
     fn Icon(&self) -> windows_core::Result<crate::bindings::IIconInfo> {
-        self.icon.clone().map(|icon| icon.to_interface()).or_or_empty()
+        self.icon
+            .clone()
+            .map(|icon| icon.to_interface())
+            .ok_or_empty()
     }
 
     fn Settings(&self) -> windows_core::Result<ICommandSettings> {
-        self.settings.clone().or_or_empty()
+        self.settings.clone().ok_or_empty()
     }
 
     fn Frozen(&self) -> windows_core::Result<bool> {

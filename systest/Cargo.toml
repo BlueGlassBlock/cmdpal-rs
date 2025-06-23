@@ -27,3 +27,5 @@ windows-core = "0.61.0"
 windows-future = "0.2.0"
 cmdpal = { path = ".." }
 
+[build-dependencies]
+cmdpal-packaging = { path = "../cmdpal-packaging" }

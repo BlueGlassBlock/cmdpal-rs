@@ -71,12 +71,20 @@ impl From<Option<Color>> for OptionalColor {
 
 pub trait OkOrEmpty {
     type Target;
-    fn or_or_empty(self) -> windows_core::Result<Self::Target>;
+    fn ok_or_empty(self) -> windows_core::Result<Self::Target>;
 }
 
 impl<T> OkOrEmpty for Option<T> {
     type Target = T;
-    fn or_or_empty(self) -> windows_core::Result<Self::Target> {
+    fn ok_or_empty(self) -> windows_core::Result<Self::Target> {
         self.ok_or(windows_core::Error::empty())
+    }
+}
+
+pub trait ComBuilder<T: windows::core::ComObjectInner>
+where Self: Sized {
+    fn build_unmanaged(self) -> T;
+    fn build(self) -> windows::core::ComObject<T> {
+        self.build_unmanaged().into()
     }
 }

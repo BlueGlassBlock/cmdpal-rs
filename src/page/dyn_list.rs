@@ -1,31 +1,29 @@
 use crate::bindings::*;
-use windows::core::{implement, ComObject, Result, HSTRING};
+use windows::core::{ComObject, HSTRING, Result, implement};
 
 use super::list::ListPage;
 
 pub type SearchTextUpdateFn = Box<dyn Fn(&DynamicListPage_Impl, HSTRING, HSTRING) -> Result<()>>;
 
-#[implement(IDynamicListPage, IListPage, IPage, INotifyItemsChanged, INotifyPropChanged, ICommand)]
+#[implement(
+    IDynamicListPage,
+    IListPage,
+    IPage,
+    INotifyItemsChanged,
+    INotifyPropChanged,
+    ICommand
+)]
 pub struct DynamicListPage {
     pub base: ComObject<ListPage>,
     update_fn: SearchTextUpdateFn,
 }
 
 impl DynamicListPage {
-    pub fn new_unmanaged(
-        base: ComObject<ListPage>,
-        update_fn: SearchTextUpdateFn,
-    ) -> Self {
-        Self {
-            base,
-            update_fn,
-        }
+    pub fn new_unmanaged(base: ComObject<ListPage>, update_fn: SearchTextUpdateFn) -> Self {
+        Self { base, update_fn }
     }
 
-    pub fn new(
-        base: ComObject<ListPage>,
-        update_fn: SearchTextUpdateFn,
-    ) -> ComObject<Self> {
+    pub fn new(base: ComObject<ListPage>, update_fn: SearchTextUpdateFn) -> ComObject<Self> {
         Self::new_unmanaged(base, update_fn).into()
     }
 }
@@ -33,10 +31,10 @@ impl DynamicListPage {
 impl IDynamicListPage_Impl for DynamicListPage_Impl {
     fn SetSearchText(&self, value: &windows_core::HSTRING) -> windows_core::Result<()> {
         let old = self.base.search_text()?.clone();
+        let mut guard = self.base.search_text_mut_no_notify()?;
+        *guard = value.clone();
         let new = value.clone();
         (self.update_fn)(self, old, new)?;
-        let mut guard = self.base.search_text_mut()?;
-        *guard = value.clone();
         Ok(())
     }
 }
@@ -70,4 +68,3 @@ impl ICommand_Impl for DynamicListPage_Impl {
         body_struct(< >, ComObject<ListPage>, base)
     }
 }
-

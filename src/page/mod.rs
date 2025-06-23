@@ -2,7 +2,7 @@ pub mod content;
 pub mod dyn_list;
 pub mod list;
 
-use crate::bindings::*;
+use crate::{bindings::*, utils::ComBuilder};
 use crate::cmd::BaseCommand;
 use crate::notify::*;
 use windows::core::{ComObject, implement};
@@ -52,18 +52,16 @@ impl BasePageBuilder {
         self.command = command;
         self
     }
+}
 
-    pub fn build_unmanaged(self) -> BasePage {
+impl ComBuilder<BasePage> for BasePageBuilder {
+    fn build_unmanaged(self) -> BasePage {
         BasePage {
             title: NotifyLock::new(self.title),
             loading: NotifyLock::new(self.loading),
             accent_color: NotifyLock::new(self.accent_color),
             command: self.command,
         }
-    }
-
-    pub fn build(self) -> ComObject<BasePage> {
-        self.build_unmanaged().into()
     }
 }
 

@@ -1,7 +1,7 @@
 use crate::bindings::*;
 use crate::details::Details;
 use crate::notify::*;
-use crate::utils::{OkOrEmpty, map_array};
+use crate::utils::{map_array, ComBuilder, OkOrEmpty};
 use windows::Foundation::TypedEventHandler;
 use windows::core::{ComObject, Event, IInspectable, IUnknownImpl as _, Result, implement};
 
@@ -55,8 +55,10 @@ impl ContentPageBuilder {
         self.details = Some(details);
         self
     }
+}
 
-    pub fn build_unmanaged(self) -> ContentPage {
+impl ComBuilder<ContentPage> for ContentPageBuilder {
+    fn build_unmanaged(self) -> ContentPage {
         ContentPage {
             base: self.base,
             commands: NotifyLock::new(self.commands),
@@ -64,11 +66,6 @@ impl ContentPageBuilder {
             details: NotifyLock::new(self.details),
             item_event: Event::new(),
         }
-    }
-
-    pub fn build(self) -> ComObject<ContentPage> {
-        let obj = self.build_unmanaged();
-        ComObject::new(obj)
     }
 }
 
@@ -128,7 +125,7 @@ impl IContentPage_Impl for ContentPage_Impl {
             .read()?
             .clone()
             .map(|x| x.to_interface())
-            .or_or_empty()
+            .ok_or_empty()
     }
 }
 

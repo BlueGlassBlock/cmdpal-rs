@@ -1,14 +1,15 @@
 use crate::bindings::*;
-use windows::Storage::Streams::{IBuffer, IRandomAccessStream, InMemoryRandomAccessStream, RandomAccessStreamReference};
-use windows::core::HSTRING;
-use windows::core::implement;
 use crate::utils::{FrozenBuffer, OkOrEmpty};
+use windows::Storage::Streams::{
+    IBuffer, IRandomAccessStream, InMemoryRandomAccessStream, RandomAccessStreamReference,
+};
+use windows::core::{AgileReference, HSTRING, implement};
 
 #[implement(IIconData)]
 #[derive(Debug, Clone)]
 pub struct IconData {
     icon: HSTRING,
-    data: Option<IRandomAccessStream>,
+    data: Option<AgileReference<IRandomAccessStream>>,
 }
 
 impl IIconData_Impl for IconData_Impl {
@@ -19,8 +20,8 @@ impl IIconData_Impl for IconData_Impl {
     fn Data(
         &self,
     ) -> windows_core::Result<windows::Storage::Streams::IRandomAccessStreamReference> {
-        let stream = self.data.as_ref().or_or_empty()?;
-        RandomAccessStreamReference::CreateFromStream(stream).map(Into::into)
+        let stream = self.data.as_ref().ok_or_empty()?;
+        RandomAccessStreamReference::CreateFromStream(&stream.resolve()?).map(Into::into)
     }
 }
 
@@ -60,8 +61,7 @@ impl From<String> for IconData {
     }
 }
 
-impl TryFrom<Vec<u8>> for IconData
-{
+impl TryFrom<Vec<u8>> for IconData {
     type Error = windows::core::Error;
     fn try_from(value: Vec<u8>) -> Result<Self, Self::Error> {
         let buf: IBuffer = FrozenBuffer::from(value).into();
@@ -70,7 +70,7 @@ impl TryFrom<Vec<u8>> for IconData
         op.get()?;
         Ok(IconData {
             icon: HSTRING::from(""),
-            data: Some(stream.into()),
+            data: Some(AgileReference::new(&stream.into())?),
         })
     }
 }

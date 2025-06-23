@@ -1,19 +1,20 @@
+use crate::ctx_item::ContextItem;
 use crate::icon::IconInfo;
 use crate::notify::*;
-use crate::utils::OkOrEmpty;
+use crate::utils::{ComBuilder, OkOrEmpty};
 use crate::{bindings::*, utils::map_array};
 use windows::Foundation::TypedEventHandler;
 use windows::core::{
-    ComObject, Event, HSTRING, IInspectable, IUnknownImpl as _, implement,
+    AgileReference, ComObject, Event, HSTRING, IInspectable, IUnknownImpl as _, implement,
 };
 
 #[implement(ICommandItem, INotifyPropChanged)]
 pub struct CommandItem {
-    command: NotifyLock<ICommand>,
+    command: NotifyLock<AgileReference<ICommand>>,
     icon: NotifyLock<Option<ComObject<IconInfo>>>,
     title: NotifyLock<HSTRING>,
     subtitle: NotifyLock<HSTRING>,
-    more: NotifyLock<Vec<IContextItem>>,
+    more: NotifyLock<Vec<ContextItem>>,
     event: Event<TypedEventHandler<IInspectable, IPropChangedEventArgs>>,
 }
 
@@ -21,12 +22,12 @@ pub struct CommandItemBuilder {
     icon: Option<ComObject<IconInfo>>,
     title: Option<HSTRING>,
     subtitle: Option<HSTRING>,
-    command: ICommand,
-    more: Vec<IContextItem>,
+    command: AgileReference<ICommand>,
+    more: Vec<ContextItem>,
 }
 
 impl CommandItemBuilder {
-    pub fn new(command: ICommand) -> Self {
+    pub fn new(command: AgileReference<ICommand>) -> Self {
         CommandItemBuilder {
             icon: None,
             title: None,
@@ -34,6 +35,11 @@ impl CommandItemBuilder {
             command,
             more: Vec::new(),
         }
+    }
+
+    pub fn try_new(command: ICommand) -> windows::core::Result<Self> {
+        let agile_command = AgileReference::new(&command)?;
+        Ok(Self::new(agile_command))
     }
 
     pub fn icon(mut self, icon: ComObject<IconInfo>) -> Self {
@@ -51,17 +57,19 @@ impl CommandItemBuilder {
         self
     }
 
-    pub fn more(mut self, more: Vec<IContextItem>) -> Self {
+    pub fn more(mut self, more: Vec<ContextItem>) -> Self {
         self.more = more;
         self
     }
 
-    pub fn add_context_item(mut self, item: IContextItem) -> Self {
+    pub fn add_context_item(mut self, item: ContextItem) -> Self {
         self.more.push(item);
         self
     }
+}
 
-    pub fn build_unmanaged(self) -> CommandItem {
+impl ComBuilder<CommandItem> for CommandItemBuilder {
+    fn build_unmanaged(self) -> CommandItem {
         let title = self.title.unwrap_or_else(|| HSTRING::new());
         let subtitle = self.subtitle.unwrap_or_else(|| HSTRING::new());
 
@@ -73,10 +81,6 @@ impl CommandItemBuilder {
             more: NotifyLock::new(self.more),
             event: Event::new(),
         }
-    }
-
-    pub fn build(self) -> ComObject<CommandItem> {
-        self.build_unmanaged().into()
     }
 }
 
@@ -91,13 +95,15 @@ impl CommandItem_Impl {
         self.event.call(|handler| handler.Invoke(&sender, &arg));
     }
 
-    pub fn command(&self) -> windows_core::Result<NotifyLockReadGuard<'_, ICommand>> {
+    pub fn command(
+        &self,
+    ) -> windows_core::Result<NotifyLockReadGuard<'_, AgileReference<ICommand>>> {
         self.command.read()
     }
 
     pub fn command_mut(
         &self,
-    ) -> windows_core::Result<NotifyLockWriteGuard<'_, ICommand, impl Fn()>> {
+    ) -> windows_core::Result<NotifyLockWriteGuard<'_, AgileReference<ICommand>, impl Fn()>> {
         self.command
             .write(|| self.emit_self_prop_changed("Command"))
     }
@@ -134,13 +140,13 @@ impl CommandItem_Impl {
             .write(|| self.emit_self_prop_changed("Subtitle"))
     }
 
-    pub fn more(&self) -> windows_core::Result<NotifyLockReadGuard<'_, Vec<IContextItem>>> {
+    pub fn more(&self) -> windows_core::Result<NotifyLockReadGuard<'_, Vec<ContextItem>>> {
         self.more.read()
     }
 
     pub fn more_mut(
         &self,
-    ) -> windows_core::Result<NotifyLockWriteGuard<'_, Vec<IContextItem>, impl Fn()>> {
+    ) -> windows_core::Result<NotifyLockWriteGuard<'_, Vec<ContextItem>, impl Fn()>> {
         self.more
             .write(|| self.emit_self_prop_changed("MoreCommands"))
     }
@@ -148,7 +154,7 @@ impl CommandItem_Impl {
 
 impl ICommandItem_Impl for CommandItem_Impl {
     fn Command(&self) -> windows_core::Result<ICommand> {
-        Ok(self.command.read()?.clone())
+        self.command.read()?.resolve()
     }
 
     fn Icon(&self) -> windows_core::Result<IIconInfo> {
@@ -156,7 +162,7 @@ impl ICommandItem_Impl for CommandItem_Impl {
             .read()?
             .as_ref()
             .map(|icon| icon.to_interface())
-            .or_or_empty()
+            .ok_or_empty()
     }
 
     fn Title(&self) -> windows_core::Result<windows_core::HSTRING> {
@@ -169,7 +175,12 @@ impl ICommandItem_Impl for CommandItem_Impl {
 
     fn MoreCommands(&self) -> windows_core::Result<windows_core::Array<IContextItem>> {
         let more = self.more.read()?;
-        Ok(map_array(&more, |x| x.clone().into()))
+        Ok(map_array(&more, |x| {
+            Some(match x {
+                ContextItem::Separator(item) => item.to_interface(),
+                ContextItem::Command(item) => item.to_interface(),
+            })
+        }))
     }
 }
 

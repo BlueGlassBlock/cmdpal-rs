@@ -1,10 +1,16 @@
 use crate::cmd_item::CommandItem;
 use crate::utils::OkOrEmpty;
-use crate::{bindings::*, notify::*};
+use crate::{bindings::*, notify::*, ComBuilder};
 use windows::core::{ComObject, IInspectable, IUnknownImpl as _, Result, implement};
 
 #[implement(ISeparatorContextItem, IContextItem)]
 pub struct SeparatorContextItem;
+
+impl SeparatorContextItem {
+    pub fn new() -> ComObject<Self> {
+        ComObject::new(SeparatorContextItem)
+    }
+}
 
 impl ISeparatorContextItem_Impl for SeparatorContextItem_Impl {}
 impl IContextItem_Impl for SeparatorContextItem_Impl {}
@@ -14,6 +20,42 @@ pub struct CommandContextItem {
     pub cmd_item: ComObject<CommandItem>,
     critical: NotifyLock<bool>,
     shortcut: NotifyLock<Option<KeyChord>>,
+}
+
+pub struct CommandContextItemBuilder {
+    cmd_item: ComObject<CommandItem>,
+    critical: bool,
+    shortcut: Option<KeyChord>,
+}
+
+impl CommandContextItemBuilder {
+    pub fn new(cmd_item: ComObject<CommandItem>) -> Self {
+        CommandContextItemBuilder {
+            cmd_item,
+            critical: false,
+            shortcut: None,
+        }
+    }
+
+    pub fn critical(mut self, critical: bool) -> Self {
+        self.critical = critical;
+        self
+    }
+
+    pub fn shortcut(mut self, shortcut: Option<KeyChord>) -> Self {
+        self.shortcut = shortcut;
+        self
+    }
+}
+
+impl ComBuilder<CommandContextItem> for CommandContextItemBuilder {
+    fn build_unmanaged(self) -> CommandContextItem {
+        CommandContextItem {
+            cmd_item: self.cmd_item,
+            critical: NotifyLock::new(self.critical),
+            shortcut: NotifyLock::new(self.shortcut),
+        }
+    }
 }
 
 impl CommandContextItem_Impl {
@@ -44,7 +86,7 @@ impl ICommandContextItem_Impl for CommandContextItem_Impl {
         self.critical.read().map(|x| *x)
     }
     fn RequestedShortcut(&self) -> windows_core::Result<KeyChord> {
-        self.shortcut.read()?.map(|x| x).or_or_empty()
+        self.shortcut.read()?.map(|x| x).ok_or_empty()
     }
 }
 

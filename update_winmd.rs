@@ -43,7 +43,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Size: {} bytes", nupkg.len());
     let mut archive = ZipArchive::new(std::io::Cursor::new(nupkg))?;
     let mut buf = Vec::new();
-    let mut file = std::fs::File::create("winmd/Microsoft.CommandPalette.Extensions.winmd")?;
+    let mut file = std::fs::File::create("cmdpal-packaging/src/Microsoft.CommandPalette.Extensions.winmd")?;
     archive
         .by_name("winmd/Microsoft.CommandPalette.Extensions.winmd")?
         .read_to_end(&mut buf)?;
@@ -53,7 +53,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     windows_bindgen::bindgen(
         [
             "--in",
-            "winmd/Microsoft.CommandPalette.Extensions.winmd",
+            "cmdpal-packaging/src/Microsoft.CommandPalette.Extensions.winmd",
             &metadata_dir,
             "--filter",
             "Microsoft.CommandPalette.Extensions",

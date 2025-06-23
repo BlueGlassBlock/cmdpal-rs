@@ -4,7 +4,7 @@ use crate::bindings::*;
 pub use crate::cmd_result::CommandResult;
 use crate::icon::IconInfo;
 use crate::notify::*;
-use crate::utils::OkOrEmpty;
+use crate::utils::{ComBuilder, OkOrEmpty};
 use windows::Foundation::TypedEventHandler;
 use windows::core::{ComObject, Event, HSTRING, IInspectable, IUnknownImpl as _, implement};
 
@@ -45,8 +45,10 @@ impl BaseCommandBuilder {
         self.icon = Some(icon);
         self
     }
+}
 
-    pub fn build_unmanaged(self) -> BaseCommand {
+impl ComBuilder<BaseCommand> for BaseCommandBuilder {
+    fn build_unmanaged(self) -> BaseCommand {
         BaseCommand {
             name: NotifyLock::new(self.name),
             id: NotifyLock::new(self.id),
@@ -54,10 +56,11 @@ impl BaseCommandBuilder {
             event: windows_core::Event::new(),
         }
     }
+}
 
-    pub fn build(self) -> ComObject<BaseCommand> {
-        let obj = self.build_unmanaged();
-        ComObject::new(obj)
+impl Default for BaseCommandBuilder {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -75,7 +78,7 @@ impl ICommand_Impl for BaseCommand_Impl {
             .read()?
             .as_ref()
             .map(|icon| icon.to_interface())
-            .or_or_empty()
+            .ok_or_empty()
     }
 }
 

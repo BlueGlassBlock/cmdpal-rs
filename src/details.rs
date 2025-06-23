@@ -1,8 +1,8 @@
-use crate::bindings::*;
 use crate::icon::IconInfo;
 use crate::utils::map_array;
+use crate::{bindings::*, utils::ComBuilder};
 use windows::core::{ComObject, Result, implement};
-use windows_core::HSTRING;
+use windows_core::{AgileReference, HSTRING};
 
 #[implement(ITag)]
 pub struct Tag {
@@ -56,8 +56,10 @@ impl TagBuilder {
         self.tooltip = Some(tooltip.into());
         self
     }
+}
 
-    pub fn build_unmanaged(self) -> Tag {
+impl ComBuilder<Tag> for TagBuilder {
+    fn build_unmanaged(self) -> Tag {
         Tag {
             icon: self.icon,
             text: self.text.unwrap_or_else(|| HSTRING::new()),
@@ -65,10 +67,6 @@ impl TagBuilder {
             background: self.background,
             tooltip: self.tooltip.unwrap_or_else(|| HSTRING::new()),
         }
-    }
-
-    pub fn build(self) -> ComObject<Tag> {
-        self.build_unmanaged().into()
     }
 }
 
@@ -126,13 +124,11 @@ impl DetailsTagsBuilder {
         self.tags = tags;
         self
     }
+}
 
-    pub fn build_unmanaged(self) -> DetailsTags {
+impl ComBuilder<DetailsTags> for DetailsTagsBuilder {
+    fn build_unmanaged(self) -> DetailsTags {
         DetailsTags { tags: self.tags }
-    }
-
-    pub fn build(self) -> ComObject<DetailsTags> {
-        self.build_unmanaged().into()
     }
 }
 
@@ -163,10 +159,7 @@ pub struct DetailsLinkBuilder {
 
 impl DetailsLinkBuilder {
     pub fn new(link: windows::Foundation::Uri) -> Self {
-        DetailsLinkBuilder {
-            text: None,
-            link,
-        }
+        DetailsLinkBuilder { text: None, link }
     }
 
     pub fn text(mut self, text: impl Into<HSTRING>) -> Self {
@@ -178,16 +171,14 @@ impl DetailsLinkBuilder {
         self.link = link;
         self
     }
+}
 
-    pub fn build_unmanaged(self) -> DetailsLink {
+impl ComBuilder<DetailsLink> for DetailsLinkBuilder {
+    fn build_unmanaged(self) -> DetailsLink {
         DetailsLink {
             text: self.text.unwrap_or_else(|| HSTRING::new()),
             link: self.link,
         }
-    }
-
-    pub fn build(self) -> ComObject<DetailsLink> {
-        self.build_unmanaged().into()
     }
 }
 
@@ -205,15 +196,24 @@ impl IDetailsLink_Impl for DetailsLink_Impl {
 
 #[implement(IDetailsCommand, IDetailsData)]
 pub struct DetailsCommand {
-    command: ICommand,
+    command: AgileReference<ICommand>,
 }
 
 impl DetailsCommand {
-    pub fn new_unmanaged(command: ICommand) -> Self {
+    pub fn try_new_unmanaged(command: ICommand) -> Result<Self> {
+        let command = AgileReference::new(&command)?;
+        Ok(DetailsCommand { command })
+    }
+
+    pub fn try_new(command: ICommand) -> Result<ComObject<Self>> {
+        Self::try_new_unmanaged(command).map(Into::into)
+    }
+
+    pub fn new_unmanaged(command: AgileReference<ICommand>) -> Self {
         DetailsCommand { command }
     }
 
-    pub fn new(command: ICommand) -> ComObject<Self> {
+    pub fn new(command: AgileReference<ICommand>) -> ComObject<Self> {
         Self::new_unmanaged(command).into()
     }
 }
@@ -222,7 +222,7 @@ impl IDetailsData_Impl for DetailsCommand_Impl {}
 
 impl IDetailsCommand_Impl for DetailsCommand_Impl {
     fn Command(&self) -> Result<ICommand> {
-        Ok(self.command.clone())
+        self.command.resolve()
     }
 }
 
@@ -335,18 +335,16 @@ impl DetailsBuilder {
         self.metadata.push(element);
         self
     }
+}
 
-    pub fn build_unmanaged(self) -> Details {
+impl ComBuilder<Details> for DetailsBuilder {
+    fn build_unmanaged(self) -> Details {
         Details {
             hero_image: self.hero_image,
             title: self.title.unwrap_or_else(|| HSTRING::new()),
             body: self.body.unwrap_or_else(|| HSTRING::new()),
             metadata: self.metadata,
         }
-    }
-
-    pub fn build(self) -> ComObject<Details> {
-        self.build_unmanaged().into()
     }
 }
 

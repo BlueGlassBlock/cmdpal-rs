@@ -1,3 +1,8 @@
+pub mod no_op;
+pub mod open_url;
+pub mod reveal_file;
+pub mod copy_text;
+
 use crate::bindings::*;
 use windows::core::implement;
 use windows_core::ComObject;

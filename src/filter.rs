@@ -1,5 +1,6 @@
 use crate::icon::IconInfo;
 use crate::utils::map_array;
+use crate::ComBuilder;
 use crate::{bindings::*, utils::OkOrEmpty};
 use std::sync::RwLock;
 use windows::{
@@ -23,7 +24,7 @@ pub struct FilterItem {
 
 impl IFilter_Impl for FilterItem_Impl {
     fn Icon(&self) -> windows_core::Result<IIconInfo> {
-        self.icon.as_ref().map(|icon| icon.to_interface()).or_or_empty()
+        self.icon.as_ref().map(|icon| icon.to_interface()).ok_or_empty()
     }
 
     fn Id(&self) -> windows_core::Result<windows_core::HSTRING> {
@@ -56,6 +57,42 @@ pub struct Filters {
     index: RwLock<usize>,
 }
 
+pub struct FiltersBuilder {
+    filters: Vec<Filter>
+}
+
+impl FiltersBuilder {
+    pub fn new() -> Self {
+        Self {
+            filters: Vec::new(),
+        }
+    }
+
+    pub fn add(mut self, item: Filter) -> Self {
+        self.filters.push(item);
+        self
+    }
+
+    pub fn add_item(mut self, item: ComObject<FilterItem>) -> Self {
+        self.filters.push(Filter::Item(item));
+        self
+    }
+
+    pub fn add_separator(mut self) -> Self {
+        self.filters.push(Filter::Separator(ComObject::new(SeparatorFilterItem)));
+        self
+    }
+}
+
+impl ComBuilder<Filters> for FiltersBuilder {
+    fn build_unmanaged(self) -> Filters {
+        Filters {
+            filters: self.filters,
+            index: RwLock::new(0),
+        }
+    }
+}
+
 impl IFilters_Impl for Filters_Impl {
     fn CurrentFilterId(&self) -> windows_core::Result<windows_core::HSTRING> {
         let filter = self
@@ -66,7 +103,7 @@ impl IFilters_Impl for Filters_Impl {
                     .read()
                     .map_err(|_| Error::from(ERROR_LOCK_VIOLATION))?,
             )
-            .or_or_empty()?;
+            .ok_or_empty()?;
         match filter {
             Filter::Separator(_) => Err(Error::empty()),
             Filter::Item(item) => item.Id(),
@@ -80,6 +117,7 @@ impl IFilters_Impl for Filters_Impl {
     }
 
     fn SetCurrentFilterId(&self, value: &windows_core::HSTRING) -> windows_core::Result<()> {
+        // TODO: inform user with a function that the filter is changed, so that they can change list item accordingly
         for (i, filter) in self.filters.iter().enumerate() {
             match filter {
                 Filter::Separator(_) => continue,

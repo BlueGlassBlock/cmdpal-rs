@@ -8,16 +8,16 @@ pub struct Extension {
     pub cmd_provider: ICommandProvider,
 }
 
-impl From<crate::provider::cmd::CommandProvider> for Extension {
-    fn from(value: crate::provider::cmd::CommandProvider) -> Self {
+impl From<crate::cmd_provider::CommandProvider> for Extension {
+    fn from(value: crate::cmd_provider::CommandProvider) -> Self {
         Self {
             cmd_provider: value.into(),
         }
     }
 }
 
-impl From<&crate::provider::cmd::CommandProvider_Impl> for Extension {
-    fn from(value: &crate::provider::cmd::CommandProvider_Impl) -> Self {
+impl From<&crate::cmd_provider::CommandProvider_Impl> for Extension {
+    fn from(value: &crate::cmd_provider::CommandProvider_Impl) -> Self {
         Self {
             cmd_provider: windows::core::IUnknownImpl::to_interface(value)
         }
@@ -34,7 +34,6 @@ impl From<ICommandProvider> for Extension {
 
 impl IClosable_Impl for Extension_Impl {
     fn Close(&self) -> windows_core::Result<()> {
-        tracing::info!("Extension closed");
         Ok(())
     }
 }
@@ -44,17 +43,14 @@ impl IExtension_Impl for Extension_Impl {
         &self,
         provider_type: ProviderType,
     ) -> windows_core::Result<windows_core::IInspectable> {
-        tracing::info!("GetProvider called {:?}", provider_type);
         let res = match provider_type {
             ProviderType::Commands => Ok(IInspectable::from(self.cmd_provider.clone())),
             _ => Err(E_NOTIMPL.into()),
         };
-        tracing::info!("GetProvider result: {:?}", res);
         res
     }
 
     fn Dispose(&self) -> windows_core::Result<()> {
-        tracing::info!("Extension disposed");
         Ok(())
     }
 }

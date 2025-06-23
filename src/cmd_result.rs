@@ -7,6 +7,7 @@ use windows_core::ComObject;
 // windows::core::implement doesn't support `enum` yet, so we manually write out the VTables
 
 // #[implement(ICommandResult)]
+#[derive(Debug, Clone)]
 pub enum CommandResult {
     Dismiss,
     GoHome,
@@ -45,7 +46,7 @@ impl ICommandResult_Impl for CommandResult_Impl {
     }
 }
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 #[implement(IGoToPageArgs, ICommandResultArgs)]
 pub struct GoToPageArgs {
     pub navigation_mode: NavigationMode,
@@ -93,11 +94,20 @@ impl From<NavigationMode> for crate::bindings::NavigationMode {
     }
 }
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 #[implement(IToastArgs, ICommandResultArgs)]
 pub struct ToastArgs {
     pub message: windows::core::HSTRING,
     pub result: ComObject<CommandResult>,
+}
+
+impl From<&windows::core::HSTRING> for ToastArgs {
+    fn from(value: &windows::core::HSTRING) -> Self {
+        Self {
+            message: value.clone(),
+            result: ComObject::new(CommandResult::Dismiss),
+        }
+    }
 }
 
 impl ICommandResultArgs_Impl for ToastArgs_Impl {}
@@ -111,7 +121,7 @@ impl IToastArgs_Impl for ToastArgs_Impl {
     }
 }
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 #[implement(IConfirmationArgs, ICommandResultArgs)]
 pub struct ConfirmationArgs {
     pub title: windows::core::HSTRING,

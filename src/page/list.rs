@@ -4,7 +4,7 @@ use crate::{
     details::{Details, Tag},
     filter::Filters,
     notify::*,
-    utils::{GridProperties, OkOrEmpty, map_array},
+    utils::{ComBuilder, GridProperties, OkOrEmpty, map_array},
 };
 use windows::core::{ComObject, IInspectable, IUnknownImpl as _, Result, implement};
 use windows_core::HSTRING;
@@ -63,8 +63,10 @@ impl ListItemBuilder {
         self.suggestion = Some(suggestion.into());
         self
     }
+}
 
-    pub fn build_unmanaged(self) -> ListItem {
+impl ComBuilder<ListItem> for ListItemBuilder {
+    fn build_unmanaged(self) -> ListItem {
         ListItem {
             cmd_item: self.cmd_item,
             details: NotifyLock::new(self.details),
@@ -72,10 +74,6 @@ impl ListItemBuilder {
             section: NotifyLock::new(self.section.unwrap_or_else(|| HSTRING::new())),
             suggestion: NotifyLock::new(self.suggestion.unwrap_or_else(|| HSTRING::new())),
         }
-    }
-
-    pub fn build(self) -> ComObject<ListItem> {
-        self.build_unmanaged().into()
     }
 }
 
@@ -85,7 +83,7 @@ impl IListItem_Impl for ListItem_Impl {
             .read()?
             .as_ref()
             .map(|d| d.to_interface())
-            .or_or_empty()
+            .ok_or_empty()
     }
     fn Tags(&self) -> windows_core::Result<windows_core::Array<ITag>> {
         Ok(map_array(&self.tags.read()?, |t| Some(t.to_interface())))
@@ -113,10 +111,10 @@ impl INotifyPropChanged_Impl for ListItem_Impl {
 #[implement(IListPage, IPage, ICommand, INotifyPropChanged, INotifyItemsChanged)]
 pub struct ListPage {
     pub base: ComObject<BasePage>,
-    empty_content: NotifyLock<ComObject<CommandItem>>,
-    filters: NotifyLock<ComObject<Filters>>,
+    empty_content: NotifyLock<Option<ComObject<CommandItem>>>,
+    filters: NotifyLock<Option<ComObject<Filters>>>,
     items: NotifyLock<Vec<ComObject<ListItem>>>,
-    grid_properties: NotifyLock<ComObject<GridProperties>>,
+    grid_properties: NotifyLock<Option<ComObject<GridProperties>>>,
     placeholder: NotifyLock<HSTRING>,
     search_text: NotifyLock<HSTRING>,
     show_details: NotifyLock<bool>,
@@ -125,9 +123,9 @@ pub struct ListPage {
 
 pub struct ListPageBuilder {
     base: ComObject<BasePage>,
-    empty_content: ComObject<CommandItem>,
-    filters: ComObject<Filters>,
-    grid_properties: ComObject<GridProperties>,
+    empty_content: Option<ComObject<CommandItem>>,
+    filters: Option<ComObject<Filters>>,
+    grid_properties: Option<ComObject<GridProperties>>,
     items: Vec<ComObject<ListItem>>,
     placeholder: Option<HSTRING>,
     search_text: Option<HSTRING>,
@@ -135,22 +133,27 @@ pub struct ListPageBuilder {
 }
 
 impl ListPageBuilder {
-    pub fn new(
-        base: ComObject<BasePage>,
-        empty_content: ComObject<CommandItem>,
-        filters: ComObject<Filters>,
-        grid_properties: ComObject<GridProperties>,
-    ) -> Self {
+    pub fn new(base: ComObject<BasePage>) -> Self {
         ListPageBuilder {
             base,
-            empty_content,
-            filters,
+            empty_content: None,
+            filters: None,
             items: Vec::new(),
-            grid_properties,
+            grid_properties: None,
             placeholder: None,
             search_text: None,
             show_details: None,
         }
+    }
+
+    pub fn empty_content(mut self, empty_content: ComObject<CommandItem>) -> Self {
+        self.empty_content = Some(empty_content);
+        self
+    }
+
+    pub fn filters(mut self, filters: ComObject<Filters>) -> Self {
+        self.filters = Some(filters);
+        self
     }
 
     pub fn items(mut self, items: Vec<ComObject<ListItem>>) -> Self {
@@ -160,6 +163,11 @@ impl ListPageBuilder {
 
     pub fn add_item(mut self, item: ComObject<ListItem>) -> Self {
         self.items.push(item);
+        self
+    }
+
+    pub fn grid_properties(mut self, grid_properties: ComObject<GridProperties>) -> Self {
+        self.grid_properties = Some(grid_properties);
         self
     }
 
@@ -177,8 +185,10 @@ impl ListPageBuilder {
         self.show_details = Some(show_details);
         self
     }
+}
 
-    pub fn build_unmanaged(self) -> ListPage {
+impl ComBuilder<ListPage> for ListPageBuilder {
+    fn build_unmanaged(self) -> ListPage {
         ListPage {
             base: self.base,
             empty_content: NotifyLock::new(self.empty_content),
@@ -190,10 +200,6 @@ impl ListPageBuilder {
             show_details: NotifyLock::new(self.show_details.unwrap_or(false)),
             item_event: ItemsChangedEventHandler::new(),
         }
-    }
-
-    pub fn build(self) -> ComObject<ListPage> {
-        self.build_unmanaged().into()
     }
 }
 
@@ -217,13 +223,19 @@ impl ListPage_Impl {
         })
     }
 
-    pub fn empty_content(&self) -> Result<NotifyLockReadGuard<'_, ComObject<CommandItem>>> {
+    pub(crate) fn search_text_mut_no_notify(
+        &self,
+    ) -> Result<NotifyLockWriteGuard<'_, HSTRING, impl Fn()>> {
+        self.search_text.write(|| {})
+    }
+
+    pub fn empty_content(&self) -> Result<NotifyLockReadGuard<'_, Option<ComObject<CommandItem>>>> {
         self.empty_content.read()
     }
 
     pub fn empty_content_mut(
         &self,
-    ) -> Result<NotifyLockWriteGuard<'_, ComObject<CommandItem>, impl Fn()>> {
+    ) -> Result<NotifyLockWriteGuard<'_, Option<ComObject<CommandItem>>, impl Fn()>> {
         self.empty_content.write(|| {
             self.base
                 .command
@@ -231,11 +243,13 @@ impl ListPage_Impl {
         })
     }
 
-    pub fn filters(&self) -> Result<NotifyLockReadGuard<'_, ComObject<Filters>>> {
+    pub fn filters(&self) -> Result<NotifyLockReadGuard<'_, Option<ComObject<Filters>>>> {
         self.filters.read()
     }
 
-    pub fn filters_mut(&self) -> Result<NotifyLockWriteGuard<'_, ComObject<Filters>, impl Fn()>> {
+    pub fn filters_mut(
+        &self,
+    ) -> Result<NotifyLockWriteGuard<'_, Option<ComObject<Filters>>, impl Fn()>> {
         self.filters.write(|| {
             self.base
                 .command
@@ -253,13 +267,15 @@ impl ListPage_Impl {
         self.items.write(|| self.emit_self_items_changed(-1))
     }
 
-    pub fn grid_properties(&self) -> Result<NotifyLockReadGuard<'_, ComObject<GridProperties>>> {
+    pub fn grid_properties(
+        &self,
+    ) -> Result<NotifyLockReadGuard<'_, Option<ComObject<GridProperties>>>> {
         self.grid_properties.read()
     }
 
     pub fn grid_properties_mut(
         &self,
-    ) -> Result<NotifyLockWriteGuard<'_, ComObject<GridProperties>, impl Fn()>> {
+    ) -> Result<NotifyLockWriteGuard<'_, Option<ComObject<GridProperties>>, impl Fn()>> {
         self.grid_properties.write(|| {
             self.base
                 .command
@@ -294,11 +310,19 @@ impl ListPage_Impl {
 
 impl IListPage_Impl for ListPage_Impl {
     fn EmptyContent(&self) -> windows_core::Result<ICommandItem> {
-        Ok(self.empty_content.read()?.to_interface())
+        self.empty_content
+            .read()?
+            .as_ref()
+            .map(|c| c.to_interface())
+            .ok_or(windows::core::Error::empty())
     }
 
     fn Filters(&self) -> windows_core::Result<IFilters> {
-        Ok(self.filters.read()?.to_interface())
+        self.filters
+            .read()?
+            .as_ref()
+            .map(|f| f.to_interface())
+            .ok_or(windows::core::Error::empty())
     }
 
     fn GetItems(&self) -> windows_core::Result<windows_core::Array<IListItem>> {
@@ -306,7 +330,11 @@ impl IListPage_Impl for ListPage_Impl {
     }
 
     fn GridProperties(&self) -> windows_core::Result<IGridProperties> {
-        Ok(self.grid_properties.read()?.to_interface())
+        self.grid_properties
+            .read()?
+            .as_ref()
+            .map(|g| g.to_interface())
+            .ok_or(windows::core::Error::empty())
     }
 
     fn HasMoreItems(&self) -> windows_core::Result<bool> {
