@@ -1,9 +1,9 @@
-use crate::bindings::*;
+use crate::{bindings::*, utils::assert_send_sync};
 use windows::core::{ComObject, HSTRING, Result, implement};
 
 use super::list::ListPage;
 
-pub type SearchTextUpdateFn = Box<dyn Fn(&DynamicListPage_Impl, HSTRING, HSTRING) -> Result<()>>;
+pub type SearchTextUpdateFn = Box<dyn Send + Sync + Fn(&DynamicListPage_Impl, HSTRING, HSTRING) -> Result<()>>;
 
 #[implement(
     IDynamicListPage,
@@ -68,3 +68,5 @@ impl ICommand_Impl for DynamicListPage_Impl {
         body_struct(< >, ComObject<ListPage>, base)
     }
 }
+
+const _: () = assert_send_sync::<ComObject<DynamicListPage>>();

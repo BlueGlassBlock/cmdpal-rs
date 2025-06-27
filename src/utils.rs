@@ -88,3 +88,6 @@ where Self: Sized {
         self.build_unmanaged().into()
     }
 }
+
+#[allow(dead_code, reason = "Compile check only")]
+pub(crate) const fn assert_send_sync<T: Send + Sync>() {}

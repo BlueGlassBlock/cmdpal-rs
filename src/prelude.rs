@@ -1,5 +1,5 @@
 pub use crate::{
-    ComBuilder, ExtRegistry,
+    ExtRegistry,
     bindings::StatusContext,
     cmd::{
         BaseCommand, BaseCommandBuilder, CommandResult,
@@ -27,7 +27,7 @@ pub use crate::{
         dyn_list::DynamicListPage,
         list::{ListItem, ListItemBuilder, ListPage, ListPageBuilder},
     },
-    utils::GridProperties,
+    utils::{GridProperties, ComBuilder},
 };
 
-pub use windows::core::{ComObject, GUID, HSTRING, IUnknownImpl as _, Result as WinResult, h};
+pub use windows::core::{ComObject, GUID, HSTRING, IUnknownImpl as IUnknown_Impl, Result as WinResult, Error as WinError, h};

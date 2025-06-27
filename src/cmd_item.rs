@@ -1,7 +1,7 @@
 use crate::ctx_item::ContextItem;
 use crate::icon::IconInfo;
 use crate::notify::*;
-use crate::utils::{ComBuilder, OkOrEmpty};
+use crate::utils::{assert_send_sync, ComBuilder, OkOrEmpty};
 use crate::{bindings::*, utils::map_array};
 use windows::Foundation::TypedEventHandler;
 use windows::core::{
@@ -203,3 +203,5 @@ impl INotifyPropChanged_Impl for CommandItem_Impl {
         Ok(())
     }
 }
+
+const _: () = assert_send_sync::<ComObject<CommandItem>>();

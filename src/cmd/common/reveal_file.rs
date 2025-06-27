@@ -8,7 +8,7 @@ use windows::{Win32::Foundation::ERROR_FILE_INVALID, core::ComObject};
 
 pub struct RevealFileCommandBuilder {
     base: ComObject<BaseCommand>,
-    path_fn: Box<dyn Fn() -> std::path::PathBuf>,
+    path_fn: Box<dyn Send + Sync + Fn() -> std::path::PathBuf>,
     result: CommandResult,
 }
 
@@ -28,7 +28,7 @@ impl RevealFileCommandBuilder {
         }
     }
 
-    pub fn new_dyn(path_fn: Box<dyn Fn() -> std::path::PathBuf>) -> Self {
+    pub fn new_dyn(path_fn: Box<dyn Send + Sync + Fn() -> std::path::PathBuf>) -> Self {
         Self {
             base: reveal_file_base_cmd(),
             path_fn,
@@ -51,8 +51,7 @@ impl ComBuilder<InvokableCommand> for RevealFileCommandBuilder {
         InvokableCommand {
             base: self.base,
             func: Box::new(move |_| {
-                let f = &self.path_fn;
-                let path = f()
+                let path = (self.path_fn)()
                     .canonicalize()
                     .map_err(|_| windows::core::Error::from(ERROR_FILE_INVALID))?;
                 match path.try_exists() {

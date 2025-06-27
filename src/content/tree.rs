@@ -1,8 +1,10 @@
 use super::Content;
 use crate::notify::*;
+use crate::utils::assert_send_sync;
 use crate::{bindings::*, utils::map_array};
 use windows::Foundation::TypedEventHandler;
 use windows::core::{Event, IInspectable, IUnknownImpl as _, Result, implement};
+use windows_core::ComObject;
 
 #[implement(ITreeContent, IContent, INotifyPropChanged, INotifyItemsChanged)]
 pub struct TreeContent {
@@ -98,3 +100,5 @@ impl INotifyItemsChanged_Impl for TreeContent_Impl {
         Ok(())
     }
 }
+
+const _: () = assert_send_sync::<ComObject<TreeContent>>();

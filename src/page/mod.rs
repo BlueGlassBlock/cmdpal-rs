@@ -2,6 +2,7 @@ pub mod content;
 pub mod dyn_list;
 pub mod list;
 
+use crate::utils::assert_send_sync;
 use crate::{bindings::*, utils::ComBuilder};
 use crate::cmd::BaseCommand;
 use crate::notify::*;
@@ -123,3 +124,5 @@ impl INotifyPropChanged_Impl for BasePage_Impl {
         body_struct(< >, ComObject<BaseCommand>, command)
     }
 }
+
+const _: () = assert_send_sync::<ComObject<BasePage>>();

@@ -1,5 +1,5 @@
-use cmdpal::prelude::*;
 use cmdpal::prelude::WinResult as Result;
+use cmdpal::prelude::*;
 use windows::Win32;
 
 //255c6090-dbec-4008-b865-3f08765e727b
@@ -86,28 +86,28 @@ fn com_main() -> Result<()> {
             .body("Details Body")
             .build(),
     )
-    .add_content(cmdpal::content::markdown::MarkdownContent::new(MD_CONTENT.into()).into())
-    .add_content(md_box.to_interface())
-    .add_command(
+    .try_add_content(cmdpal::content::markdown::MarkdownContent::new(MD_CONTENT.into()).into())?
+    .try_add_content(md_box.to_interface())?
+    .try_add_command(
         CommandContextItemBuilder::new(copy_sample_item)
             .build()
             .to_interface(),
-    )
-    .add_command(
+    )?
+    .try_add_command(
         CommandContextItemBuilder::new(copy_time_item)
             .build()
             .to_interface(),
-    )
-    .add_command(
+    )?
+    .try_add_command(
         CommandContextItemBuilder::new(open_nonebot_dev_item)
             .build()
             .to_interface(),
-    )
-    .add_command(
+    )?
+    .try_add_command(
         CommandContextItemBuilder::new(reveal_file_item)
             .build()
             .to_interface(),
-    )
+    )?
     .build();
     let provider = cmdpal::cmd_provider::CommandProviderBuilder::new()
         .id("BlueG.PEP")

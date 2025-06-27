@@ -9,7 +9,7 @@ use windows::core::{ComObject, HSTRING, h};
 
 pub struct CopyTextCommandBuilder {
     base: ComObject<BaseCommand>,
-    text_fn: Box<dyn Fn() -> HSTRING>,
+    text_fn: Box<dyn Send + Sync + Fn() -> HSTRING>,
     result: CommandResult,
 }
 
@@ -29,7 +29,7 @@ impl CopyTextCommandBuilder {
         }
     }
 
-    pub fn new_dyn(text_fn: Box<dyn Fn() -> HSTRING>) -> Self {
+    pub fn new_dyn(text_fn: Box<dyn Send + Sync + Fn() -> HSTRING>) -> Self {
         Self {
             base: copy_text_base_cmd(),
             text_fn,
@@ -52,13 +52,7 @@ impl ComBuilder<InvokableCommand> for CopyTextCommandBuilder {
         InvokableCommand {
             base: self.base,
             func: Box::new(move |_| {
-                println!("CopyTextCommandBuilder: copying text to clipboard");
-                let f = &self.text_fn;
-                println!(
-                    "CopyTextCommandBuilder: text to copy: {}",
-                    f().to_string_lossy()
-                );
-                clipboard_helper::set_clipboard_text(f())?;
+                clipboard_helper::set_clipboard_text((self.text_fn)())?;
                 Ok(self.result.clone())
             }),
         }

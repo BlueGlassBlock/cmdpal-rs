@@ -1,5 +1,5 @@
 use crate::icon::IconInfo;
-use crate::utils::map_array;
+use crate::utils::{assert_send_sync, map_array};
 use crate::{bindings::*, utils::ComBuilder};
 use windows::core::{ComObject, Result, implement};
 use windows_core::{AgileReference, HSTRING};
@@ -392,3 +392,6 @@ impl IDetails_Impl for Details_Impl {
         }))
     }
 }
+
+const _: () = assert_send_sync::<DetailsData>();
+const _: () = assert_send_sync::<ComObject<Details>>();

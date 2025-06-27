@@ -17,7 +17,6 @@ pub mod cmd_provider;
 pub mod settings;
 pub mod prelude;
 pub(crate) mod utils;
-pub use utils::ComBuilder;
 
 pub struct ExtRegistry {
     factories: Vec<(

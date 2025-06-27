@@ -1,7 +1,9 @@
 use crate::bindings::*;
 use crate::notify::*;
+use crate::utils::assert_send_sync;
 use windows::Foundation::TypedEventHandler;
 use windows::core::{Event, HSTRING, IInspectable, IUnknownImpl as _, implement};
+use windows_core::ComObject;
 
 #[implement(IMarkdownContent, IContent, INotifyPropChanged)]
 pub struct MarkdownContent {
@@ -21,9 +23,7 @@ impl MarkdownContent_Impl {
     fn emit_self_prop_changed(&self, prop: &str) {
         let sender: IInspectable = self.to_interface();
         let arg: IPropChangedEventArgs = PropChangedEventArgs(prop.into()).into();
-        self.event.call(|handler| {
-            handler.Invoke(&sender, &arg)
-        });
+        self.event.call(|handler| handler.Invoke(&sender, &arg));
     }
 
     pub fn body(&self) -> windows_core::Result<NotifyLockReadGuard<'_, HSTRING>> {
@@ -61,3 +61,5 @@ impl INotifyPropChanged_Impl for MarkdownContent_Impl {
         Ok(())
     }
 }
+
+const _: () = assert_send_sync::<ComObject<MarkdownContent>>();

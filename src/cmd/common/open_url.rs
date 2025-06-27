@@ -8,7 +8,7 @@ use windows::core::ComObject;
 
 pub struct OpenUrlCommandBuilder {
     base: ComObject<BaseCommand>,
-    target_fn: Box<dyn Fn() -> String>,
+    target_fn: Box<dyn Send + Sync + Fn() -> String>,
     result: CommandResult,
 }
 
@@ -28,7 +28,7 @@ impl OpenUrlCommandBuilder {
         }
     }
 
-    pub fn new_dyn(target_fn: Box<dyn Fn() -> String>) -> Self {
+    pub fn new_dyn(target_fn: Box<dyn Send + Sync + Fn() -> String>) -> Self {
         Self {
             base: open_url_base_cmd(),
             target_fn,
@@ -51,8 +51,7 @@ impl ComBuilder<InvokableCommand> for OpenUrlCommandBuilder {
         InvokableCommand {
             base: self.base,
             func: Box::new(move |_| {
-                let f = &self.target_fn;
-                shell_helper::open_in_shell(&f())?;
+                shell_helper::open_in_shell(&(self.target_fn)())?;
                 Ok(self.result.clone())
             }),
         }

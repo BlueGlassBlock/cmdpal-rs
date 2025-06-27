@@ -1,6 +1,7 @@
+//! This module currently doesn't work: https://github.com/microsoft/PowerToys/issues/38318
+
 use crate::icon::IconInfo;
-use crate::utils::map_array;
-use crate::ComBuilder;
+use crate::utils::{ComBuilder, assert_send_sync, map_array};
 use crate::{bindings::*, utils::OkOrEmpty};
 use std::sync::RwLock;
 use windows::{
@@ -17,14 +18,17 @@ impl IFilterItem_Impl for SeparatorFilterItem_Impl {}
 
 #[implement(IFilter, IFilterItem)]
 pub struct FilterItem {
-    icon: Option<ComObject<IconInfo>>,
-    id: HSTRING,
-    name: HSTRING,
+    pub icon: Option<ComObject<IconInfo>>,
+    pub id: HSTRING,
+    pub name: HSTRING,
 }
 
 impl IFilter_Impl for FilterItem_Impl {
     fn Icon(&self) -> windows_core::Result<IIconInfo> {
-        self.icon.as_ref().map(|icon| icon.to_interface()).ok_or_empty()
+        self.icon
+            .as_ref()
+            .map(|icon| icon.to_interface())
+            .ok_or_empty()
     }
 
     fn Id(&self) -> windows_core::Result<windows_core::HSTRING> {
@@ -58,7 +62,7 @@ pub struct Filters {
 }
 
 pub struct FiltersBuilder {
-    filters: Vec<Filter>
+    filters: Vec<Filter>,
 }
 
 impl FiltersBuilder {
@@ -79,7 +83,8 @@ impl FiltersBuilder {
     }
 
     pub fn add_separator(mut self) -> Self {
-        self.filters.push(Filter::Separator(ComObject::new(SeparatorFilterItem)));
+        self.filters
+            .push(Filter::Separator(ComObject::new(SeparatorFilterItem)));
         self
     }
 }
@@ -118,6 +123,7 @@ impl IFilters_Impl for Filters_Impl {
 
     fn SetCurrentFilterId(&self, value: &windows_core::HSTRING) -> windows_core::Result<()> {
         // TODO: inform user with a function that the filter is changed, so that they can change list item accordingly
+        // We will resolve and call the filter update function with ComObject<FilterItem> then.
         for (i, filter) in self.filters.iter().enumerate() {
             match filter {
                 Filter::Separator(_) => continue,
@@ -136,3 +142,6 @@ impl IFilters_Impl for Filters_Impl {
         Ok(())
     }
 }
+
+const _: () = assert_send_sync::<Filter>();
+const _: () = assert_send_sync::<ComObject<Filters>>();

@@ -1,6 +1,6 @@
 use crate::bindings::{CommandResultKind, ICommand, ICommandResult, ICommandResultArgs, ICommandResultArgs_Impl, ICommandResult_Impl, IConfirmationArgs, IConfirmationArgs_Impl, IGoToPageArgs, IGoToPageArgs_Impl, IToastArgs, IToastArgs_Impl};
 use windows::{core::{implement, Error, Result as WinResult}, Win32::Foundation::ERROR_BAD_ARGUMENTS};
-use windows_core::ComObject;
+use windows_core::{AgileReference, ComObject};
 
 
 
@@ -126,7 +126,7 @@ impl IToastArgs_Impl for ToastArgs_Impl {
 pub struct ConfirmationArgs {
     pub title: windows::core::HSTRING,
     pub description: windows::core::HSTRING,
-    pub primary_command: ICommand, // TODO: ComObject ...
+    pub primary_command: AgileReference<ICommand>,
     pub is_primary_command_critical: bool,
 }
 
@@ -140,7 +140,7 @@ impl IConfirmationArgs_Impl for ConfirmationArgs_Impl {
         Ok(self.description.clone())
     }
     fn PrimaryCommand(&self) -> windows_core::Result<crate::bindings::ICommand> {
-        Ok(self.primary_command.clone())
+        self.primary_command.resolve()
     }
     fn IsPrimaryCommandCritical(&self) -> windows_core::Result<bool> {
         Ok(self.is_primary_command_critical)

@@ -1,11 +1,12 @@
 use crate::bindings::*;
 use crate::cmd::CommandResult;
 use crate::notify::*;
+use crate::utils::assert_send_sync;
 use windows::Foundation::TypedEventHandler;
 use windows::core::{ComObject, Event, HSTRING, IInspectable, implement, IUnknownImpl as _};
 
 pub type SubmitFn = Box<
-    dyn Fn(&FormContent_Impl, &HSTRING, &HSTRING) -> windows_core::Result<ComObject<CommandResult>>,
+    dyn Send + Sync + Fn(&FormContent_Impl, &HSTRING, &HSTRING) -> windows_core::Result<ComObject<CommandResult>>,
 >;
 
 #[implement(IFormContent, IContent, INotifyPropChanged)]
@@ -91,3 +92,5 @@ impl INotifyPropChanged_Impl for FormContent_Impl {
         Ok(())
     }
 }
+
+const _: () = assert_send_sync::<ComObject<FormContent>>();

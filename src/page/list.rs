@@ -4,7 +4,7 @@ use crate::{
     details::{Details, Tag},
     filter::Filters,
     notify::*,
-    utils::{ComBuilder, GridProperties, OkOrEmpty, map_array},
+    utils::{assert_send_sync, map_array, ComBuilder, GridProperties, OkOrEmpty},
 };
 use windows::core::{ComObject, IInspectable, IUnknownImpl as _, Result, implement};
 use windows_core::HSTRING;
@@ -117,6 +117,8 @@ pub struct ListPage {
     grid_properties: NotifyLock<Option<ComObject<GridProperties>>>,
     placeholder: NotifyLock<HSTRING>,
     search_text: NotifyLock<HSTRING>,
+    has_more: NotifyLock<bool>,
+    more_fn: Box<dyn Send + Sync + Fn(&ListPage_Impl) -> Result<()>>,
     show_details: NotifyLock<bool>,
     item_event: ItemsChangedEventHandler,
 }
@@ -129,6 +131,7 @@ pub struct ListPageBuilder {
     items: Vec<ComObject<ListItem>>,
     placeholder: Option<HSTRING>,
     search_text: Option<HSTRING>,
+    more_fn: Option<Box<dyn Send + Sync + Fn(&ListPage_Impl) -> Result<()>>>,
     show_details: Option<bool>,
 }
 
@@ -142,6 +145,7 @@ impl ListPageBuilder {
             grid_properties: None,
             placeholder: None,
             search_text: None,
+            more_fn: None,
             show_details: None,
         }
     }
@@ -197,6 +201,14 @@ impl ComBuilder<ListPage> for ListPageBuilder {
             grid_properties: NotifyLock::new(self.grid_properties),
             placeholder: NotifyLock::new(self.placeholder.unwrap_or_else(|| HSTRING::new())),
             search_text: NotifyLock::new(self.search_text.unwrap_or_else(|| HSTRING::new())),
+            has_more: NotifyLock::new(self.more_fn.is_some()),
+            more_fn: self.more_fn.unwrap_or_else(|| {
+                Box::new(|page| {
+                    page.has_more_mut().map(|mut guard| {
+                        *guard = false; 
+                    })
+                })
+            }),
             show_details: NotifyLock::new(self.show_details.unwrap_or(false)),
             item_event: ItemsChangedEventHandler::new(),
         }
@@ -283,6 +295,18 @@ impl ListPage_Impl {
         })
     }
 
+    pub fn has_more(&self) -> Result<NotifyLockReadGuard<'_, bool>> {
+        self.has_more.read()
+    }
+
+    pub fn has_more_mut(&self) -> Result<NotifyLockWriteGuard<'_, bool, impl Fn()>> {
+        self.has_more.write(|| {
+            self.base
+                .command
+                .emit_prop_changed(self.to_interface(), "HasMoreItems")
+        })
+    }
+
     pub fn placeholder(&self) -> Result<NotifyLockReadGuard<'_, HSTRING>> {
         self.placeholder.read()
     }
@@ -338,11 +362,11 @@ impl IListPage_Impl for ListPage_Impl {
     }
 
     fn HasMoreItems(&self) -> windows_core::Result<bool> {
-        Ok(false) // TODO
+        Ok(*self.has_more.read()?)
     }
 
     fn LoadMore(&self) -> windows_core::Result<()> {
-        Ok(()) // TODO
+        (self.more_fn)(self)
     }
 
     fn PlaceholderText(&self) -> windows_core::Result<windows_core::HSTRING> {
@@ -395,3 +419,5 @@ impl INotifyItemsChanged_Impl for ListPage_Impl {
         Ok(())
     }
 }
+
+const _: () = assert_send_sync::<ComObject<ListPage>>();

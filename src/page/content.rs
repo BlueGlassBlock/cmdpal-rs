@@ -1,14 +1,16 @@
 use crate::bindings::*;
 use crate::details::Details;
 use crate::notify::*;
-use crate::utils::{map_array, ComBuilder, OkOrEmpty};
+use crate::utils::{ComBuilder, OkOrEmpty, assert_send_sync, map_array};
 use windows::Foundation::TypedEventHandler;
-use windows::core::{ComObject, Event, IInspectable, IUnknownImpl as _, Result, implement};
+use windows::core::{
+    AgileReference, ComObject, Event, IInspectable, IUnknownImpl as _, Result, implement,
+};
 
 #[implement(IContentPage, IPage, ICommand, INotifyPropChanged, INotifyItemsChanged)]
 pub struct ContentPage {
-    commands: NotifyLock<Vec<IContextItem>>,
-    contents: NotifyLock<Vec<IContent>>,
+    commands: NotifyLock<Vec<AgileReference<IContextItem>>>,
+    contents: NotifyLock<Vec<AgileReference<IContent>>>,
     details: NotifyLock<Option<ComObject<Details>>>,
     pub base: ComObject<super::BasePage>,
     item_event: Event<TypedEventHandler<IInspectable, IItemsChangedEventArgs>>,
@@ -16,8 +18,8 @@ pub struct ContentPage {
 
 pub struct ContentPageBuilder {
     base: ComObject<super::BasePage>,
-    commands: Vec<IContextItem>,
-    contents: Vec<IContent>,
+    commands: Vec<AgileReference<IContextItem>>,
+    contents: Vec<AgileReference<IContent>>,
     details: Option<ComObject<Details>>,
 }
 
@@ -31,24 +33,34 @@ impl ContentPageBuilder {
         }
     }
 
-    pub fn commands(mut self, commands: Vec<IContextItem>) -> Self {
+    pub fn commands(mut self, commands: Vec<AgileReference<IContextItem>>) -> Self {
         self.commands = commands;
         self
     }
 
-    pub fn add_command(mut self, command: IContextItem) -> Self {
+    pub fn add_command(mut self, command: AgileReference<IContextItem>) -> Self {
         self.commands.push(command);
         self
     }
 
-    pub fn contents(mut self, contents: Vec<IContent>) -> Self {
+    pub fn try_add_command(mut self, command: IContextItem) -> Result<Self> {
+        self.commands.push(AgileReference::new(&command)?);
+        Ok(self)
+    }
+
+    pub fn contents(mut self, contents: Vec<AgileReference<IContent>>) -> Self {
         self.contents = contents;
         self
     }
 
-    pub fn add_content(mut self, content: IContent) -> Self {
+    pub fn add_content(mut self, content: AgileReference<IContent>) -> Self {
         self.contents.push(content);
         self
+    }
+
+    pub fn try_add_content(mut self, content: IContent) -> Result<Self> {
+        self.contents.push(AgileReference::new(&content)?);
+        Ok(self)
     }
 
     pub fn details(mut self, details: ComObject<Details>) -> Self {
@@ -80,19 +92,23 @@ impl ContentPage_Impl {
         self.emit_items_changed(self.to_interface(), total_items);
     }
 
-    pub fn commands(&self) -> Result<NotifyLockReadGuard<'_, Vec<IContextItem>>> {
+    pub fn commands(&self) -> Result<NotifyLockReadGuard<'_, Vec<AgileReference<IContextItem>>>> {
         self.commands.read()
     }
 
-    pub fn commands_mut(&self) -> Result<NotifyLockWriteGuard<'_, Vec<IContextItem>, impl Fn()>> {
+    pub fn commands_mut(
+        &self,
+    ) -> Result<NotifyLockWriteGuard<'_, Vec<AgileReference<IContextItem>>, impl Fn()>> {
         self.commands.write(|| self.emit_self_items_changed(-1))
     }
 
-    pub fn contents(&self) -> Result<NotifyLockReadGuard<'_, Vec<IContent>>> {
+    pub fn contents(&self) -> Result<NotifyLockReadGuard<'_, Vec<AgileReference<IContent>>>> {
         self.contents.read()
     }
 
-    pub fn contents_mut(&self) -> Result<NotifyLockWriteGuard<'_, Vec<IContent>, impl Fn()>> {
+    pub fn contents_mut(
+        &self,
+    ) -> Result<NotifyLockWriteGuard<'_, Vec<AgileReference<IContent>>, impl Fn()>> {
         self.contents.write(|| self.emit_self_items_changed(-1))
     }
 
@@ -113,11 +129,11 @@ impl ContentPage_Impl {
 
 impl IContentPage_Impl for ContentPage_Impl {
     fn Commands(&self) -> windows_core::Result<windows_core::Array<IContextItem>> {
-        Ok(map_array(&self.commands.read()?, |x| x.clone().into()))
+        Ok(map_array(&self.commands.read()?, |x| x.resolve().ok()))
     }
 
     fn GetContent(&self) -> windows_core::Result<windows_core::Array<IContent>> {
-        Ok(map_array(&self.contents.read()?, |x| x.clone().into()))
+        Ok(map_array(&self.contents.read()?, |x| x.resolve().ok()))
     }
 
     fn Details(&self) -> windows_core::Result<IDetails> {
@@ -166,3 +182,5 @@ impl INotifyPropChanged_Impl for ContentPage_Impl {
         body_struct(<>, ComObject<super::BasePage>, base)
     );
 }
+
+const _: () = assert_send_sync::<ComObject<ContentPage>>();

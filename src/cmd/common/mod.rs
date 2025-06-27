@@ -12,7 +12,7 @@ pub use crate::cmd_result::CommandResult;
 
 use super::BaseCommand;
 
-pub type InvokableFn = Box<dyn Fn(&IInspectable) -> windows_core::Result<CommandResult>>;
+pub type InvokableFn = Box<dyn Send + Sync + Fn(&IInspectable) -> windows_core::Result<CommandResult>>;
 
 #[implement(IInvokableCommand, ICommand, INotifyPropChanged)]
 pub struct InvokableCommand {

@@ -1,6 +1,6 @@
 use crate::cmd_item::CommandItem;
-use crate::utils::OkOrEmpty;
-use crate::{bindings::*, notify::*, ComBuilder};
+use crate::utils::{ComBuilder, OkOrEmpty, assert_send_sync};
+use crate::{bindings::*, notify::*};
 use windows::core::{ComObject, IInspectable, IUnknownImpl as _, Result, implement};
 
 #[implement(ISeparatorContextItem, IContextItem)]
@@ -117,3 +117,5 @@ impl From<&ContextItem> for IContextItem {
         }
     }
 }
+
+const _: () = assert_send_sync::<ContextItem>();
