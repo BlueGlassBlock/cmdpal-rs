@@ -3,7 +3,10 @@ pub mod open_url;
 pub mod reveal_file;
 pub mod copy_text;
 
+use std::ops::Deref;
+
 use crate::bindings::*;
+use crate::cmd::BaseCommand_Impl;
 use windows::core::implement;
 use windows_core::ComObject;
 use windows_core::IInspectable;
@@ -18,6 +21,13 @@ pub type InvokableFn = Box<dyn Send + Sync + Fn(&IInspectable) -> windows_core::
 pub struct InvokableCommand {
     pub base: ComObject<BaseCommand>,
     pub func: InvokableFn,
+}
+
+impl Deref for InvokableCommand {
+    type Target = BaseCommand_Impl;
+    fn deref(&self) -> &Self::Target {
+        &self.base
+    }
 }
 
 impl IInvokableCommand_Impl for InvokableCommand_Impl {

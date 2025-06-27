@@ -25,6 +25,9 @@ rustdoc-args = ["--cfg", "docsrs"]
 
 [dependencies]
 ambassador = "0.4"
+schemars = "1.0.2"
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"
 windows = { version = "0.61", features = [
     "Storage_Streams",
     "System",

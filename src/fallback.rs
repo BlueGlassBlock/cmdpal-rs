@@ -1,5 +1,8 @@
+use std::ops::Deref;
+
 use super::cmd_item::CommandItem;
 use crate::bindings::*;
+use crate::cmd_item::CommandItem_Impl;
 use crate::notify::*;
 use crate::utils::{ComBuilder, assert_send_sync};
 use windows::core::{ComObject, HSTRING, IUnknownImpl as _, Result, implement};
@@ -61,6 +64,13 @@ pub struct FallbackCommandItem {
     pub base: ComObject<CommandItem>,
     handler: ComObject<FallbackHandler>,
     title: NotifyLock<HSTRING>,
+}
+
+impl Deref for FallbackCommandItem {
+    type Target = CommandItem_Impl;
+    fn deref(&self) -> &Self::Target {
+        &self.base
+    }
 }
 
 impl FallbackCommandItem_Impl {

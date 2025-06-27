@@ -1,7 +1,9 @@
+use super::{BasePage, BasePage_Impl};
 use crate::bindings::*;
 use crate::details::Details;
 use crate::notify::*;
 use crate::utils::{ComBuilder, OkOrEmpty, assert_send_sync, map_array};
+use std::ops::Deref;
 use windows::Foundation::TypedEventHandler;
 use windows::core::{
     AgileReference, ComObject, Event, IInspectable, IUnknownImpl as _, Result, implement,
@@ -9,22 +11,22 @@ use windows::core::{
 
 #[implement(IContentPage, IPage, ICommand, INotifyPropChanged, INotifyItemsChanged)]
 pub struct ContentPage {
+    pub base: ComObject<BasePage>,
     commands: NotifyLock<Vec<AgileReference<IContextItem>>>,
     contents: NotifyLock<Vec<AgileReference<IContent>>>,
     details: NotifyLock<Option<ComObject<Details>>>,
-    pub base: ComObject<super::BasePage>,
     item_event: Event<TypedEventHandler<IInspectable, IItemsChangedEventArgs>>,
 }
 
 pub struct ContentPageBuilder {
-    base: ComObject<super::BasePage>,
+    base: ComObject<BasePage>,
     commands: Vec<AgileReference<IContextItem>>,
     contents: Vec<AgileReference<IContent>>,
     details: Option<ComObject<Details>>,
 }
 
 impl ContentPageBuilder {
-    pub fn new(base: ComObject<super::BasePage>) -> Self {
+    pub fn new(base: ComObject<BasePage>) -> Self {
         ContentPageBuilder {
             base,
             commands: Vec::new(),
@@ -78,6 +80,13 @@ impl ComBuilder<ContentPage> for ContentPageBuilder {
             details: NotifyLock::new(self.details),
             item_event: Event::new(),
         }
+    }
+}
+
+impl Deref for ContentPage {
+    type Target = BasePage_Impl;
+    fn deref(&self) -> &Self::Target {
+        &self.base
     }
 }
 
@@ -167,19 +176,19 @@ impl INotifyItemsChanged_Impl for ContentPage_Impl {
 
 impl IPage_Impl for ContentPage_Impl {
     ambassador_impl_IPage_Impl!(
-        body_struct(<>, ComObject<super::BasePage>, base)
+        body_struct(<>, ComObject<BasePage>, base)
     );
 }
 
 impl ICommand_Impl for ContentPage_Impl {
     ambassador_impl_ICommand_Impl!(
-        body_struct(<>, ComObject<super::BasePage>, (base.command), (base.command), (base.command))
+        body_struct(<>, ComObject<BasePage>, (base.command), (base.command), (base.command))
     );
 }
 
 impl INotifyPropChanged_Impl for ContentPage_Impl {
     ambassador_impl_INotifyPropChanged_Impl!(
-        body_struct(<>, ComObject<super::BasePage>, base)
+        body_struct(<>, ComObject<BasePage>, base)
     );
 }
 

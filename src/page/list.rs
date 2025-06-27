@@ -1,15 +1,17 @@
+use std::ops::Deref;
+
 use crate::{
     bindings::*,
     cmd_item::CommandItem,
     details::{Details, Tag},
     filter::Filters,
     notify::*,
-    utils::{assert_send_sync, map_array, ComBuilder, GridProperties, OkOrEmpty},
+    utils::{ComBuilder, GridProperties, OkOrEmpty, assert_send_sync, map_array},
 };
 use windows::core::{ComObject, IInspectable, IUnknownImpl as _, Result, implement};
 use windows_core::HSTRING;
 
-use super::BasePage;
+use super::{BasePage, BasePage_Impl};
 
 #[implement(IListItem, ICommandItem, INotifyPropChanged)]
 pub struct ListItem {
@@ -205,13 +207,21 @@ impl ComBuilder<ListPage> for ListPageBuilder {
             more_fn: self.more_fn.unwrap_or_else(|| {
                 Box::new(|page| {
                     page.has_more_mut().map(|mut guard| {
-                        *guard = false; 
+                        *guard = false;
                     })
                 })
             }),
             show_details: NotifyLock::new(self.show_details.unwrap_or(false)),
             item_event: ItemsChangedEventHandler::new(),
         }
+    }
+}
+
+impl Deref for ListPage {
+    type Target = BasePage_Impl;
+
+    fn deref(&self) -> &Self::Target {
+        &self.base
     }
 }
 

@@ -1,4 +1,6 @@
-use crate::{bindings::*, utils::assert_send_sync};
+use std::ops::Deref;
+
+use crate::{bindings::*, page::list::ListPage_Impl, utils::assert_send_sync};
 use windows::core::{ComObject, HSTRING, Result, implement};
 
 use super::list::ListPage;
@@ -16,6 +18,14 @@ pub type SearchTextUpdateFn = Box<dyn Send + Sync + Fn(&DynamicListPage_Impl, HS
 pub struct DynamicListPage {
     pub base: ComObject<ListPage>,
     update_fn: SearchTextUpdateFn,
+}
+
+impl Deref for DynamicListPage {
+    type Target = ListPage_Impl;
+
+    fn deref(&self) -> &Self::Target {
+        &self.base
+    }
 }
 
 impl DynamicListPage {
