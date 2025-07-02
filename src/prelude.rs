@@ -27,7 +27,10 @@ pub use crate::{
         dyn_list::DynamicListPage,
         list::{ListItem, ListItemBuilder, ListPage, ListPageBuilder},
     },
-    utils::{GridProperties, ComBuilder},
+    utils::{ComBuilder, GridProperties},
 };
 
-pub use windows::core::{ComObject, GUID, HSTRING, IUnknownImpl as IUnknown_Impl, Result as WinResult, Error as WinError, h};
+pub use windows::core::{
+    ComObject, Error as WinError, GUID, HSTRING, IUnknownImpl as IUnknown_Impl,
+    Result as WinResult, h,
+};

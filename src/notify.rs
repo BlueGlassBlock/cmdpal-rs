@@ -4,7 +4,7 @@ use std::ops::{Deref, DerefMut};
 use std::sync::{RwLock, RwLockWriteGuard};
 use windows::Foundation::TypedEventHandler;
 use windows::Win32::Foundation::ERROR_LOCK_VIOLATION;
-use windows::core::{Result, implement, Event, IInspectable};
+use windows::core::{Event, IInspectable, Result, implement};
 
 pub struct NotifyLock<T> {
     lock: RwLock<T>,
@@ -70,7 +70,10 @@ impl<T> NotifyLock<T> {
     {
         self.lock
             .write()
-            .map(|guard| NotifyLockWriteGuard { guard: ManuallyDrop::new(guard) , notify })
+            .map(|guard| NotifyLockWriteGuard {
+                guard: ManuallyDrop::new(guard),
+                notify,
+            })
             .map_err(|_| ERROR_LOCK_VIOLATION.into())
     }
 }
@@ -97,9 +100,9 @@ pub type ItemsChangedEventHandler = Event<TypedEventHandler<IInspectable, IItems
 #[implement(IItemsChangedEventArgs)]
 pub struct ItemsChangedEventArgs(pub i32);
 
-impl IItemsChangedEventArgs_Impl for ItemsChangedEventArgs_Impl{
+impl IItemsChangedEventArgs_Impl for ItemsChangedEventArgs_Impl {
     fn TotalItems(&self) -> windows_core::Result<i32> {
-        Ok(self.0)        
+        Ok(self.0)
     }
 }
 

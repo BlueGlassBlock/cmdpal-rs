@@ -1,3 +1,3 @@
 fn main() {
-    cmdpal_packaging::generate_winmd().unwrap();
+    cmdpal_packaging::generate_winmd().ok();
 }

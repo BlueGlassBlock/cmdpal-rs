@@ -97,11 +97,11 @@ impl ICommand {
     pub fn PropChanged<P0>(&self, handler: P0) -> windows_core::Result<i64>
     where
         P0: windows_core::Param<
-            windows::Foundation::TypedEventHandler<
-                windows_core::IInspectable,
-                IPropChangedEventArgs,
+                windows::Foundation::TypedEventHandler<
+                    windows_core::IInspectable,
+                    IPropChangedEventArgs,
+                >,
             >,
-        >,
     {
         let this = &windows_core::Interface::cast::<INotifyPropChanged>(self)?;
         unsafe {
@@ -319,11 +319,11 @@ impl ICommandContextItem {
     pub fn PropChanged<P0>(&self, handler: P0) -> windows_core::Result<i64>
     where
         P0: windows_core::Param<
-            windows::Foundation::TypedEventHandler<
-                windows_core::IInspectable,
-                IPropChangedEventArgs,
+                windows::Foundation::TypedEventHandler<
+                    windows_core::IInspectable,
+                    IPropChangedEventArgs,
+                >,
             >,
-        >,
     {
         let this = &windows_core::Interface::cast::<INotifyPropChanged>(self)?;
         unsafe {
@@ -493,11 +493,11 @@ impl ICommandItem {
     pub fn PropChanged<P0>(&self, handler: P0) -> windows_core::Result<i64>
     where
         P0: windows_core::Param<
-            windows::Foundation::TypedEventHandler<
-                windows_core::IInspectable,
-                IPropChangedEventArgs,
+                windows::Foundation::TypedEventHandler<
+                    windows_core::IInspectable,
+                    IPropChangedEventArgs,
+                >,
             >,
-        >,
     {
         let this = &windows_core::Interface::cast::<INotifyPropChanged>(self)?;
         unsafe {
@@ -800,11 +800,11 @@ impl ICommandProvider {
     pub fn ItemsChanged<P0>(&self, handler: P0) -> windows_core::Result<i64>
     where
         P0: windows_core::Param<
-            windows::Foundation::TypedEventHandler<
-                windows_core::IInspectable,
-                IItemsChangedEventArgs,
+                windows::Foundation::TypedEventHandler<
+                    windows_core::IInspectable,
+                    IItemsChangedEventArgs,
+                >,
             >,
-        >,
     {
         let this = &windows_core::Interface::cast::<INotifyItemsChanged>(self)?;
         unsafe {
@@ -1486,11 +1486,11 @@ impl IContent {
     pub fn PropChanged<P0>(&self, handler: P0) -> windows_core::Result<i64>
     where
         P0: windows_core::Param<
-            windows::Foundation::TypedEventHandler<
-                windows_core::IInspectable,
-                IPropChangedEventArgs,
+                windows::Foundation::TypedEventHandler<
+                    windows_core::IInspectable,
+                    IPropChangedEventArgs,
+                >,
             >,
-        >,
     {
         let this = &windows_core::Interface::cast::<INotifyPropChanged>(self)?;
         unsafe {
@@ -1629,11 +1629,11 @@ impl IContentPage {
     pub fn ItemsChanged<P0>(&self, handler: P0) -> windows_core::Result<i64>
     where
         P0: windows_core::Param<
-            windows::Foundation::TypedEventHandler<
-                windows_core::IInspectable,
-                IItemsChangedEventArgs,
+                windows::Foundation::TypedEventHandler<
+                    windows_core::IInspectable,
+                    IItemsChangedEventArgs,
+                >,
             >,
-        >,
     {
         let this = &windows_core::Interface::cast::<INotifyItemsChanged>(self)?;
         unsafe {
@@ -1659,11 +1659,11 @@ impl IContentPage {
     pub fn PropChanged<P0>(&self, handler: P0) -> windows_core::Result<i64>
     where
         P0: windows_core::Param<
-            windows::Foundation::TypedEventHandler<
-                windows_core::IInspectable,
-                IPropChangedEventArgs,
+                windows::Foundation::TypedEventHandler<
+                    windows_core::IInspectable,
+                    IPropChangedEventArgs,
+                >,
             >,
-        >,
     {
         let this = &windows_core::Interface::cast::<INotifyPropChanged>(self)?;
         unsafe {
@@ -2624,11 +2624,11 @@ impl IDynamicListPage {
     pub fn ItemsChanged<P0>(&self, handler: P0) -> windows_core::Result<i64>
     where
         P0: windows_core::Param<
-            windows::Foundation::TypedEventHandler<
-                windows_core::IInspectable,
-                IItemsChangedEventArgs,
+                windows::Foundation::TypedEventHandler<
+                    windows_core::IInspectable,
+                    IItemsChangedEventArgs,
+                >,
             >,
-        >,
     {
         let this = &windows_core::Interface::cast::<INotifyItemsChanged>(self)?;
         unsafe {
@@ -2654,11 +2654,11 @@ impl IDynamicListPage {
     pub fn PropChanged<P0>(&self, handler: P0) -> windows_core::Result<i64>
     where
         P0: windows_core::Param<
-            windows::Foundation::TypedEventHandler<
-                windows_core::IInspectable,
-                IPropChangedEventArgs,
+                windows::Foundation::TypedEventHandler<
+                    windows_core::IInspectable,
+                    IPropChangedEventArgs,
+                >,
             >,
-        >,
     {
         let this = &windows_core::Interface::cast::<INotifyPropChanged>(self)?;
         unsafe {
@@ -3133,11 +3133,11 @@ impl IFallbackCommandItem {
     pub fn PropChanged<P0>(&self, handler: P0) -> windows_core::Result<i64>
     where
         P0: windows_core::Param<
-            windows::Foundation::TypedEventHandler<
-                windows_core::IInspectable,
-                IPropChangedEventArgs,
+                windows::Foundation::TypedEventHandler<
+                    windows_core::IInspectable,
+                    IPropChangedEventArgs,
+                >,
             >,
-        >,
     {
         let this = &windows_core::Interface::cast::<INotifyPropChanged>(self)?;
         unsafe {
@@ -3684,11 +3684,11 @@ impl IFormContent {
     pub fn PropChanged<P0>(&self, handler: P0) -> windows_core::Result<i64>
     where
         P0: windows_core::Param<
-            windows::Foundation::TypedEventHandler<
-                windows_core::IInspectable,
-                IPropChangedEventArgs,
+                windows::Foundation::TypedEventHandler<
+                    windows_core::IInspectable,
+                    IPropChangedEventArgs,
+                >,
             >,
-        >,
     {
         let this = &windows_core::Interface::cast::<INotifyPropChanged>(self)?;
         unsafe {
@@ -4062,7 +4062,7 @@ impl windows_core::RuntimeName for IIconData {
 pub trait IIconData_Impl: windows_core::IUnknownImpl {
     fn Icon(&self) -> windows_core::Result<windows_core::HSTRING>;
     fn Data(&self)
-        -> windows_core::Result<windows::Storage::Streams::IRandomAccessStreamReference>;
+    -> windows_core::Result<windows::Storage::Streams::IRandomAccessStreamReference>;
 }
 impl IIconData_Vtbl {
     pub const fn new<Identity: IIconData_Impl, const OFFSET: isize>() -> Self {
@@ -4295,11 +4295,11 @@ impl IInvokableCommand {
     pub fn PropChanged<P0>(&self, handler: P0) -> windows_core::Result<i64>
     where
         P0: windows_core::Param<
-            windows::Foundation::TypedEventHandler<
-                windows_core::IInspectable,
-                IPropChangedEventArgs,
+                windows::Foundation::TypedEventHandler<
+                    windows_core::IInspectable,
+                    IPropChangedEventArgs,
+                >,
             >,
-        >,
     {
         let this = &windows_core::Interface::cast::<INotifyPropChanged>(self)?;
         unsafe {
@@ -4566,11 +4566,11 @@ impl IListItem {
     pub fn PropChanged<P0>(&self, handler: P0) -> windows_core::Result<i64>
     where
         P0: windows_core::Param<
-            windows::Foundation::TypedEventHandler<
-                windows_core::IInspectable,
-                IPropChangedEventArgs,
+                windows::Foundation::TypedEventHandler<
+                    windows_core::IInspectable,
+                    IPropChangedEventArgs,
+                >,
             >,
-        >,
     {
         let this = &windows_core::Interface::cast::<INotifyPropChanged>(self)?;
         unsafe {
@@ -4864,11 +4864,11 @@ impl IListPage {
     pub fn ItemsChanged<P0>(&self, handler: P0) -> windows_core::Result<i64>
     where
         P0: windows_core::Param<
-            windows::Foundation::TypedEventHandler<
-                windows_core::IInspectable,
-                IItemsChangedEventArgs,
+                windows::Foundation::TypedEventHandler<
+                    windows_core::IInspectable,
+                    IItemsChangedEventArgs,
+                >,
             >,
-        >,
     {
         let this = &windows_core::Interface::cast::<INotifyItemsChanged>(self)?;
         unsafe {
@@ -4894,11 +4894,11 @@ impl IListPage {
     pub fn PropChanged<P0>(&self, handler: P0) -> windows_core::Result<i64>
     where
         P0: windows_core::Param<
-            windows::Foundation::TypedEventHandler<
-                windows_core::IInspectable,
-                IPropChangedEventArgs,
+                windows::Foundation::TypedEventHandler<
+                    windows_core::IInspectable,
+                    IPropChangedEventArgs,
+                >,
             >,
-        >,
     {
         let this = &windows_core::Interface::cast::<INotifyPropChanged>(self)?;
         unsafe {
@@ -5305,11 +5305,11 @@ impl IMarkdownContent {
     pub fn PropChanged<P0>(&self, handler: P0) -> windows_core::Result<i64>
     where
         P0: windows_core::Param<
-            windows::Foundation::TypedEventHandler<
-                windows_core::IInspectable,
-                IPropChangedEventArgs,
+                windows::Foundation::TypedEventHandler<
+                    windows_core::IInspectable,
+                    IPropChangedEventArgs,
+                >,
             >,
-        >,
     {
         let this = &windows_core::Interface::cast::<INotifyPropChanged>(self)?;
         unsafe {
@@ -5395,11 +5395,11 @@ impl INotifyItemsChanged {
     pub fn ItemsChanged<P0>(&self, handler: P0) -> windows_core::Result<i64>
     where
         P0: windows_core::Param<
-            windows::Foundation::TypedEventHandler<
-                windows_core::IInspectable,
-                IItemsChangedEventArgs,
+                windows::Foundation::TypedEventHandler<
+                    windows_core::IInspectable,
+                    IItemsChangedEventArgs,
+                >,
             >,
-        >,
     {
         let this = self;
         unsafe {
@@ -5518,11 +5518,11 @@ impl INotifyPropChanged {
     pub fn PropChanged<P0>(&self, handler: P0) -> windows_core::Result<i64>
     where
         P0: windows_core::Param<
-            windows::Foundation::TypedEventHandler<
-                windows_core::IInspectable,
-                IPropChangedEventArgs,
+                windows::Foundation::TypedEventHandler<
+                    windows_core::IInspectable,
+                    IPropChangedEventArgs,
+                >,
             >,
-        >,
     {
         let this = self;
         unsafe {
@@ -5700,11 +5700,11 @@ impl IPage {
     pub fn PropChanged<P0>(&self, handler: P0) -> windows_core::Result<i64>
     where
         P0: windows_core::Param<
-            windows::Foundation::TypedEventHandler<
-                windows_core::IInspectable,
-                IPropChangedEventArgs,
+                windows::Foundation::TypedEventHandler<
+                    windows_core::IInspectable,
+                    IPropChangedEventArgs,
+                >,
             >,
-        >,
     {
         let this = &windows_core::Interface::cast::<INotifyPropChanged>(self)?;
         unsafe {
@@ -5855,11 +5855,11 @@ impl IProgressState {
     pub fn PropChanged<P0>(&self, handler: P0) -> windows_core::Result<i64>
     where
         P0: windows_core::Param<
-            windows::Foundation::TypedEventHandler<
-                windows_core::IInspectable,
-                IPropChangedEventArgs,
+                windows::Foundation::TypedEventHandler<
+                    windows_core::IInspectable,
+                    IPropChangedEventArgs,
+                >,
             >,
-        >,
     {
         let this = &windows_core::Interface::cast::<INotifyPropChanged>(self)?;
         unsafe {
@@ -6149,11 +6149,11 @@ impl IStatusMessage {
     pub fn PropChanged<P0>(&self, handler: P0) -> windows_core::Result<i64>
     where
         P0: windows_core::Param<
-            windows::Foundation::TypedEventHandler<
-                windows_core::IInspectable,
-                IPropChangedEventArgs,
+                windows::Foundation::TypedEventHandler<
+                    windows_core::IInspectable,
+                    IPropChangedEventArgs,
+                >,
             >,
-        >,
     {
         let this = &windows_core::Interface::cast::<INotifyPropChanged>(self)?;
         unsafe {
@@ -6616,11 +6616,11 @@ impl ITreeContent {
     pub fn ItemsChanged<P0>(&self, handler: P0) -> windows_core::Result<i64>
     where
         P0: windows_core::Param<
-            windows::Foundation::TypedEventHandler<
-                windows_core::IInspectable,
-                IItemsChangedEventArgs,
+                windows::Foundation::TypedEventHandler<
+                    windows_core::IInspectable,
+                    IItemsChangedEventArgs,
+                >,
             >,
-        >,
     {
         let this = &windows_core::Interface::cast::<INotifyItemsChanged>(self)?;
         unsafe {
@@ -6646,11 +6646,11 @@ impl ITreeContent {
     pub fn PropChanged<P0>(&self, handler: P0) -> windows_core::Result<i64>
     where
         P0: windows_core::Param<
-            windows::Foundation::TypedEventHandler<
-                windows_core::IInspectable,
-                IPropChangedEventArgs,
+                windows::Foundation::TypedEventHandler<
+                    windows_core::IInspectable,
+                    IPropChangedEventArgs,
+                >,
             >,
-        >,
     {
         let this = &windows_core::Interface::cast::<INotifyPropChanged>(self)?;
         unsafe {

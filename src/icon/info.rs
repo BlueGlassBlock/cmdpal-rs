@@ -1,8 +1,6 @@
-use windows::core::{implement, ComObject};
-use crate::bindings::*;
 use super::data::IconData;
-
-
+use crate::bindings::*;
+use windows::core::{ComObject, implement};
 
 #[implement(IIconInfo)]
 pub struct IconInfo {

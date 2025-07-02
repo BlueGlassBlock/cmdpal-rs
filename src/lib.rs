@@ -1,6 +1,7 @@
 pub mod bindings;
 pub mod cmd;
 pub mod cmd_item;
+pub mod cmd_provider;
 pub mod cmd_result;
 pub mod content;
 pub mod ctx_item;
@@ -13,9 +14,8 @@ pub mod host;
 pub mod icon;
 pub mod notify;
 pub mod page;
-pub mod cmd_provider;
-pub mod settings;
 pub mod prelude;
+pub mod settings;
 pub(crate) mod utils;
 
 pub struct ExtRegistry {

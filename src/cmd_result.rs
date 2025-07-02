@@ -1,8 +1,13 @@
-use crate::bindings::{CommandResultKind, ICommand, ICommandResult, ICommandResultArgs, ICommandResultArgs_Impl, ICommandResult_Impl, IConfirmationArgs, IConfirmationArgs_Impl, IGoToPageArgs, IGoToPageArgs_Impl, IToastArgs, IToastArgs_Impl};
-use windows::{core::{implement, Error, Result as WinResult}, Win32::Foundation::ERROR_BAD_ARGUMENTS};
+use crate::bindings::{
+    CommandResultKind, ICommand, ICommandResult, ICommandResult_Impl, ICommandResultArgs,
+    ICommandResultArgs_Impl, IConfirmationArgs, IConfirmationArgs_Impl, IGoToPageArgs,
+    IGoToPageArgs_Impl, IToastArgs, IToastArgs_Impl,
+};
+use windows::{
+    Win32::Foundation::ERROR_BAD_ARGUMENTS,
+    core::{Error, Result as WinResult, implement},
+};
 use windows_core::{AgileReference, ComObject};
-
-
 
 // windows::core::implement doesn't support `enum` yet, so we manually write out the VTables
 
@@ -117,7 +122,7 @@ impl IToastArgs_Impl for ToastArgs_Impl {
         Ok(self.message.clone())
     }
     fn Result(&self) -> windows_core::Result<ICommandResult> {
-        Ok(self.result.to_interface())   
+        Ok(self.result.to_interface())
     }
 }
 
@@ -340,11 +345,8 @@ impl ::windows_core::AsImpl<CommandResult> for ICommandResult {
     unsafe fn as_impl_ptr(&self) -> ::core::ptr::NonNull<CommandResult> {
         unsafe {
             let this = ::windows_core::Interface::as_raw(self);
-            let this =
-                (this as *mut *mut ::core::ffi::c_void).sub(1) as *mut CommandResult_Impl;
-            ::core::ptr::NonNull::new_unchecked(
-                &raw const ((*this).this) as *mut CommandResult,
-            )
+            let this = (this as *mut *mut ::core::ffi::c_void).sub(1) as *mut CommandResult_Impl;
+            ::core::ptr::NonNull::new_unchecked(&raw const ((*this).this) as *mut CommandResult)
         }
     }
 }

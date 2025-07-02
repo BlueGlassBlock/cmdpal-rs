@@ -2,7 +2,7 @@ use std::ops::Deref;
 
 use crate::{
     bindings::*,
-    cmd_item::CommandItem,
+    cmd_item::{CommandItem, CommandItem_Impl},
     details::{Details, Tag},
     filter::Filters,
     notify::*,
@@ -67,7 +67,8 @@ impl ListItemBuilder {
     }
 }
 
-impl ComBuilder<ListItem> for ListItemBuilder {
+impl ComBuilder for ListItemBuilder {
+    type Target = ListItem;
     fn build_unmanaged(self) -> ListItem {
         ListItem {
             cmd_item: self.cmd_item,
@@ -76,6 +77,14 @@ impl ComBuilder<ListItem> for ListItemBuilder {
             section: NotifyLock::new(self.section.unwrap_or_else(|| HSTRING::new())),
             suggestion: NotifyLock::new(self.suggestion.unwrap_or_else(|| HSTRING::new())),
         }
+    }
+}
+
+impl Deref for ListItem {
+    type Target = CommandItem_Impl;
+
+    fn deref(&self) -> &Self::Target {
+        &self.cmd_item
     }
 }
 
@@ -193,7 +202,8 @@ impl ListPageBuilder {
     }
 }
 
-impl ComBuilder<ListPage> for ListPageBuilder {
+impl ComBuilder for ListPageBuilder {
+    type Target = ListPage;
     fn build_unmanaged(self) -> ListPage {
         ListPage {
             base: self.base,
@@ -206,9 +216,12 @@ impl ComBuilder<ListPage> for ListPageBuilder {
             has_more: NotifyLock::new(self.more_fn.is_some()),
             more_fn: self.more_fn.unwrap_or_else(|| {
                 Box::new(|page| {
-                    page.has_more_mut().map(|mut guard| {
-                        *guard = false;
-                    })
+                    page.has_more_mut()
+                        .map(|mut guard| {
+                            *guard = false;
+                            Ok(())
+                        })
+                        .unwrap_or_else(|e| Err(e))
                 })
             }),
             show_details: NotifyLock::new(self.show_details.unwrap_or(false)),

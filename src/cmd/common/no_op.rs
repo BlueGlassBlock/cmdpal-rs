@@ -23,7 +23,8 @@ impl NoOpCommandBuilder {
     }
 }
 
-impl ComBuilder<InvokableCommand> for NoOpCommandBuilder {
+impl ComBuilder for NoOpCommandBuilder {
+    type Target = InvokableCommand;
     fn build_unmanaged(self) -> InvokableCommand {
         InvokableCommand {
             base: self.base,

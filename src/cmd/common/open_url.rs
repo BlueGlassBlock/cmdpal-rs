@@ -46,7 +46,8 @@ impl OpenUrlCommandBuilder {
     }
 }
 
-impl ComBuilder<InvokableCommand> for OpenUrlCommandBuilder {
+impl ComBuilder for OpenUrlCommandBuilder {
+    type Target = InvokableCommand;
     fn build_unmanaged(self) -> InvokableCommand {
         InvokableCommand {
             base: self.base,

@@ -43,8 +43,7 @@ impl TreeContent_Impl {
     }
 
     pub fn children_mut(&self) -> Result<NotifyLockWriteGuard<'_, Vec<Content>, impl Fn()>> {
-        self.children
-            .write(|| self.emit_self_items_changed(-1))
+        self.children.write(|| self.emit_self_items_changed(-1))
     }
 }
 

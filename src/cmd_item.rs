@@ -1,7 +1,7 @@
 use crate::ctx_item::ContextItem;
 use crate::icon::IconInfo;
 use crate::notify::*;
-use crate::utils::{assert_send_sync, ComBuilder, OkOrEmpty};
+use crate::utils::{ComBuilder, OkOrEmpty, assert_send_sync};
 use crate::{bindings::*, utils::map_array};
 use windows::Foundation::TypedEventHandler;
 use windows::core::{
@@ -68,7 +68,8 @@ impl CommandItemBuilder {
     }
 }
 
-impl ComBuilder<CommandItem> for CommandItemBuilder {
+impl ComBuilder for CommandItemBuilder {
+    type Target = CommandItem;
     fn build_unmanaged(self) -> CommandItem {
         let title = self.title.unwrap_or_else(|| HSTRING::new());
         let subtitle = self.subtitle.unwrap_or_else(|| HSTRING::new());

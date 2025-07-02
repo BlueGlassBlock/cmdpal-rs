@@ -89,8 +89,9 @@ impl FiltersBuilder {
     }
 }
 
-impl ComBuilder<Filters> for FiltersBuilder {
-    fn build_unmanaged(self) -> Filters {
+impl ComBuilder for FiltersBuilder {
+    type Target = Filters;
+    fn build_unmanaged(self) -> Self::Target {
         Filters {
             filters: self.filters,
             index: RwLock::new(0),

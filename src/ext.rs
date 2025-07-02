@@ -19,7 +19,7 @@ impl From<crate::cmd_provider::CommandProvider> for Extension {
 impl From<&crate::cmd_provider::CommandProvider_Impl> for Extension {
     fn from(value: &crate::cmd_provider::CommandProvider_Impl) -> Self {
         Self {
-            cmd_provider: windows::core::IUnknownImpl::to_interface(value)
+            cmd_provider: windows::core::IUnknownImpl::to_interface(value),
         }
     }
 }

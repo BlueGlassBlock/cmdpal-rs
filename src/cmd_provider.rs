@@ -86,7 +86,8 @@ impl CommandProviderBuilder {
     }
 }
 
-impl ComBuilder<CommandProvider> for CommandProviderBuilder {
+impl ComBuilder for CommandProviderBuilder {
+    type Target = CommandProvider;
     fn build_unmanaged(self) -> CommandProvider {
         CommandProvider {
             id: self.id,

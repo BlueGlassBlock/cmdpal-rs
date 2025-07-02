@@ -1,9 +1,9 @@
-use windows::core::{implement, ComObject};
-use windows::Win32::Foundation::E_POINTER;
-use windows::Win32::System::Com::{IClassFactory, IClassFactory_Impl};
-use windows_core::Interface;
 use crate::bindings::IExtension;
 use crate::ext::Extension;
+use windows::Win32::Foundation::E_POINTER;
+use windows::Win32::System::Com::{IClassFactory, IClassFactory_Impl};
+use windows::core::{ComObject, implement};
+use windows_core::Interface;
 
 #[implement(IClassFactory)]
 pub struct ExtensionClassFactory(pub ComObject<Extension>);
@@ -15,7 +15,12 @@ impl IClassFactory_Impl for ExtensionClassFactory_Impl {
     /// and we rely on the caller to carefully validate their pointers. For FFI calls, we must
     /// similarly trust that the caller has ensured pointer validity.
     #[allow(clippy::not_unsafe_ptr_arg_deref)]
-    fn CreateInstance(&self, _: windows_core::Ref<'_, windows_core::IUnknown>, iid: *const windows_core::GUID, interface: *mut *mut core::ffi::c_void) -> windows_core::Result<()> {
+    fn CreateInstance(
+        &self,
+        _: windows_core::Ref<'_, windows_core::IUnknown>,
+        iid: *const windows_core::GUID,
+        interface: *mut *mut core::ffi::c_void,
+    ) -> windows_core::Result<()> {
         // Validate the interface pointer for minimal safety.
         if iid.is_null() || interface.is_null() {
             return Err(E_POINTER.into());

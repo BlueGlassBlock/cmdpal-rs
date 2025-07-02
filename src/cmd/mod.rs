@@ -47,13 +47,14 @@ impl BaseCommandBuilder {
     }
 }
 
-impl ComBuilder<BaseCommand> for BaseCommandBuilder {
+impl ComBuilder for BaseCommandBuilder {
+    type Target = BaseCommand;
     fn build_unmanaged(self) -> BaseCommand {
         BaseCommand {
             name: NotifyLock::new(self.name),
             id: NotifyLock::new(self.id),
             icon: NotifyLock::new(self.icon),
-            event: windows_core::Event::new(),
+            event: Event::new(),
         }
     }
 }

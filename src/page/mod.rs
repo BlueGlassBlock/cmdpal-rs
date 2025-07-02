@@ -2,10 +2,10 @@ pub mod content;
 pub mod dyn_list;
 pub mod list;
 
-use crate::utils::assert_send_sync;
-use crate::{bindings::*, utils::ComBuilder};
 use crate::cmd::BaseCommand;
 use crate::notify::*;
+use crate::utils::assert_send_sync;
+use crate::{bindings::*, utils::ComBuilder};
 use windows::core::{ComObject, implement};
 use windows_core::{HSTRING, IUnknownImpl as _, Result};
 
@@ -55,7 +55,8 @@ impl BasePageBuilder {
     }
 }
 
-impl ComBuilder<BasePage> for BasePageBuilder {
+impl ComBuilder for BasePageBuilder {
+    type Target = BasePage;
     fn build_unmanaged(self) -> BasePage {
         BasePage {
             title: NotifyLock::new(self.title),

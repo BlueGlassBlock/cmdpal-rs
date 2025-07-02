@@ -1,11 +1,16 @@
 use std::ops::Deref;
 
-use crate::{bindings::*, page::list::ListPage_Impl, utils::assert_send_sync};
+use crate::{
+    bindings::*,
+    page::list::ListPage_Impl,
+    utils::{ComBuilder, assert_send_sync},
+};
 use windows::core::{ComObject, HSTRING, Result, implement};
 
 use super::list::ListPage;
 
-pub type SearchTextUpdateFn = Box<dyn Send + Sync + Fn(&DynamicListPage_Impl, HSTRING, HSTRING) -> Result<()>>;
+pub type SearchTextUpdateFn =
+    Box<dyn Send + Sync + Fn(&DynamicListPage_Impl, HSTRING, HSTRING) -> Result<()>>;
 
 #[implement(
     IDynamicListPage,
@@ -20,21 +25,40 @@ pub struct DynamicListPage {
     update_fn: SearchTextUpdateFn,
 }
 
+pub struct DynamicListPageBuilder {
+    base: ComObject<ListPage>,
+    update_fn: SearchTextUpdateFn,
+}
+
+impl DynamicListPageBuilder {
+    pub fn new(base: ComObject<ListPage>) -> Self {
+        DynamicListPageBuilder {
+            base,
+            update_fn: Box::new(|_, _, _| Ok(())),
+        }
+    }
+
+    pub fn update_fn(mut self, update_fn: SearchTextUpdateFn) -> Self {
+        self.update_fn = update_fn;
+        self
+    }
+}
+
+impl ComBuilder for DynamicListPageBuilder {
+    type Target = DynamicListPage;
+    fn build_unmanaged(self) -> DynamicListPage {
+        DynamicListPage {
+            base: self.base,
+            update_fn: self.update_fn,
+        }
+    }
+}
+
 impl Deref for DynamicListPage {
     type Target = ListPage_Impl;
 
     fn deref(&self) -> &Self::Target {
         &self.base
-    }
-}
-
-impl DynamicListPage {
-    pub fn new_unmanaged(base: ComObject<ListPage>, update_fn: SearchTextUpdateFn) -> Self {
-        Self { base, update_fn }
-    }
-
-    pub fn new(base: ComObject<ListPage>, update_fn: SearchTextUpdateFn) -> ComObject<Self> {
-        Self::new_unmanaged(base, update_fn).into()
     }
 }
 

@@ -46,7 +46,8 @@ impl RevealFileCommandBuilder {
     }
 }
 
-impl ComBuilder<InvokableCommand> for RevealFileCommandBuilder {
+impl ComBuilder for RevealFileCommandBuilder {
+    type Target = InvokableCommand;
     fn build_unmanaged(self) -> InvokableCommand {
         InvokableCommand {
             base: self.base,

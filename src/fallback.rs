@@ -35,12 +35,17 @@ pub struct FallbackCommandItemBuilder {
 }
 
 impl FallbackCommandItemBuilder {
-    pub fn new(base: ComObject<CommandItem>, handler: ComObject<FallbackHandler>) -> Self {
+    pub fn new(base: ComObject<CommandItem>) -> Self {
         Self {
             base,
-            handler,
+            handler: FallbackHandler::new(Box::new(|_| Ok(()))),
             title: HSTRING::new(),
         }
+    }
+
+    pub fn handler(mut self, handler: ComObject<FallbackHandler>) -> Self {
+        self.handler = handler;
+        self
     }
 
     pub fn title(mut self, new_title: impl Into<HSTRING>) -> Self {
@@ -49,7 +54,8 @@ impl FallbackCommandItemBuilder {
     }
 }
 
-impl ComBuilder<FallbackCommandItem> for FallbackCommandItemBuilder {
+impl ComBuilder for FallbackCommandItemBuilder {
+    type Target = FallbackCommandItem;
     fn build_unmanaged(self) -> FallbackCommandItem {
         FallbackCommandItem {
             base: self.base,

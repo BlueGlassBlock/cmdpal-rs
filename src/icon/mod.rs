@@ -1,5 +1,5 @@
-pub mod info;
 pub mod data;
+pub mod info;
 
-pub use info::IconInfo;
 pub use data::IconData;
+pub use info::IconInfo;

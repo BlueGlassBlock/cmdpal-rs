@@ -1,7 +1,7 @@
+pub mod copy_text;
 pub mod no_op;
 pub mod open_url;
 pub mod reveal_file;
-pub mod copy_text;
 
 use std::ops::Deref;
 
@@ -15,7 +15,8 @@ pub use crate::cmd_result::CommandResult;
 
 use super::BaseCommand;
 
-pub type InvokableFn = Box<dyn Send + Sync + Fn(&IInspectable) -> windows_core::Result<CommandResult>>;
+pub type InvokableFn =
+    Box<dyn Send + Sync + Fn(&IInspectable) -> windows_core::Result<CommandResult>>;
 
 #[implement(IInvokableCommand, ICommand, INotifyPropChanged)]
 pub struct InvokableCommand {

@@ -1,9 +1,9 @@
-use windows::core::{implement, Array};
+use crate::bindings::*;
+use std::ops::DerefMut;
 use windows::Storage::Streams::{IBuffer, IBuffer_Impl};
 use windows::Win32::Foundation::E_NOTIMPL;
 use windows::Win32::System::WinRT::{IBufferByteAccess, IBufferByteAccess_Impl};
-use std::ops::DerefMut;
-use crate::bindings::*;
+use windows::core::{Array, implement};
 
 #[implement(IBuffer, IBufferByteAccess)]
 pub(crate) struct FrozenBuffer {
@@ -43,10 +43,7 @@ impl IGridProperties_Impl for GridProperties_Impl {
     }
 }
 
-pub fn map_array<T: windows::core::Type<T>, S>(
-    slice: &[S],
-    map: fn(&S) -> T::Default,
-) -> Array<T> {
+pub fn map_array<T: windows::core::Type<T>, S>(slice: &[S], map: fn(&S) -> T::Default) -> Array<T> {
     let mut arr = Array::with_len(slice.len());
     for (i, item) in slice.iter().enumerate() {
         arr.deref_mut()[i] = map(item);
@@ -81,13 +78,15 @@ impl<T> OkOrEmpty for Option<T> {
     }
 }
 
-pub trait ComBuilder<T: windows::core::ComObjectInner>
-where Self: Sized {
-    fn build_unmanaged(self) -> T;
-    fn build(self) -> windows::core::ComObject<T> {
+pub trait ComBuilder: Sized {
+    type Target: windows::core::ComObjectInner;
+    fn build_unmanaged(self) -> Self::Target;
+    fn build(self) -> windows::core::ComObject<Self::Target> {
         self.build_unmanaged().into()
     }
 }
+
+// Removed blanket implementation to avoid conflicting trait implementations.
 
 #[allow(dead_code, reason = "Compile check only")]
 pub(crate) const fn assert_send_sync<T: Send + Sync>() {}

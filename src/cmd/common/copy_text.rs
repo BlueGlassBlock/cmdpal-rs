@@ -47,7 +47,8 @@ impl CopyTextCommandBuilder {
     }
 }
 
-impl ComBuilder<InvokableCommand> for CopyTextCommandBuilder {
+impl ComBuilder for CopyTextCommandBuilder {
+    type Target = InvokableCommand;
     fn build_unmanaged(self) -> InvokableCommand {
         InvokableCommand {
             base: self.base,
@@ -60,7 +61,7 @@ impl ComBuilder<InvokableCommand> for CopyTextCommandBuilder {
 }
 
 mod clipboard_helper {
-    use windows::Win32::Foundation::{GlobalFree, ERROR_LOCKED, E_FAIL, E_POINTER, HANDLE};
+    use windows::Win32::Foundation::{E_FAIL, E_POINTER, ERROR_LOCKED, GlobalFree, HANDLE};
     use windows::Win32::System::Com::{COINIT_APARTMENTTHREADED, CoInitializeEx};
     use windows::Win32::System::DataExchange::{
         CloseClipboard, EmptyClipboard, OpenClipboard, SetClipboardData,
