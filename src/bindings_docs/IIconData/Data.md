@@ -1,0 +1,1 @@
+Gets the data of the icon.

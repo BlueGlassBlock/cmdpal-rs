@@ -1,0 +1,1 @@
+The CommandResultKind enum is used to specify the result of a command execution in the Command Palette. It defines the different actions that can be taken after a command is executed.

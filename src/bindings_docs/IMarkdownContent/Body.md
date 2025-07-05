@@ -1,0 +1,1 @@
+The body of the content, formatted using Markdown. This property contains the main text content that will be displayed in the Command Palette.

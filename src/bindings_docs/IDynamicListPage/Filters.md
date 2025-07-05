@@ -1,0 +1,1 @@
+The filters applied to the list. This property allows users to refine the items displayed in the list based on specific criteria.

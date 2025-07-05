@@ -1,0 +1,1 @@
+Represents a provider that offers commands. Commands are actions that can be executed directly from the Command Palette.

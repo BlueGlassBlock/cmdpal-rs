@@ -1,0 +1,1 @@
+The ITag interface represents a tag in the Command Palette. Tags are used to categorize and organize commands, making them easier for users to find and execute.

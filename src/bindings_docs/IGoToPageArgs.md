@@ -1,0 +1,1 @@
+The IGoToPageArgs interface represents the arguments for navigating to a specific page in the Command Palette. It is used to define the parameters for navigating to a page, such as the page ID and navigation mode.

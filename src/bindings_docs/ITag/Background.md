@@ -1,0 +1,1 @@
+The background color of the tag. This property is used to visually distinguish the tag from other elements in the Command Palette.

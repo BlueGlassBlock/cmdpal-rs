@@ -1,0 +1,1 @@
+The tooltip text displayed when the user hovers over the tag. This property is used to provide additional information about the tag, helping users understand its purpose.

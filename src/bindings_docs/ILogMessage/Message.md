@@ -1,0 +1,1 @@
+The message text that describes the log entry.

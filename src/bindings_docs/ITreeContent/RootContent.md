@@ -1,0 +1,1 @@
+Gets the root content of the tree. This is the top-level item in the hierarchy.

@@ -1,0 +1,1 @@
+Gets or sets the navigation mode.

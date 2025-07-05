@@ -1,0 +1,1 @@
+The KeyChord struct represents a combination of key modifiers and a virtual key. It is used to define keyboard shortcuts in the Command Palette.

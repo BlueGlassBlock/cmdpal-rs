@@ -1,0 +1,1 @@
+Gets the light mode version of the icon.

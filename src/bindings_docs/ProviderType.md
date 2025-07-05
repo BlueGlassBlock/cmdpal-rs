@@ -1,0 +1,1 @@
+The ProviderType enum defines the types of providers that can be used in the Command Palette. Each provider type represents a different category of functionality or data source that can be integrated into the Command Palette.

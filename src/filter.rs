@@ -1,4 +1,4 @@
-//! This module currently doesn't work: https://github.com/microsoft/PowerToys/issues/38318
+//! This module currently doesn't work: <https://github.com/microsoft/PowerToys/issues/38318>
 
 use crate::icon::IconInfo;
 use crate::utils::{ComBuilder, assert_send_sync, map_array};

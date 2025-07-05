@@ -1,0 +1,1 @@
+The IFilterItem interface represents a filter item in the Command Palette. It is used to define the properties and methods associated with a filter item that can be applied to the items displayed in the Command Palette.

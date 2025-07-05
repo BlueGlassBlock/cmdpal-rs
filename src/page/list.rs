@@ -15,7 +15,7 @@ use super::{BasePage, BasePage_Impl};
 
 #[implement(IListItem, ICommandItem, INotifyPropChanged)]
 pub struct ListItem {
-    pub cmd_item: ComObject<CommandItem>,
+    pub base: ComObject<CommandItem>,
     details: NotifyLock<Option<ComObject<Details>>>,
     tags: NotifyLock<Vec<ComObject<Tag>>>,
     section: NotifyLock<HSTRING>,
@@ -23,7 +23,7 @@ pub struct ListItem {
 }
 
 pub struct ListItemBuilder {
-    cmd_item: ComObject<CommandItem>,
+    base: ComObject<CommandItem>,
     details: Option<ComObject<Details>>,
     tags: Vec<ComObject<Tag>>,
     section: Option<HSTRING>,
@@ -31,9 +31,9 @@ pub struct ListItemBuilder {
 }
 
 impl ListItemBuilder {
-    pub fn new(cmd_item: ComObject<CommandItem>) -> Self {
+    pub fn new(base: ComObject<CommandItem>) -> Self {
         ListItemBuilder {
-            cmd_item,
+            base,
             details: None,
             tags: Vec::new(),
             section: None,
@@ -71,7 +71,7 @@ impl ComBuilder for ListItemBuilder {
     type Target = ListItem;
     fn build_unmanaged(self) -> ListItem {
         ListItem {
-            cmd_item: self.cmd_item,
+            base: self.base,
             details: NotifyLock::new(self.details),
             tags: NotifyLock::new(self.tags),
             section: NotifyLock::new(self.section.unwrap_or_else(|| HSTRING::new())),
@@ -84,7 +84,7 @@ impl Deref for ListItem {
     type Target = CommandItem_Impl;
 
     fn deref(&self) -> &Self::Target {
-        &self.cmd_item
+        &self.base
     }
 }
 
@@ -108,14 +108,43 @@ impl IListItem_Impl for ListItem_Impl {
 }
 
 impl ICommandItem_Impl for ListItem_Impl {
-    ambassador_impl_ICommandItem_Impl! {
-        body_struct(<>, ComObject<CommandItem>, cmd_item)
+    fn Command(&self) -> windows_core::Result<ICommand> {
+        self.base.Command()
+    }
+
+    fn Icon(&self) -> windows_core::Result<IIconInfo> {
+        self.base.Icon()
+    }
+
+    fn MoreCommands(&self) -> windows_core::Result<windows_core::Array<IContextItem>> {
+        self.base.MoreCommands()
+    }
+
+    fn Subtitle(&self) -> windows_core::Result<windows_core::HSTRING> {
+        self.base.Subtitle()
+    }
+
+    fn Title(&self) -> windows_core::Result<windows_core::HSTRING> {
+        self.base.Title()
     }
 }
 
 impl INotifyPropChanged_Impl for ListItem_Impl {
-    ambassador_impl_INotifyPropChanged_Impl! {
-        body_struct(<>, ComObject<CommandItem>, cmd_item)
+    fn PropChanged(
+        &self,
+        handler: windows_core::Ref<
+            '_,
+            windows::Foundation::TypedEventHandler<
+                windows_core::IInspectable,
+                IPropChangedEventArgs,
+            >,
+        >,
+    ) -> windows_core::Result<i64> {
+        self.base.PropChanged(handler)
+    }
+
+    fn RemovePropChanged(&self, token: i64) -> windows_core::Result<()> {
+        self.base.RemovePropChanged(token)
     }
 }
 
@@ -253,7 +282,7 @@ impl ListPage_Impl {
     pub fn search_text_mut(&self) -> Result<NotifyLockWriteGuard<'_, HSTRING, impl Fn()>> {
         self.search_text.write(|| {
             self.base
-                .command
+                .base
                 .emit_prop_changed(self.to_interface(), "SearchText")
         })
     }
@@ -273,7 +302,7 @@ impl ListPage_Impl {
     ) -> Result<NotifyLockWriteGuard<'_, Option<ComObject<CommandItem>>, impl Fn()>> {
         self.empty_content.write(|| {
             self.base
-                .command
+                .base
                 .emit_prop_changed(self.to_interface(), "EmptyContent")
         })
     }
@@ -287,7 +316,7 @@ impl ListPage_Impl {
     ) -> Result<NotifyLockWriteGuard<'_, Option<ComObject<Filters>>, impl Fn()>> {
         self.filters.write(|| {
             self.base
-                .command
+                .base
                 .emit_prop_changed(self.to_interface(), "Filters")
         })
     }
@@ -313,7 +342,7 @@ impl ListPage_Impl {
     ) -> Result<NotifyLockWriteGuard<'_, Option<ComObject<GridProperties>>, impl Fn()>> {
         self.grid_properties.write(|| {
             self.base
-                .command
+                .base
                 .emit_prop_changed(self.to_interface(), "GridProperties")
         })
     }
@@ -325,7 +354,7 @@ impl ListPage_Impl {
     pub fn has_more_mut(&self) -> Result<NotifyLockWriteGuard<'_, bool, impl Fn()>> {
         self.has_more.write(|| {
             self.base
-                .command
+                .base
                 .emit_prop_changed(self.to_interface(), "HasMoreItems")
         })
     }
@@ -337,7 +366,7 @@ impl ListPage_Impl {
     pub fn placeholder_mut(&self) -> Result<NotifyLockWriteGuard<'_, HSTRING, impl Fn()>> {
         self.placeholder.write(|| {
             self.base
-                .command
+                .base
                 .emit_prop_changed(self.to_interface(), "PlaceholderText")
         })
     }
@@ -349,7 +378,7 @@ impl ListPage_Impl {
     pub fn show_details_mut(&self) -> Result<NotifyLockWriteGuard<'_, bool, impl Fn()>> {
         self.show_details.write(|| {
             self.base
-                .command
+                .base
                 .emit_prop_changed(self.to_interface(), "ShowDetails")
         })
     }
@@ -406,20 +435,49 @@ impl IListPage_Impl for ListPage_Impl {
 }
 
 impl IPage_Impl for ListPage_Impl {
-    ambassador_impl_IPage_Impl! {
-        body_struct(<>, ComObject<BasePage>, base)
+    fn AccentColor(&self) -> windows_core::Result<OptionalColor> {
+        self.base.AccentColor()
+    }
+
+    fn IsLoading(&self) -> windows_core::Result<bool> {
+        self.base.IsLoading()
+    }
+
+    fn Title(&self) -> windows_core::Result<windows_core::HSTRING> {
+        self.base.Title()
     }
 }
 
 impl ICommand_Impl for ListPage_Impl {
-    ambassador_impl_ICommand_Impl! {
-        body_struct(<>, ComObject<BasePage>, base)
+    fn Icon(&self) -> windows_core::Result<IIconInfo> {
+        self.base.Icon()
+    }
+
+    fn Id(&self) -> windows_core::Result<windows_core::HSTRING> {
+        self.base.Id()
+    }
+
+    fn Name(&self) -> windows_core::Result<windows_core::HSTRING> {
+        self.base.Name()
     }
 }
 
 impl INotifyPropChanged_Impl for ListPage_Impl {
-    ambassador_impl_INotifyPropChanged_Impl! {
-        body_struct(<>, ComObject<BasePage>, base)
+    fn PropChanged(
+        &self,
+        handler: windows_core::Ref<
+            '_,
+            windows::Foundation::TypedEventHandler<
+                windows_core::IInspectable,
+                IPropChangedEventArgs,
+            >,
+        >,
+    ) -> windows_core::Result<i64> {
+        self.base.PropChanged(handler)
+    }
+
+    fn RemovePropChanged(&self, token: i64) -> windows_core::Result<()> {
+        self.base.RemovePropChanged(token)
     }
 }
 

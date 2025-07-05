@@ -1,0 +1,1 @@
+The IFormContent interface represents the content of a form in the Command Palette. It is used to define the properties and methods for creating and managing form content, such as displaying data, handling user input, and validating data.

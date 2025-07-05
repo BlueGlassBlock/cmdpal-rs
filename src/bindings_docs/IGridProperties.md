@@ -1,0 +1,1 @@
+The IGridProperties interface represents the properties of a grid in the Command Palette. It is used to define the layout and appearance of grids in the Command Palette, such as tile size.

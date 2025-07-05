@@ -1,0 +1,1 @@
+The INotifyPropChanged interface represents an object that can notify listeners of property changes in the Command Palette. It is used to implement the observer pattern, allowing other components to subscribe to property change notifications.

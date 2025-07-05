@@ -1,0 +1,1 @@
+The IToastArgs interface is used to define the arguments for a toast notification in the Command Palette. It provides properties to specify the message and the result of the command associated with the toast.

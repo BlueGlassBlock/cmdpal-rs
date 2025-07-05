@@ -1,0 +1,1 @@
+The IFilters interface is used to manage the filters in the Command Palette. It provides methods to retrieve the current filter ID and to get a list of available filters.

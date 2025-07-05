@@ -1,0 +1,1 @@
+The details of the item. This property can be used to provide additional information or context about the item, such as a description or metadata.

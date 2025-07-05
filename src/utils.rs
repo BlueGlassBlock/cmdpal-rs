@@ -86,7 +86,52 @@ pub trait ComBuilder: Sized {
     }
 }
 
-// Removed blanket implementation to avoid conflicting trait implementations.
-
 #[allow(dead_code, reason = "Compile check only")]
 pub(crate) const fn assert_send_sync<T: Send + Sync>() {}
+
+
+#[doc(hidden)]
+#[macro_export]
+macro_rules! _define_windows_core_interface_with_bindings_docs {
+    ($name:ident, $vtbl:ident, $iid:literal) => {
+        #[repr(transparent)]
+        #[derive(::core::cmp::PartialEq, ::core::cmp::Eq, ::core::clone::Clone)]
+        #[doc = include_str!(concat!(
+            "./bindings_docs/",
+            stringify!($name),
+            ".md"
+        ))]
+        pub struct $name(::windows_core::IUnknown);
+        unsafe impl ::windows_core::Interface for $name {
+            type Vtable = $vtbl;
+            const IID: ::windows_core::GUID = ::windows_core::GUID::from_u128($iid);
+        }
+        impl ::core::fmt::Debug for $name {
+            fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> core::fmt::Result {
+                f.debug_tuple(stringify!($name))
+                    .field(&::windows_core::Interface::as_raw(self))
+                    .finish()
+            }
+        }
+    };
+    ($name:ident, $vtbl:ident) => {
+        #[repr(transparent)]
+        #[derive(::core::cmp::PartialEq, ::core::cmp::Eq, ::core::clone::Clone)]
+        #[doc = include_str!(concat!(
+            "./bindings_docs/",
+            stringify!($name),
+            ".md"
+        ))]
+        pub struct $name(::core::ptr::NonNull<::core::ffi::c_void>);
+        unsafe impl ::windows_core::Interface for $name {
+            type Vtable = $vtbl;
+            const IID: ::windows_core::GUID = ::windows_core::GUID::zeroed();
+            const UNKNOWN: bool = false;
+        }
+        impl ::core::fmt::Debug for $name {
+            fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> core::fmt::Result {
+                f.debug_tuple(stringify!($name)).field(&self.0).finish()
+            }
+        }
+    };
+}

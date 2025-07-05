@@ -1,0 +1,1 @@
+The ITreeContent interface is used to represent a tree structure of content on a content page in the Command Palette. It allows for hierarchical organization of content, enabling users to navigate through different levels of information.

@@ -1,0 +1,1 @@
+The text displayed on the tag. This property is used to provide a label for the tag, indicating its category or purpose.

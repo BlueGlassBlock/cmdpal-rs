@@ -1,0 +1,1 @@
+The ISeparatorContextItem interface represents a separator context menu item in the Command Palette. It is used to create a visual separation between different sections of commands or items in the Command Palette.

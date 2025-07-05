@@ -1,0 +1,1 @@
+Indicates whether there are more items to load in the list. This property is used to determine if additional items can be fetched or displayed.

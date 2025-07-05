@@ -1,0 +1,1 @@
+Sets the search text of the dynamic list page. Implementer should update items of the list and invoke notifiers when the method is called.

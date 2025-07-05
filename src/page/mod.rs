@@ -2,7 +2,9 @@ pub mod content;
 pub mod dyn_list;
 pub mod list;
 
-use crate::cmd::BaseCommand;
+use std::ops::Deref;
+
+use crate::cmd::{BaseCommand, BaseCommand_Impl};
 use crate::notify::*;
 use crate::utils::assert_send_sync;
 use crate::{bindings::*, utils::ComBuilder};
@@ -14,23 +16,23 @@ pub struct BasePage {
     title: NotifyLock<HSTRING>,
     loading: NotifyLock<bool>,
     accent_color: NotifyLock<Option<Color>>,
-    pub command: ComObject<BaseCommand>,
+    pub base: ComObject<BaseCommand>,
 }
 
 pub struct BasePageBuilder {
     title: HSTRING,
     loading: bool,
     accent_color: Option<Color>,
-    command: ComObject<BaseCommand>,
+    base: ComObject<BaseCommand>,
 }
 
 impl BasePageBuilder {
-    pub fn new(command: ComObject<BaseCommand>) -> Self {
+    pub fn new(base: ComObject<BaseCommand>) -> Self {
         BasePageBuilder {
             title: HSTRING::new(),
             loading: true,
             accent_color: None,
-            command,
+            base,
         }
     }
 
@@ -50,7 +52,7 @@ impl BasePageBuilder {
     }
 
     pub fn command(mut self, command: ComObject<BaseCommand>) -> Self {
-        self.command = command;
+        self.base = command;
         self
     }
 }
@@ -62,8 +64,16 @@ impl ComBuilder for BasePageBuilder {
             title: NotifyLock::new(self.title),
             loading: NotifyLock::new(self.loading),
             accent_color: NotifyLock::new(self.accent_color),
-            command: self.command,
+            base: self.base,
         }
+    }
+}
+
+impl Deref for BasePage {
+    type Target = BaseCommand_Impl;
+
+    fn deref(&self) -> &Self::Target {
+        &self.base
     }
 }
 
@@ -74,7 +84,7 @@ impl BasePage_Impl {
 
     pub fn title_mut(&self) -> Result<NotifyLockWriteGuard<'_, HSTRING, impl Fn()>> {
         self.title
-            .write(|| self.command.emit_prop_changed(self.to_interface(), "Title"))
+            .write(|| self.base.emit_prop_changed(self.to_interface(), "Title"))
     }
 
     pub fn loading(&self) -> Result<NotifyLockReadGuard<'_, bool>> {
@@ -83,7 +93,7 @@ impl BasePage_Impl {
 
     pub fn loading_mut(&self) -> Result<NotifyLockWriteGuard<'_, bool, impl Fn()>> {
         self.loading.write(|| {
-            self.command
+            self.base
                 .emit_prop_changed(self.to_interface(), "Loading")
         })
     }
@@ -94,7 +104,7 @@ impl BasePage_Impl {
 
     pub fn accent_color_mut(&self) -> Result<NotifyLockWriteGuard<'_, Option<Color>, impl Fn()>> {
         self.accent_color.write(|| {
-            self.command
+            self.base
                 .emit_prop_changed(self.to_interface(), "AccentColor")
         })
     }
@@ -115,14 +125,33 @@ impl IPage_Impl for BasePage_Impl {
 }
 
 impl ICommand_Impl for BasePage_Impl {
-    ambassador_impl_ICommand_Impl! {
-        body_struct(< >, ComObject<BaseCommand>, command)
+    fn Icon(&self) -> windows_core::Result<IIconInfo> {
+        self.base.Icon()
+    }
+    fn Id(&self) -> windows_core::Result<windows_core::HSTRING> {
+        self.base.Id()
+    }
+    fn Name(&self) -> windows_core::Result<windows_core::HSTRING> {
+        self.base.Name()
     }
 }
 
 impl INotifyPropChanged_Impl for BasePage_Impl {
-    ambassador_impl_INotifyPropChanged_Impl! {
-        body_struct(< >, ComObject<BaseCommand>, command)
+    fn PropChanged(
+        &self,
+        handler: windows_core::Ref<
+            '_,
+            windows::Foundation::TypedEventHandler<
+                windows_core::IInspectable,
+                IPropChangedEventArgs,
+            >,
+        >,
+    ) -> windows_core::Result<i64> {
+        self.base.PropChanged(handler)
+    }
+
+    fn RemovePropChanged(&self, token: i64) -> windows_core::Result<()> {
+        self.base.RemovePropChanged(token)
     }
 }
 

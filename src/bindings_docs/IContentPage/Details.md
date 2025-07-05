@@ -1,0 +1,1 @@
+The details associated with the content page.

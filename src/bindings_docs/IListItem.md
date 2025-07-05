@@ -1,0 +1,1 @@
+The IListItem interface represents an item in the Command Palette list. It is used to define the properties and behavior of individual items displayed in the list, allowing users to interact with and select from the available options.

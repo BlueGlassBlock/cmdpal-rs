@@ -1,0 +1,1 @@
+The NavigationMode enum defines the different modes of navigation that can be used in the Command Palette. Each mode specifies how the navigation stack should be managed when navigating to a new page. This is useful for controlling the behavior of the navigation experience in your application.

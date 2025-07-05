@@ -1,0 +1,1 @@
+Gets or sets the size of the tiles in the grid. 

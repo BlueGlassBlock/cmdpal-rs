@@ -1,0 +1,1 @@
+The text used to suggest the item. This property can be used to provide a hint or suggestion to the user about the item, helping them to understand its purpose or functionality.

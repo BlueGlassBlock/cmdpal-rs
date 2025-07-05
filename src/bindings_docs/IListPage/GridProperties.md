@@ -1,0 +1,1 @@
+The properties of the grid layout used to display the list items. This property defines how the items are arranged and presented in the grid.

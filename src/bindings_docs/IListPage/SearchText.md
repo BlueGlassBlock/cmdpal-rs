@@ -1,0 +1,1 @@
+The text used to filter the list items. This property allows users to search for specific items within the list.

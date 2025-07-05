@@ -1,0 +1,1 @@
+The IFallbackHandler interface is used to handle fallback scenarios in the Command Palette. This is commonly used for commands that want to allow the user to search for something that they've typed that doesn't match any of the commands in the list.

@@ -1,0 +1,1 @@
+The IMarkdownContent interface represents a content element in the Command Palette that can display Markdown-formatted text. It is used to provide rich text formatting and layout options for displaying information in the Command Palette.

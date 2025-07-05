@@ -1,4 +1,6 @@
-use crate::cmd_item::CommandItem;
+use std::ops::Deref;
+
+use crate::cmd_item::{CommandItem, CommandItem_Impl};
 use crate::utils::{ComBuilder, OkOrEmpty, assert_send_sync};
 use crate::{bindings::*, notify::*};
 use windows::core::{ComObject, IInspectable, IUnknownImpl as _, Result, implement};
@@ -17,21 +19,21 @@ impl IContextItem_Impl for SeparatorContextItem_Impl {}
 
 #[implement(ICommandContextItem, IContextItem, ICommandItem, INotifyPropChanged)]
 pub struct CommandContextItem {
-    pub cmd_item: ComObject<CommandItem>,
+    pub base: ComObject<CommandItem>,
     critical: NotifyLock<bool>,
     shortcut: NotifyLock<Option<KeyChord>>,
 }
 
 pub struct CommandContextItemBuilder {
-    cmd_item: ComObject<CommandItem>,
+    base: ComObject<CommandItem>,
     critical: bool,
     shortcut: Option<KeyChord>,
 }
 
 impl CommandContextItemBuilder {
-    pub fn new(cmd_item: ComObject<CommandItem>) -> Self {
+    pub fn new(base: ComObject<CommandItem>) -> Self {
         CommandContextItemBuilder {
-            cmd_item,
+            base,
             critical: false,
             shortcut: None,
         }
@@ -52,17 +54,24 @@ impl ComBuilder for CommandContextItemBuilder {
     type Target = CommandContextItem;
     fn build_unmanaged(self) -> CommandContextItem {
         CommandContextItem {
-            cmd_item: self.cmd_item,
+            base: self.base,
             critical: NotifyLock::new(self.critical),
             shortcut: NotifyLock::new(self.shortcut),
         }
     }
 }
 
+impl Deref for CommandContextItem {
+    type Target = CommandItem_Impl;
+    fn deref(&self) -> &Self::Target {
+        &self.base
+    }
+}
+
 impl CommandContextItem_Impl {
     pub(crate) fn emit_self_prop_changed(&self, prop: &str) {
         let sender: IInspectable = self.to_interface();
-        self.cmd_item.emit_prop_changed(&sender, prop);
+        self.base.emit_prop_changed(&sender, prop);
     }
 
     pub fn critical(&self) -> Result<NotifyLockReadGuard<'_, bool>> {
@@ -82,6 +91,7 @@ impl CommandContextItem_Impl {
             .write(|| self.emit_self_prop_changed("RequestedShortcut"))
     }
 }
+
 impl ICommandContextItem_Impl for CommandContextItem_Impl {
     fn IsCritical(&self) -> windows_core::Result<bool> {
         self.critical.read().map(|x| *x)
@@ -92,16 +102,45 @@ impl ICommandContextItem_Impl for CommandContextItem_Impl {
 }
 
 impl ICommandItem_Impl for CommandContextItem_Impl {
-    ambassador_impl_ICommandItem_Impl! {
-        body_struct(< >, ComObject<CommandItem>, cmd_item)
+    fn Command(&self) -> windows_core::Result<ICommand> {
+        self.base.Command()
+    }
+
+    fn Icon(&self) -> windows_core::Result<IIconInfo> {
+        self.base.Icon()
+    }
+
+    fn MoreCommands(&self) -> windows_core::Result<windows_core::Array<IContextItem>> {
+        self.base.MoreCommands()
+    }
+
+    fn Subtitle(&self) -> windows_core::Result<windows_core::HSTRING> {
+        self.base.Subtitle()
+    }
+
+    fn Title(&self) -> windows_core::Result<windows_core::HSTRING> {
+        self.base.Title()
     }
 }
 
 impl IContextItem_Impl for CommandContextItem_Impl {}
 
 impl INotifyPropChanged_Impl for CommandContextItem_Impl {
-    ambassador_impl_INotifyPropChanged_Impl! {
-        body_struct(< >, ComObject<CommandItem>, cmd_item)
+    fn PropChanged(
+        &self,
+        handler: windows_core::Ref<
+            '_,
+            windows::Foundation::TypedEventHandler<
+                windows_core::IInspectable,
+                IPropChangedEventArgs,
+            >,
+        >,
+    ) -> windows_core::Result<i64> {
+        self.base.PropChanged(handler)
+    }
+
+    fn RemovePropChanged(&self, token: i64) -> windows_core::Result<()> {
+        self.base.RemovePropChanged(token)
     }
 }
 

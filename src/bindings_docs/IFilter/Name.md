@@ -1,0 +1,1 @@
+The name of the filter. This property is used to define the display name of the filter in the Command Palette.

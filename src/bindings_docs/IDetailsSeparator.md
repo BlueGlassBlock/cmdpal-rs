@@ -1,0 +1,1 @@
+The IDetailsSeparator interface is used to define a separator in a details page in the Command Palette. Separators are used to visually group items and provide a clear distinction between different sections of the details page.

@@ -1,0 +1,1 @@
+The new page gets added to the current navigation stack. Going back from the requested page will take you to the current page.

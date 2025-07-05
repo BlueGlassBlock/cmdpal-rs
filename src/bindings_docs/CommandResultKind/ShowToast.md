@@ -1,0 +1,1 @@
+Display a transient desktop-level message to the user. This is especially useful for displaying confirmation that an action took place when the palette will be closed. Consider the [`crate::cmd::common::CopyTextCommandBuilder`] in the helpers - this command will show a toast with the text "Copied to clipboard", then dismiss the palette.

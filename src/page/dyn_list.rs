@@ -74,32 +74,106 @@ impl IDynamicListPage_Impl for DynamicListPage_Impl {
 }
 
 impl IListPage_Impl for DynamicListPage_Impl {
-    ambassador_impl_IListPage_Impl! {
-        body_struct(< >, ComObject<ListPage>, base)
+    fn EmptyContent(&self) -> windows_core::Result<ICommandItem> {
+        self.base.EmptyContent()
+    }
+
+    fn Filters(&self) -> windows_core::Result<IFilters> {
+        self.base.Filters()
+    }
+
+    fn GetItems(&self) -> windows_core::Result<windows_core::Array<IListItem>> {
+        self.base.GetItems()
+    }
+
+    fn GridProperties(&self) -> windows_core::Result<IGridProperties> {
+        self.base.GridProperties()
+    }
+
+    fn HasMoreItems(&self) -> windows_core::Result<bool> {
+        self.base.HasMoreItems()
+    }
+
+    fn LoadMore(&self) -> windows_core::Result<()> {
+        self.base.LoadMore()
+    }
+
+    fn PlaceholderText(&self) -> windows_core::Result<windows_core::HSTRING> {
+        self.base.PlaceholderText()
+    }
+
+    fn SearchText(&self) -> windows_core::Result<windows_core::HSTRING> {
+        self.base.SearchText()
+    }
+
+    fn ShowDetails(&self) -> windows_core::Result<bool> {
+        self.base.ShowDetails()
     }
 }
 
 impl IPage_Impl for DynamicListPage_Impl {
-    ambassador_impl_IPage_Impl! {
-        body_struct(< >, ComObject<ListPage>, base)
+    fn AccentColor(&self) -> windows_core::Result<OptionalColor> {
+        self.base.AccentColor()
+    }
+
+    fn IsLoading(&self) -> windows_core::Result<bool> {
+        self.base.IsLoading()
+    }
+
+    fn Title(&self) -> windows_core::Result<windows_core::HSTRING> {
+        self.base.Title()
     }
 }
 
 impl INotifyItemsChanged_Impl for DynamicListPage_Impl {
-    ambassador_impl_INotifyItemsChanged_Impl! {
-        body_struct(< >, ComObject<ListPage>, base)
+    fn ItemsChanged(
+        &self,
+        handler: windows_core::Ref<
+            '_,
+            windows::Foundation::TypedEventHandler<
+                windows_core::IInspectable,
+                IItemsChangedEventArgs,
+            >,
+        >,
+    ) -> windows_core::Result<i64> {
+        self.base.ItemsChanged(handler)
     }
-}
 
-impl INotifyPropChanged_Impl for DynamicListPage_Impl {
-    ambassador_impl_INotifyPropChanged_Impl! {
-        body_struct(< >, ComObject<ListPage>, base)
+    fn RemoveItemsChanged(&self, token: i64) -> windows_core::Result<()> {
+        self.base.RemoveItemsChanged(token)
     }
 }
 
 impl ICommand_Impl for DynamicListPage_Impl {
-    ambassador_impl_ICommand_Impl! {
-        body_struct(< >, ComObject<ListPage>, base)
+    fn Icon(&self) -> windows_core::Result<IIconInfo> {
+        self.base.Icon()
+    }
+
+    fn Id(&self) -> windows_core::Result<windows_core::HSTRING> {
+        self.base.Id()
+    }
+
+    fn Name(&self) -> windows_core::Result<windows_core::HSTRING> {
+        self.base.Name()
+    }
+}
+
+impl INotifyPropChanged_Impl for DynamicListPage_Impl {
+    fn PropChanged(
+        &self,
+        handler: windows_core::Ref<
+            '_,
+            windows::Foundation::TypedEventHandler<
+                windows_core::IInspectable,
+                IPropChangedEventArgs,
+            >,
+        >,
+    ) -> windows_core::Result<i64> {
+        self.base.PropChanged(handler)
+    }
+
+    fn RemovePropChanged(&self, token: i64) -> windows_core::Result<()> {
+        self.base.RemovePropChanged(token)
     }
 }
 

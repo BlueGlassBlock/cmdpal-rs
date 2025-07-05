@@ -1,0 +1,1 @@
+Navigate to a different page in the palette. The [`IGoToPageArgs`] will specify which page to navigate to.

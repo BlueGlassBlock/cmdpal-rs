@@ -1,0 +1,1 @@
+Display a confirmation dialog to the user.

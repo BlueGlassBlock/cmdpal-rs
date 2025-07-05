@@ -1,0 +1,1 @@
+A descriptive name for the fallback command item, without the context of what's been typed. This property is what the Command Palette will show to user in the settings page for this command item entry.

@@ -1,0 +1,1 @@
+The IFallbackCommandItem interface represents a fallback command item in the Command Palette. It is used to define the properties and methods associated with a fallback command item that can be displayed in the Command Palette when no other commands match the user's input.

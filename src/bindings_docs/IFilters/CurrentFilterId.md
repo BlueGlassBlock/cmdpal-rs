@@ -1,0 +1,1 @@
+ID of currently selected [`IFilterItem`]. This is used to determine "default" filter.

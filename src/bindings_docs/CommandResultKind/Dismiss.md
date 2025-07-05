@@ -1,0 +1,1 @@
+Close the Command Palette after the action is executed and dismiss the current state. On the next launch, the Command Palette will start from the main page with a blank query.

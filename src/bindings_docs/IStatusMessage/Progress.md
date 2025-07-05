@@ -1,0 +1,1 @@
+The progress state of the message. This property is used to indicate the progress of an operation or task associated with the message.

@@ -1,0 +1,1 @@
+Indicates whether the progress is indeterminate (true) or determinate (false).

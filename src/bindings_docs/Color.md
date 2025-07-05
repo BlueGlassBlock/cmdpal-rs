@@ -1,0 +1,1 @@
+The Color struct represents a color value in the Command Palette. It is used to define colors in the RGB (Red, Green, Blue) color model, with an optional alpha (transparency) channel.

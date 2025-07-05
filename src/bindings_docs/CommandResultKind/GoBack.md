@@ -1,0 +1,1 @@
+Navigate to the previous page, and keep it open.

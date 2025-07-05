@@ -1,0 +1,1 @@
+The OptionalColor struct represents an optional color value that can be used in the Command Palette. It is designed to encapsulate a color value along with a flag indicating whether the value is present or not. This is useful for scenarios where a color may or may not be specified, allowing for more flexible and dynamic UI designs.

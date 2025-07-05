@@ -1,0 +1,1 @@
+Indicates a warning message.

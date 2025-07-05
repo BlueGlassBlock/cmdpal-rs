@@ -1,0 +1,1 @@
+The icon associated with the tag. This property is used to provide a visual representation of the tag, making it easier for users to identify its purpose.

@@ -1,0 +1,1 @@
+Indicates an informational message.

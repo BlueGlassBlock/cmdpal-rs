@@ -1,0 +1,1 @@
+The text to display when the list is empty or no items match the current filters. This property provides context to the user about the state of the list.

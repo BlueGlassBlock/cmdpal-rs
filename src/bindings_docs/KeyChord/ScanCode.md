@@ -1,0 +1,1 @@
+The scan code that represents the physical key on the keyboard. This is used for low-level keyboard input handling.

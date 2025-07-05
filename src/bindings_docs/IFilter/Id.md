@@ -1,0 +1,1 @@
+The unique identifier for the filter. This property is used to identify the filter in the Command Palette.

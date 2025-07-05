@@ -1,0 +1,1 @@
+The ICommandContextItem interface is used to represent a context menu item in the Command Palette. It is used to define the properties and methods that a context menu item must implement in order to be displayed in the Command Palette.

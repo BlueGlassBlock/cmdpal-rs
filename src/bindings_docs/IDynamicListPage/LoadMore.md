@@ -1,0 +1,1 @@
+The **LoadMore** method is used to load additional items into the list. This method is typically called when the user requests more items, such as when scrolling to the end of the list or clicking a "Load More" button.

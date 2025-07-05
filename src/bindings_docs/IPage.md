@@ -1,0 +1,1 @@
+The IPage interface represents individual views in the application and are the primary unit of navigation and interaction.

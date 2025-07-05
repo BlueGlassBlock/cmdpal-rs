@@ -1,0 +1,1 @@
+The overall state of the message. This property is used to categorize the message, such as success, error, or warning.

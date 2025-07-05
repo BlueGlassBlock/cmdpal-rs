@@ -1,0 +1,1 @@
+The icon associated with the filter. This property is used to define the visual representation of the filter in the Command Palette.

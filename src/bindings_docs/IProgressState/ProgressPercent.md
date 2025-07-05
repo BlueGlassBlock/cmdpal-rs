@@ -1,0 +1,1 @@
+Gets the progress percentage `0` - `100` if the progress is determinate.

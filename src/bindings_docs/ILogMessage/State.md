@@ -1,0 +1,1 @@
+The state of the log message. This property indicates the severity or type of the log message, such as informational, warning, or error. The [`MessageState`] will specify the type.

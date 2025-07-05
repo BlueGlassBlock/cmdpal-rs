@@ -1,0 +1,1 @@
+Gets the number of items changed.

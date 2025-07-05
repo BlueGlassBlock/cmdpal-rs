@@ -1,0 +1,1 @@
+The color value. This field is used to store the actual color when it is specified.

@@ -12,6 +12,10 @@ use windows_core::ComObject;
 use windows_core::IInspectable;
 
 pub use crate::cmd_result::CommandResult;
+pub use copy_text::CopyTextCommandBuilder;
+pub use no_op::NoOpCommandBuilder;
+pub use open_url::OpenUrlCommandBuilder;
+pub use reveal_file::RevealFileCommandBuilder;
 
 use super::BaseCommand;
 
@@ -42,13 +46,34 @@ impl IInvokableCommand_Impl for InvokableCommand_Impl {
 }
 
 impl ICommand_Impl for InvokableCommand_Impl {
-    ambassador_impl_ICommand_Impl! {
-        body_struct(< >, ComObject<BaseCommand>, base)
+    fn Icon(&self) -> windows_core::Result<IIconInfo> {
+        self.base.Icon()
+    }
+
+    fn Id(&self) -> windows_core::Result<windows_core::HSTRING> {
+        self.base.Id()
+    }
+
+    fn Name(&self) -> windows_core::Result<windows_core::HSTRING> {
+        self.base.Name()
     }
 }
 
 impl INotifyPropChanged_Impl for InvokableCommand_Impl {
-    ambassador_impl_INotifyPropChanged_Impl! {
-        body_struct(< >, ComObject<BaseCommand>, base)
+    fn PropChanged(
+        &self,
+        handler: windows_core::Ref<
+            '_,
+            windows::Foundation::TypedEventHandler<
+                windows_core::IInspectable,
+                IPropChangedEventArgs,
+            >,
+        >,
+    ) -> windows_core::Result<i64> {
+        self.base.PropChanged(handler)
+    }
+
+    fn RemovePropChanged(&self, token: i64) -> windows_core::Result<()> {
+        self.base.RemovePropChanged(token)
     }
 }

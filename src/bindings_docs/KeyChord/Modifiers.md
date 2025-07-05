@@ -1,0 +1,1 @@
+The key modifiers (e.g., Control, Shift, Alt) that are part of the key chord.

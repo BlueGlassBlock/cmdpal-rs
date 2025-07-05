@@ -1,0 +1,1 @@
+The IPropChangedEventArgs interface represents the arguments for property change events in the Command Palette. It is used to provide information about the property that has changed and its new value.

@@ -1,0 +1,1 @@
+The foreground color of the tag. This property is used to set the text color of the tag, ensuring good contrast with the background color.

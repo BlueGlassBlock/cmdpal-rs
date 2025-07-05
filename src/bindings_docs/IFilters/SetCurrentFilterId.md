@@ -1,0 +1,1 @@
+Sets the ID of the currently selected [`IFilterItem`]. Implementer should update items of the list when the method is called. [`IListPage::GetItems`] will be called after this method is called to refresh the list of items.

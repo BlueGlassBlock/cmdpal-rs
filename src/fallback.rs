@@ -102,14 +102,43 @@ impl IFallbackCommandItem_Impl for FallbackCommandItem_Impl {
 }
 
 impl ICommandItem_Impl for FallbackCommandItem_Impl {
-    ambassador_impl_ICommandItem_Impl! {
-        body_struct(< >, ComObject<CommandItem>, base)
+    fn Command(&self) -> windows_core::Result<ICommand> {
+        self.base.Command()
+    }
+
+    fn Icon(&self) -> windows_core::Result<IIconInfo> {
+        self.base.Icon()
+    }
+
+    fn MoreCommands(&self) -> windows_core::Result<windows_core::Array<IContextItem>> {
+        self.base.MoreCommands()
+    }
+
+    fn Subtitle(&self) -> windows_core::Result<windows_core::HSTRING> {
+        self.base.Subtitle()
+    }
+
+    fn Title(&self) -> windows_core::Result<windows_core::HSTRING> {
+        self.base.Title()
     }
 }
 
 impl INotifyPropChanged_Impl for FallbackCommandItem_Impl {
-    ambassador_impl_INotifyPropChanged_Impl! {
-        body_struct(< >, ComObject<CommandItem>, base)
+    fn PropChanged(
+        &self,
+        handler: windows_core::Ref<
+            '_,
+            windows::Foundation::TypedEventHandler<
+                windows_core::IInspectable,
+                IPropChangedEventArgs,
+            >,
+        >,
+    ) -> windows_core::Result<i64> {
+        self.base.PropChanged(handler)
+    }
+
+    fn RemovePropChanged(&self, token: i64) -> windows_core::Result<()> {
+        self.base.RemovePropChanged(token)
     }
 }
 

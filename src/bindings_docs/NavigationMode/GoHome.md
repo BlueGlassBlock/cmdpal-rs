@@ -1,0 +1,1 @@
+Clear the back stack, then navigate to the page. Going back from the requested page will take you to the home page.

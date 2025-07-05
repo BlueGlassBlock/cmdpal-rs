@@ -1,0 +1,1 @@
+Do nothing. This leaves the palette in its current state, with the current page stack and query.

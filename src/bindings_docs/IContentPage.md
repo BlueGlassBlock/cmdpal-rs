@@ -1,0 +1,1 @@
+The IContentPage interface is used to define a content page in the Command Palette. Content pages can be used to display additional information or resources related to the item being displayed in the Command Palette.

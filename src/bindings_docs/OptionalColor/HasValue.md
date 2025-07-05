@@ -1,0 +1,1 @@
+Indicates whether the color value is present or not.

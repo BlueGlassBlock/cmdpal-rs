@@ -1,0 +1,1 @@
+The Dispose method is used to clean up resources and perform any necessary cleanup when the extension is no longer needed. This method is typically called when the extension is being unloaded or disposed of, allowing it to release any resources it has acquired during its lifetime.

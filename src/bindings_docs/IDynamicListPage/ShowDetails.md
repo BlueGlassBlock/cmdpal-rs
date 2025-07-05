@@ -1,0 +1,1 @@
+Indicates whether to show detailed information about the items in the list. This property can be used to toggle between a summary view and a detailed view of the items.

@@ -1,0 +1,1 @@
+The StatusContext struct presents the origin of status to Command Palette.

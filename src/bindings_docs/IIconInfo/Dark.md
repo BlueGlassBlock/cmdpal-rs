@@ -1,0 +1,1 @@
+Gets the dark mode version of the icon.

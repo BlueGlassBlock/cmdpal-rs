@@ -1,0 +1,1 @@
+The IInvokableCommand interface represents a command that can be invoked in the Command Palette. It is used to define commands that can be executed by the user, such as opening a file, running a script, or performing an action.

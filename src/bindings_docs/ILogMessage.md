@@ -1,0 +1,1 @@
+The ILogMessage interface represents a log message in the Command Palette. It is used to provide information about the state of the application or specific operations, and can be used for debugging or informational purposes.

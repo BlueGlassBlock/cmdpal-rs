@@ -1,0 +1,1 @@
+The IIconInfo interface represents an icon that can be used in the Command Palette. It is used to define icons that can be displayed in the Command Palette, such as application icons, file icons, or custom icons.

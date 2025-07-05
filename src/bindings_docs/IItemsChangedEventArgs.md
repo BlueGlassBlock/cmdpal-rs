@@ -1,0 +1,1 @@
+The IItemsChangedEventArgs interface represents the arguments for the event that is raised when the items in the Command Palette change. It provides information about the number of items that have been added, removed, or modified in the list.

@@ -1,0 +1,1 @@
+The IExtension interface is used to define the properties and methods that an extension must implement in order to be used in the Command Palette.

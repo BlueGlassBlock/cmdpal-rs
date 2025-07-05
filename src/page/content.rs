@@ -131,7 +131,7 @@ impl ContentPage_Impl {
     ) -> Result<NotifyLockWriteGuard<'_, Option<ComObject<Details>>, impl Fn()>> {
         self.details.write(|| {
             self.base
-                .command
+                .base
                 .emit_prop_changed(self.to_interface(), "Details")
         })
     }
@@ -176,21 +176,50 @@ impl INotifyItemsChanged_Impl for ContentPage_Impl {
 }
 
 impl IPage_Impl for ContentPage_Impl {
-    ambassador_impl_IPage_Impl!(
-        body_struct(<>, ComObject<BasePage>, base)
-    );
+    fn AccentColor(&self) -> windows_core::Result<OptionalColor> {
+        self.base.AccentColor()
+    }
+
+    fn IsLoading(&self) -> windows_core::Result<bool> {
+        self.base.IsLoading()
+    }
+
+    fn Title(&self) -> windows_core::Result<windows_core::HSTRING> {
+        self.base.Title()
+    }
 }
 
 impl ICommand_Impl for ContentPage_Impl {
-    ambassador_impl_ICommand_Impl!(
-        body_struct(<>, ComObject<BasePage>, (base.command), (base.command), (base.command))
-    );
+    fn Icon(&self) -> windows_core::Result<IIconInfo> {
+        self.base.Icon()
+    }
+
+    fn Id(&self) -> windows_core::Result<windows_core::HSTRING> {
+        self.base.Id()
+    }
+
+    fn Name(&self) -> windows_core::Result<windows_core::HSTRING> {
+        self.base.Name()
+    }
 }
 
 impl INotifyPropChanged_Impl for ContentPage_Impl {
-    ambassador_impl_INotifyPropChanged_Impl!(
-        body_struct(<>, ComObject<BasePage>, base)
-    );
+    fn PropChanged(
+        &self,
+        handler: windows_core::Ref<
+            '_,
+            windows::Foundation::TypedEventHandler<
+                windows_core::IInspectable,
+                IPropChangedEventArgs,
+            >,
+        >,
+    ) -> windows_core::Result<i64> {
+        self.base.PropChanged(handler)
+    }
+
+    fn RemovePropChanged(&self, token: i64) -> windows_core::Result<()> {
+        self.base.RemovePropChanged(token)
+    }
 }
 
 const _: () = assert_send_sync::<ComObject<ContentPage>>();

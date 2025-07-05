@@ -1,0 +1,1 @@
+The virtual key code that represents the main key in the key chord.

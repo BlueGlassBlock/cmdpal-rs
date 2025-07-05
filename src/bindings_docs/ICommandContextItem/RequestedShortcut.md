@@ -1,0 +1,1 @@
+The shortcut that was requested for this item. This property is used to define the shortcut that will be used to activate the item in the Command Palette.

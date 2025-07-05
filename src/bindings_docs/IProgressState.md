@@ -1,0 +1,1 @@
+The IProgressState interface represents the state of a progress indicator in the Command Palette. It is used to provide information about the progress of an operation, such as loading or processing data.

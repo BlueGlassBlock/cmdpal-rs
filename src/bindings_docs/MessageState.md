@@ -1,0 +1,1 @@
+The MessageState enum defines the different states of a message that can be displayed in the Command Palette. Each state represents a different type of message that can be shown to the user, such as error messages, informational messages, success messages, and warning messages.

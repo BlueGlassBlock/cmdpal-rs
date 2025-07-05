@@ -1,0 +1,1 @@
+The INotifyItemsChanged interface represents an object that can notify listeners of item changes in the Command Palette. It is used to implement the observer pattern, allowing other components to subscribe to item change notifications.

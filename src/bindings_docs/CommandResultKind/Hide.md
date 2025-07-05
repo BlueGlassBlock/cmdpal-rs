@@ -1,0 +1,1 @@
+Keep this page open and hide the palette.

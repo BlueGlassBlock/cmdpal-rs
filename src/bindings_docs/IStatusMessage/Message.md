@@ -1,0 +1,1 @@
+The message text to be displayed in the Command Palette. This property is used to provide information or feedback to the user.

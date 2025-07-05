@@ -1,0 +1,1 @@
+The section to which the item belongs. This property can be used to group items into sections, allowing for better organization and navigation within the list.
