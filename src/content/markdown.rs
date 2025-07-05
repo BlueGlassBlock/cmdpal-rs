@@ -1,21 +1,25 @@
 use crate::bindings::*;
 use crate::notify::*;
 use crate::utils::assert_send_sync;
-use windows::Foundation::TypedEventHandler;
 use windows::core::{Event, HSTRING, IInspectable, IUnknownImpl as _, implement};
 use windows_core::ComObject;
 
 #[implement(IMarkdownContent, IContent, INotifyPropChanged)]
 pub struct MarkdownContent {
     body: NotifyLock<HSTRING>,
-    event: Event<TypedEventHandler<IInspectable, IPropChangedEventArgs>>,
+    event: PropChangedEventHandler,
 }
 
 impl MarkdownContent {
-    pub fn new(body: HSTRING) -> Self {
+    pub fn new_unmanaged(body: HSTRING) -> Self {
         let body = NotifyLock::new(body);
         let event = Event::new();
         MarkdownContent { body, event }
+    }
+
+    pub fn new(body: HSTRING) -> ComObject<Self> {
+        let content = Self::new_unmanaged(body);
+        ComObject::new(content)
     }
 }
 
