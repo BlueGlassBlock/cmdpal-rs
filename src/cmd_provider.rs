@@ -1,5 +1,6 @@
 use crate::bindings::*;
 use crate::icon::IconInfo;
+use crate::notify::ItemsChangedEventHandler;
 use crate::utils::{ComBuilder, OkOrEmpty, map_array};
 use windows::Foundation::{IClosable, IClosable_Impl, TypedEventHandler};
 use windows::core::{ComObject, implement};
@@ -14,7 +15,7 @@ pub struct CommandProvider {
     frozen: bool,
     top_level: Vec<ICommandItem>,
     fallbacks: Vec<IFallbackCommandItem>,
-    event: Event<TypedEventHandler<IInspectable, IItemsChangedEventArgs>>,
+    event: ItemsChangedEventHandler,
 }
 
 pub struct CommandProviderBuilder {

@@ -2,7 +2,6 @@ use crate::bindings::*;
 use crate::cmd::CommandResult;
 use crate::notify::*;
 use crate::utils::{ComBuilder, assert_send_sync};
-use windows::Foundation::TypedEventHandler;
 use windows::core::{ComObject, Event, HSTRING, IInspectable, IUnknownImpl as _, implement};
 
 pub type SubmitFn = Box<
@@ -17,7 +16,7 @@ pub struct FormContent {
     data_json: NotifyLock<HSTRING>,
     state_json: NotifyLock<HSTRING>,
     submit: SubmitFn,
-    event: Event<TypedEventHandler<IInspectable, IPropChangedEventArgs>>,
+    event: PropChangedEventHandler,
 }
 
 pub struct FormContentBuilder {

@@ -3,7 +3,6 @@ use crate::icon::IconInfo;
 use crate::notify::*;
 use crate::utils::{ComBuilder, OkOrEmpty, assert_send_sync};
 use crate::{bindings::*, utils::map_array};
-use windows::Foundation::TypedEventHandler;
 use windows::core::{
     AgileReference, ComObject, Event, HSTRING, IInspectable, IUnknownImpl as _, implement,
 };
@@ -15,7 +14,7 @@ pub struct CommandItem {
     title: NotifyLock<HSTRING>,
     subtitle: NotifyLock<HSTRING>,
     more: NotifyLock<Vec<ContextItem>>,
-    event: Event<TypedEventHandler<IInspectable, IPropChangedEventArgs>>,
+    event: PropChangedEventHandler,
 }
 
 pub struct CommandItemBuilder {

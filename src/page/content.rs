@@ -4,7 +4,6 @@ use crate::details::Details;
 use crate::notify::*;
 use crate::utils::{ComBuilder, OkOrEmpty, assert_send_sync, map_array};
 use std::ops::Deref;
-use windows::Foundation::TypedEventHandler;
 use windows::core::{
     AgileReference, ComObject, Event, IInspectable, IUnknownImpl as _, Result, implement,
 };
@@ -15,7 +14,7 @@ pub struct ContentPage {
     commands: NotifyLock<Vec<AgileReference<IContextItem>>>,
     contents: NotifyLock<Vec<AgileReference<IContent>>>,
     details: NotifyLock<Option<ComObject<Details>>>,
-    item_event: Event<TypedEventHandler<IInspectable, IItemsChangedEventArgs>>,
+    item_event: ItemsChangedEventHandler,
 }
 
 pub struct ContentPageBuilder {

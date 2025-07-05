@@ -1,3 +1,6 @@
+//! This module provides a prelude for the cmdpal library, re-exporting commonly used types and traits.
+//! This allows users to import everything they need with a single `use cmdpal::prelude::*;` statement.
+
 pub use crate::{
     ExtRegistry,
     bindings::StatusContext,
@@ -10,11 +13,11 @@ pub use crate::{
     },
     cmd_item::{CommandItem, CommandItemBuilder},
     cmd_provider::{CommandProvider, CommandProviderBuilder},
-    content::{FormContent, MarkdownContent, TreeContent},
+    content::{FormContent, FormContentBuilder, MarkdownContent, TreeContent, TreeContentBuilder},
     ctx_item::{CommandContextItem, CommandContextItemBuilder, ContextItem, SeparatorContextItem},
     details::{
         Details, DetailsBuilder, DetailsLink, DetailsLinkBuilder, DetailsSeparator, DetailsTags,
-        Tag, TagBuilder,
+        DetailsTagsBuilder, Tag, TagBuilder,
     },
     ext::Extension,
     fallback::FallbackCommandItem,
@@ -24,7 +27,7 @@ pub use crate::{
     page::{
         BasePage, BasePageBuilder,
         content::{ContentPage, ContentPageBuilder},
-        dyn_list::DynamicListPage,
+        dyn_list::{DynamicListPage, DynamicListPageBuilder},
         list::{ListItem, ListItemBuilder, ListPage, ListPageBuilder},
     },
     utils::{ComBuilder, GridProperties},

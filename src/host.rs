@@ -2,8 +2,8 @@ use crate::bindings::*;
 use crate::notify::*;
 use std::sync::RwLock;
 use windows::core::AgileReference;
-use windows::core::{ComObject, Event, IInspectable, IUnknownImpl as _, implement};
-use windows::{Foundation::TypedEventHandler, Win32::Foundation::E_INVALIDARG};
+use windows::core::{ComObject, IInspectable, IUnknownImpl as _, implement};
+use windows::Win32::Foundation::E_INVALIDARG;
 
 pub(crate) static EXTENSION_HOST: RwLock<Option<AgileReference<IExtensionHost>>> =
     RwLock::new(None);
@@ -12,7 +12,7 @@ pub(crate) static EXTENSION_HOST: RwLock<Option<AgileReference<IExtensionHost>>>
 pub struct ProgressState {
     indeterminate: NotifyLock<bool>,
     percentage: NotifyLock<u32>,
-    event: Event<TypedEventHandler<IInspectable, IPropChangedEventArgs>>,
+    event: PropChangedEventHandler,
 }
 
 impl ProgressState_Impl {
@@ -136,7 +136,7 @@ pub struct StatusMessage {
     state: NotifyLock<MessageState>,
     progress: NotifyLock<ComObject<ProgressState>>,
     message: NotifyLock<windows_core::HSTRING>,
-    event: Event<TypedEventHandler<IInspectable, IPropChangedEventArgs>>,
+    event: PropChangedEventHandler,
 }
 
 impl StatusMessage_Impl {

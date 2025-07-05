@@ -1,3 +1,4 @@
+//! `NotifyLock` struct and event handling utilities
 use crate::bindings::*;
 use std::mem::ManuallyDrop;
 use std::ops::{Deref, DerefMut};
@@ -6,12 +7,20 @@ use windows::Foundation::TypedEventHandler;
 use windows::Win32::Foundation::ERROR_LOCK_VIOLATION;
 use windows::core::{Event, IInspectable, Result, implement};
 
+/// `NotifyLock` struct is a wrapper around [`RwLock`] that allows for notification callbacks.
+/// When exposing the interface, `NotifyLock` references shouldn't be returned directly.
+/// Instead, return [`NotifyLockReadGuard`] or [`NotifyLockWriteGuard`]
+/// to ensure that intended notification function is called.
+///
+/// Useful for implementing COM interfaces like `INotifyPropChanged`.
 pub struct NotifyLock<T> {
     lock: RwLock<T>,
 }
 
+/// Alias of [`std::sync::RwLockReadGuard`]
 pub use std::sync::RwLockReadGuard as NotifyLockReadGuard;
 
+/// A thin wrapper around [`RwLockWriteGuard`] that allows for notification callbacks
 pub struct NotifyLockWriteGuard<'a, T, N>
 where
     N: Fn() + 'a,
@@ -54,16 +63,20 @@ where
 }
 
 impl<T> NotifyLock<T> {
+    /// Creates a new `NotifyLock` with the given value.
     pub fn new(value: T) -> Self {
         NotifyLock {
             lock: RwLock::new(value),
         }
     }
 
+    /// Get a read guard for the lock.
     pub fn read(&self) -> Result<NotifyLockReadGuard<'_, T>> {
         self.lock.read().map_err(|_| ERROR_LOCK_VIOLATION.into())
     }
 
+    /// Get a mutable write guard for the lock, with a notification callback.
+    /// The callback will be called when the guard is dropped.
     pub fn write<'a, N>(&'a self, notify: N) -> Result<NotifyLockWriteGuard<'a, T, N>>
     where
         N: Fn() + 'a,
@@ -80,6 +93,8 @@ impl<T> NotifyLock<T> {
 
 pub type PropChangedEventHandler = Event<TypedEventHandler<IInspectable, IPropChangedEventArgs>>;
 
+/// `PropChangedEventArgs` is used to notify about property changes in COM interfaces.
+/// It implements the `IPropChangedEventArgs` interface and contains the name of the property that changed.
 #[implement(IPropChangedEventArgs)]
 pub struct PropChangedEventArgs(pub windows::core::HSTRING);
 
@@ -97,6 +112,8 @@ impl From<windows::core::HSTRING> for PropChangedEventArgs {
 
 pub type ItemsChangedEventHandler = Event<TypedEventHandler<IInspectable, IItemsChangedEventArgs>>;
 
+/// `ItemsChangedEventArgs` is used to notify about changes in a collection of items.
+/// It implements the `IItemsChangedEventArgs` interface and contains the total number of items (-1 if unknown).
 #[implement(IItemsChangedEventArgs)]
 pub struct ItemsChangedEventArgs(pub i32);
 

@@ -1,8 +1,7 @@
 use super::Content;
 use crate::notify::*;
-use crate::utils::assert_send_sync;
+use crate::utils::{assert_send_sync, ComBuilder};
 use crate::{bindings::*, utils::map_array};
-use windows::Foundation::TypedEventHandler;
 use windows::core::{Event, IInspectable, IUnknownImpl as _, Result, implement};
 use windows_core::ComObject;
 
@@ -10,8 +9,44 @@ use windows_core::ComObject;
 pub struct TreeContent {
     root: NotifyLock<Content>,
     children: NotifyLock<Vec<Content>>,
-    prop_event: Event<TypedEventHandler<IInspectable, IPropChangedEventArgs>>,
-    item_event: Event<TypedEventHandler<IInspectable, IItemsChangedEventArgs>>,
+    prop_event: PropChangedEventHandler,
+    item_event: ItemsChangedEventHandler,
+}
+
+pub struct TreeContentBuilder {
+    root: Content,
+    children: Vec<Content>,
+}
+
+impl TreeContentBuilder {
+    pub fn new(root: Content) -> Self {
+        TreeContentBuilder {
+            root,
+            children: Vec::new(),
+        }
+    }
+
+    pub fn children(mut self, children: Vec<Content>) -> Self {
+        self.children = children;
+        self
+    }
+
+    pub fn add_child(mut self, child: Content) -> Self {
+        self.children.push(child);
+        self
+    }
+}
+
+impl ComBuilder for TreeContentBuilder {
+    type Target = TreeContent;
+    fn build_unmanaged(self) -> TreeContent {
+        TreeContent {
+            root: NotifyLock::new(self.root),
+            children: NotifyLock::new(self.children),
+            prop_event: Event::new(),
+            item_event: Event::new(),
+        }
+    }
 }
 
 impl TreeContent_Impl {

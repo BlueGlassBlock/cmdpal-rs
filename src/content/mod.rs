@@ -2,9 +2,9 @@ pub mod form;
 pub mod markdown;
 pub mod tree;
 
-pub use form::FormContent;
+pub use form::{FormContent, FormContentBuilder};
 pub use markdown::MarkdownContent;
-pub use tree::TreeContent;
+pub use tree::{TreeContent, TreeContentBuilder};
 use windows::core::ComObject;
 
 pub enum Content {

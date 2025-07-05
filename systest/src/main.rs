@@ -11,7 +11,7 @@ const MD_CONTENT: &str = include_str!("../../README.md");
 
 fn com_main() -> Result<()> {
     tracing::info!("Hello, world!");
-    let md_box: ComObject<_> = cmdpal::content::markdown::MarkdownContent::new("".into()).into();
+    let md_box: ComObject<_> = cmdpal::content::markdown::MarkdownContent::new_unmanaged("".into()).into();
     let task_box = md_box.clone();
     // start a thread to update the content to current time
     let _handle = std::thread::spawn(move || unsafe {
@@ -86,7 +86,7 @@ fn com_main() -> Result<()> {
             .body("Details Body")
             .build(),
     )
-    .try_add_content(cmdpal::content::markdown::MarkdownContent::new(MD_CONTENT.into()).into())?
+    .try_add_content(cmdpal::content::markdown::MarkdownContent::new_unmanaged(MD_CONTENT.into()).into())?
     .try_add_content(md_box.to_interface())?
     .try_add_command(
         CommandContextItemBuilder::new(copy_sample_item)

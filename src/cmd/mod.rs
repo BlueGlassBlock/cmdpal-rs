@@ -5,7 +5,6 @@ pub use crate::cmd_result::CommandResult;
 use crate::icon::IconInfo;
 use crate::notify::*;
 use crate::utils::{ComBuilder, OkOrEmpty};
-use windows::Foundation::TypedEventHandler;
 use windows::core::{ComObject, Event, HSTRING, IInspectable, IUnknownImpl as _, implement};
 
 #[implement(ICommand, INotifyPropChanged)]
@@ -13,7 +12,7 @@ pub struct BaseCommand {
     name: NotifyLock<HSTRING>,
     id: NotifyLock<HSTRING>,
     icon: NotifyLock<Option<ComObject<IconInfo>>>,
-    event: Event<TypedEventHandler<IInspectable, IPropChangedEventArgs>>,
+    event: PropChangedEventHandler,
 }
 
 pub struct BaseCommandBuilder {
