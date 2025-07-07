@@ -1,8 +1,7 @@
 use windows::core::ComObject;
 
-use super::InvokableCommand;
 use crate::{
-    cmd::{BaseCommand, BaseCommandBuilder, CommandResult},
+    cmd::{BaseCommand, BaseCommandBuilder, CommandResult, InvokableCommand},
     utils::ComBuilder,
 };
 

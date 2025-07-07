@@ -84,7 +84,7 @@ impl FallbackCommandItem_Impl {
         self.title.read()
     }
 
-    pub fn title_mut(&self) -> Result<NotifyLockWriteGuard<'_, HSTRING, impl Fn()>> {
+    pub fn title_mut(&self) -> Result<NotifyLockWriteGuard<'_, HSTRING>> {
         self.title.write(|| {
             self.base
                 .emit_prop_changed(&self.to_interface(), "DisplayTitle")

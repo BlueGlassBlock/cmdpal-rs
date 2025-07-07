@@ -7,7 +7,7 @@ use windows::core::{ComObject, Event, HSTRING, IInspectable, IUnknownImpl as _, 
 pub type SubmitFn = Box<
     dyn Send
         + Sync
-        + Fn(&FormContent_Impl, &HSTRING, &HSTRING) -> windows_core::Result<ComObject<CommandResult>>,
+        + Fn(&FormContent_Impl, &HSTRING, &HSTRING) -> windows_core::Result<CommandResult>,
 >;
 
 #[implement(IFormContent, IContent, INotifyPropChanged)]
@@ -32,7 +32,7 @@ impl FormContentBuilder {
             template_json: HSTRING::default(),
             data_json: HSTRING::default(),
             state_json: HSTRING::default(),
-            submit: Box::new(|_, _, _| Ok(ComObject::new(CommandResult::KeepOpen))),
+            submit: Box::new(|_, _, _| Ok(CommandResult::KeepOpen)),
         }
     }
 
@@ -83,7 +83,7 @@ impl FormContent_Impl {
 
     pub fn template_json_mut(
         &self,
-    ) -> windows_core::Result<NotifyLockWriteGuard<'_, HSTRING, impl Fn()>> {
+    ) -> windows_core::Result<NotifyLockWriteGuard<'_, HSTRING>> {
         self.template_json
             .write(|| self.emit_self_prop_changed("TemplateJson"))
     }
@@ -94,7 +94,7 @@ impl FormContent_Impl {
 
     pub fn data_json_mut(
         &self,
-    ) -> windows_core::Result<NotifyLockWriteGuard<'_, HSTRING, impl Fn()>> {
+    ) -> windows_core::Result<NotifyLockWriteGuard<'_, HSTRING>> {
         self.data_json
             .write(|| self.emit_self_prop_changed("DataJson"))
     }
@@ -105,7 +105,7 @@ impl FormContent_Impl {
 
     pub fn state_json_mut(
         &self,
-    ) -> windows_core::Result<NotifyLockWriteGuard<'_, HSTRING, impl Fn()>> {
+    ) -> windows_core::Result<NotifyLockWriteGuard<'_, HSTRING>> {
         self.state_json
             .write(|| self.emit_self_prop_changed("StateJson"))
     }
@@ -129,7 +129,7 @@ impl IFormContent_Impl for FormContent_Impl {
         inputs: &windows_core::HSTRING,
         data: &windows_core::HSTRING,
     ) -> windows_core::Result<ICommandResult> {
-        (self.submit)(self, inputs, data).map(|x| x.to_interface())
+        (self.submit)(self, inputs, data).map(|x| x.into())
     }
 }
 

@@ -103,7 +103,7 @@ impl CommandItem_Impl {
 
     pub fn command_mut(
         &self,
-    ) -> windows_core::Result<NotifyLockWriteGuard<'_, AgileReference<ICommand>, impl Fn()>> {
+    ) -> windows_core::Result<NotifyLockWriteGuard<'_, AgileReference<ICommand>>> {
         self.command
             .write(|| self.emit_self_prop_changed("Command"))
     }
@@ -116,7 +116,7 @@ impl CommandItem_Impl {
 
     pub fn icon_mut(
         &self,
-    ) -> windows_core::Result<NotifyLockWriteGuard<'_, Option<ComObject<IconInfo>>, impl Fn()>>
+    ) -> windows_core::Result<NotifyLockWriteGuard<'_, Option<ComObject<IconInfo>>>>
     {
         self.icon.write(|| self.emit_self_prop_changed("Icon"))
     }
@@ -125,7 +125,7 @@ impl CommandItem_Impl {
         self.title.read()
     }
 
-    pub fn title_mut(&self) -> windows_core::Result<NotifyLockWriteGuard<'_, HSTRING, impl Fn()>> {
+    pub fn title_mut(&self) -> windows_core::Result<NotifyLockWriteGuard<'_, HSTRING>> {
         self.title.write(|| self.emit_self_prop_changed("Title"))
     }
 
@@ -135,7 +135,7 @@ impl CommandItem_Impl {
 
     pub fn subtitle_mut(
         &self,
-    ) -> windows_core::Result<NotifyLockWriteGuard<'_, HSTRING, impl Fn()>> {
+    ) -> windows_core::Result<NotifyLockWriteGuard<'_, HSTRING>> {
         self.subtitle
             .write(|| self.emit_self_prop_changed("Subtitle"))
     }
@@ -146,7 +146,7 @@ impl CommandItem_Impl {
 
     pub fn more_mut(
         &self,
-    ) -> windows_core::Result<NotifyLockWriteGuard<'_, Vec<ContextItem>, impl Fn()>> {
+    ) -> windows_core::Result<NotifyLockWriteGuard<'_, Vec<ContextItem>>> {
         self.more
             .write(|| self.emit_self_prop_changed("MoreCommands"))
     }

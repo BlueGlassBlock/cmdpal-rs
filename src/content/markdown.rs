@@ -34,7 +34,7 @@ impl MarkdownContent_Impl {
         self.body.read()
     }
 
-    pub fn body_mut(&self) -> windows_core::Result<NotifyLockWriteGuard<'_, HSTRING, impl Fn()>> {
+    pub fn body_mut(&self) -> windows_core::Result<NotifyLockWriteGuard<'_, HSTRING>> {
         self.body.write(|| self.emit_self_prop_changed("Body"))
     }
 }

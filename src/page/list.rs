@@ -279,7 +279,7 @@ impl ListPage_Impl {
         self.search_text.read()
     }
 
-    pub fn search_text_mut(&self) -> Result<NotifyLockWriteGuard<'_, HSTRING, impl Fn()>> {
+    pub fn search_text_mut(&self) -> Result<NotifyLockWriteGuard<'_, HSTRING>> {
         self.search_text.write(|| {
             self.base
                 .base
@@ -289,7 +289,7 @@ impl ListPage_Impl {
 
     pub(crate) fn search_text_mut_no_notify(
         &self,
-    ) -> Result<NotifyLockWriteGuard<'_, HSTRING, impl Fn()>> {
+    ) -> Result<NotifyLockWriteGuard<'_, HSTRING>> {
         self.search_text.write(|| {})
     }
 
@@ -299,7 +299,7 @@ impl ListPage_Impl {
 
     pub fn empty_content_mut(
         &self,
-    ) -> Result<NotifyLockWriteGuard<'_, Option<ComObject<CommandItem>>, impl Fn()>> {
+    ) -> Result<NotifyLockWriteGuard<'_, Option<ComObject<CommandItem>>>> {
         self.empty_content.write(|| {
             self.base
                 .base
@@ -313,7 +313,7 @@ impl ListPage_Impl {
 
     pub fn filters_mut(
         &self,
-    ) -> Result<NotifyLockWriteGuard<'_, Option<ComObject<Filters>>, impl Fn()>> {
+    ) -> Result<NotifyLockWriteGuard<'_, Option<ComObject<Filters>>>> {
         self.filters.write(|| {
             self.base
                 .base
@@ -327,7 +327,7 @@ impl ListPage_Impl {
 
     pub fn items_mut(
         &self,
-    ) -> Result<NotifyLockWriteGuard<'_, Vec<ComObject<ListItem>>, impl Fn()>> {
+    ) -> Result<NotifyLockWriteGuard<'_, Vec<ComObject<ListItem>>>> {
         self.items.write(|| self.emit_self_items_changed(-1))
     }
 
@@ -339,7 +339,7 @@ impl ListPage_Impl {
 
     pub fn grid_properties_mut(
         &self,
-    ) -> Result<NotifyLockWriteGuard<'_, Option<ComObject<GridProperties>>, impl Fn()>> {
+    ) -> Result<NotifyLockWriteGuard<'_, Option<ComObject<GridProperties>>>> {
         self.grid_properties.write(|| {
             self.base
                 .base
@@ -351,7 +351,7 @@ impl ListPage_Impl {
         self.has_more.read()
     }
 
-    pub fn has_more_mut(&self) -> Result<NotifyLockWriteGuard<'_, bool, impl Fn()>> {
+    pub fn has_more_mut(&self) -> Result<NotifyLockWriteGuard<'_, bool>> {
         self.has_more.write(|| {
             self.base
                 .base
@@ -363,7 +363,7 @@ impl ListPage_Impl {
         self.placeholder.read()
     }
 
-    pub fn placeholder_mut(&self) -> Result<NotifyLockWriteGuard<'_, HSTRING, impl Fn()>> {
+    pub fn placeholder_mut(&self) -> Result<NotifyLockWriteGuard<'_, HSTRING>> {
         self.placeholder.write(|| {
             self.base
                 .base
@@ -375,7 +375,7 @@ impl ListPage_Impl {
         self.show_details.read()
     }
 
-    pub fn show_details_mut(&self) -> Result<NotifyLockWriteGuard<'_, bool, impl Fn()>> {
+    pub fn show_details_mut(&self) -> Result<NotifyLockWriteGuard<'_, bool>> {
         self.show_details.write(|| {
             self.base
                 .base
@@ -390,7 +390,7 @@ impl IListPage_Impl for ListPage_Impl {
             .read()?
             .as_ref()
             .map(|c| c.to_interface())
-            .ok_or(windows::core::Error::empty())
+            .ok_or_empty()
     }
 
     fn Filters(&self) -> windows_core::Result<IFilters> {
@@ -398,7 +398,7 @@ impl IListPage_Impl for ListPage_Impl {
             .read()?
             .as_ref()
             .map(|f| f.to_interface())
-            .ok_or(windows::core::Error::empty())
+            .ok_or_empty()
     }
 
     fn GetItems(&self) -> windows_core::Result<windows_core::Array<IListItem>> {
@@ -410,7 +410,7 @@ impl IListPage_Impl for ListPage_Impl {
             .read()?
             .as_ref()
             .map(|g| g.to_interface())
-            .ok_or(windows::core::Error::empty())
+            .ok_or_empty()
     }
 
     fn HasMoreItems(&self) -> windows_core::Result<bool> {

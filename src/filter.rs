@@ -1,3 +1,5 @@
+//! Types for filtering a list in Command Palette.
+//!
 //! This module currently doesn't work: <https://github.com/microsoft/PowerToys/issues/38318>
 
 use crate::icon::IconInfo;
@@ -8,22 +10,27 @@ use windows::{
     Win32::Foundation::ERROR_LOCK_VIOLATION,
     core::{ComObject, HSTRING, implement},
 };
-use windows_core::Error;
+use windows_core::{Error, Result};
 
+#[doc = include_str!("./bindings_docs/ISeparatorFilterItem.md")]
 #[implement(ISeparatorFilterItem, IFilterItem)]
-pub struct SeparatorFilterItem;
+pub struct FilterSeparator;
 
-impl ISeparatorFilterItem_Impl for SeparatorFilterItem_Impl {}
-impl IFilterItem_Impl for SeparatorFilterItem_Impl {}
+impl ISeparatorFilterItem_Impl for FilterSeparator_Impl {}
+impl IFilterItem_Impl for FilterSeparator_Impl {}
 
+#[doc = include_str!("./bindings_docs/IFilter.md")]
 #[implement(IFilter, IFilterItem)]
-pub struct FilterItem {
+pub struct Filter {
+    #[doc = include_str!("./bindings_docs/IFilter/Icon.md")]
     pub icon: Option<ComObject<IconInfo>>,
+    #[doc = include_str!("./bindings_docs/IFilter/Id.md")]
     pub id: HSTRING,
+    #[doc = include_str!("./bindings_docs/IFilter/Name.md")]
     pub name: HSTRING,
 }
 
-impl IFilter_Impl for FilterItem_Impl {
+impl IFilter_Impl for Filter_Impl {
     fn Icon(&self) -> windows_core::Result<IIconInfo> {
         self.icon
             .as_ref()
@@ -39,52 +46,85 @@ impl IFilter_Impl for FilterItem_Impl {
         Ok(self.name.clone())
     }
 }
-impl IFilterItem_Impl for FilterItem_Impl {}
+impl IFilterItem_Impl for Filter_Impl {}
 
-pub enum Filter {
-    Separator(ComObject<SeparatorFilterItem>),
-    Item(ComObject<FilterItem>),
+/// A filter item that can be used to build [`Filters`] struct.
+pub enum FilterItem {
+    /// A separator item that can be used to separate between different filter sections.
+    Separator(ComObject<FilterSeparator>),
+    /// An actual filter that can be used to filter a list.
+    Filter(ComObject<Filter>),
 }
 
-impl From<&Filter> for IFilterItem {
-    fn from(item: &Filter) -> Self {
+impl From<&FilterItem> for IFilterItem {
+    fn from(item: &FilterItem) -> Self {
         match item {
-            Filter::Separator(item) => item.to_interface(),
-            Filter::Item(item) => item.to_interface(),
+            FilterItem::Separator(item) => item.to_interface(),
+            FilterItem::Filter(item) => item.to_interface(),
         }
     }
 }
 
+/// A collection of filters that can be used to filter a list.
 #[implement(IFilters)]
 pub struct Filters {
-    filters: Vec<Filter>,
-    index: RwLock<usize>,
+    items: Vec<FilterItem>,
+    current: RwLock<Option<ComObject<Filter>>>,
+    on_update: Box<
+        dyn Send + Sync + Fn(Option<ComObject<Filter>>, Option<ComObject<Filter>>) -> Result<()>,
+    >,
 }
 
+/// Builder for [`Filters`].
 pub struct FiltersBuilder {
-    filters: Vec<Filter>,
+    items: Vec<FilterItem>,
+    on_update: Box<
+        dyn Send + Sync + Fn(Option<ComObject<Filter>>, Option<ComObject<Filter>>) -> Result<()>,
+    >,
 }
 
 impl FiltersBuilder {
+    /// Creates a new empty [`FiltersBuilder`].
     pub fn new() -> Self {
         Self {
-            filters: Vec::new(),
+            items: Vec::new(),
+            on_update: Box::new(|_, _| Ok(())),
         }
     }
 
-    pub fn add(mut self, item: Filter) -> Self {
-        self.filters.push(item);
+    /// Add a [`FilterItem`].
+    pub fn add(mut self, item: FilterItem) -> Self {
+        self.items.push(item);
         self
     }
 
-    pub fn add_item(mut self, item: ComObject<FilterItem>) -> Self {
-        self.filters.push(Filter::Item(item));
+    /// Add a [`Filter`].
+    pub fn add_filter(mut self, item: ComObject<Filter>) -> Self {
+        self.items.push(FilterItem::Filter(item));
         self
     }
 
+    /// Add a [`FilterSeparator`].
     pub fn add_separator(mut self) -> Self {
-        self.filters
-            .push(Filter::Separator(ComObject::new(SeparatorFilterItem)));
+        self.items
+            .push(FilterItem::Separator(ComObject::new(FilterSeparator)));
+        self
+    }
+
+    /// Set the callback that will be called when the current filter is updated.
+    ///
+    /// The callback should accept old and new current filter items,
+    /// Update the list of items based on the new filter,
+    /// and return a `Result<()>`.
+    pub fn on_update(
+        mut self,
+        func: Box<
+            dyn Send
+                + Sync
+                + Fn(Option<ComObject<Filter>>, Option<ComObject<Filter>>) -> Result<()>,
+        >,
+    ) -> Self {
+        self.on_update = func;
         self
     }
 }
@@ -93,54 +133,50 @@ impl ComBuilder for FiltersBuilder {
     type Target = Filters;
     fn build_unmanaged(self) -> Self::Target {
         Filters {
-            filters: self.filters,
-            index: RwLock::new(0),
+            items: self.items,
+            current: RwLock::new(None),
+            on_update: self.on_update,
         }
     }
 }
 
 impl IFilters_Impl for Filters_Impl {
     fn CurrentFilterId(&self) -> windows_core::Result<windows_core::HSTRING> {
-        let filter = self
-            .filters
-            .get(
-                *self
-                    .index
-                    .read()
-                    .map_err(|_| Error::from(ERROR_LOCK_VIOLATION))?,
-            )
-            .ok_or_empty()?;
-        match filter {
-            Filter::Separator(_) => Err(Error::empty()),
-            Filter::Item(item) => item.Id(),
-        }
+        self.current
+            .read()
+            .map_err(|_| Error::from(ERROR_LOCK_VIOLATION))?
+            .as_ref()
+            .map(|item| item.id.clone())
+            .ok_or_empty()
     }
 
     fn Filters(&self) -> windows_core::Result<windows_core::Array<IFilterItem>> {
-        Ok(map_array(&self.filters, |filter| {
+        Ok(map_array(&self.items, |filter| {
             Some(IFilterItem::from(filter))
         }))
     }
 
     fn SetCurrentFilterId(&self, value: &windows_core::HSTRING) -> windows_core::Result<()> {
-        // TODO: inform user with a function that the filter is changed, so that they can change list item accordingly
-        // We will resolve and call the filter update function with ComObject<FilterItem> then.
-        for (i, filter) in self.filters.iter().enumerate() {
+        let mut guard = self
+            .current
+            .write()
+            .map_err(|_| Error::from(ERROR_LOCK_VIOLATION))?;
+        let old = guard.clone();
+        let mut new = None;
+        for filter in self.items.iter() {
             match filter {
-                Filter::Separator(_) => continue,
-                Filter::Item(item) => {
-                    if item.Id()? == *value {
-                        let mut guard = self
-                            .index
-                            .write()
-                            .map_err(|_| Error::from(ERROR_LOCK_VIOLATION))?;
-                        *guard = i;
-                        return Ok(());
+                FilterItem::Separator(_) => continue,
+                FilterItem::Filter(item) => {
+                    if item.id == *value {
+                        new = Some(item.clone());
+                        break;
                     }
                 }
             }
         }
-        Ok(())
+        *guard = new.clone();
+        drop(guard);
+        (self.on_update)(old, new)
     }
 }
 

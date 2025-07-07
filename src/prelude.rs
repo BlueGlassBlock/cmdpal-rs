@@ -1,14 +1,11 @@
-//! This module provides a prelude for the cmdpal library, re-exporting commonly used types and traits.
-//! This allows users to import everything they need with a single `use cmdpal::prelude::*;` statement.
+//! Common types and traits used across the cmdpal library.
 
 pub use crate::{
-    ExtRegistry,
-    bindings::StatusContext,
     cmd::{
-        BaseCommand, BaseCommandBuilder, CommandResult,
+        BaseCommand, BaseCommandBuilder, CommandResult, InvokableCommand,
         common::{
-            InvokableCommand, copy_text::CopyTextCommandBuilder, no_op::NoOpCommandBuilder,
-            open_url::OpenUrlCommandBuilder, reveal_file::RevealFileCommandBuilder,
+            CopyTextCommandBuilder, NoOpCommandBuilder, OpenUrlCommandBuilder,
+            RevealFileCommandBuilder,
         },
     },
     cmd_item::{CommandItem, CommandItemBuilder},
@@ -20,9 +17,13 @@ pub use crate::{
         DetailsTagsBuilder, Tag, TagBuilder,
     },
     ext::Extension,
+    ext_registry::ExtRegistry,
     fallback::FallbackCommandItem,
-    filter::{Filter, FilterItem, Filters, SeparatorFilterItem},
-    host::{LogMessage, MessageState, ProgressState, hide_status, log_message, show_status},
+    filter::{Filter, FilterItem, FilterSeparator, Filters},
+    host::{
+        LogMessage, MessageState, ProgressState, ProgressStateBuilder, StatusContext,
+        StatusMessage, StatusMessageBuilder, hide_status, log_message, show_status,
+    },
     icon::{IconData, IconInfo},
     page::{
         BasePage, BasePageBuilder,

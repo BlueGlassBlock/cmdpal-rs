@@ -68,7 +68,7 @@ impl TreeContent_Impl {
         self.root.read()
     }
 
-    pub fn root_mut(&self) -> Result<NotifyLockWriteGuard<'_, Content, impl Fn()>> {
+    pub fn root_mut(&self) -> Result<NotifyLockWriteGuard<'_, Content>> {
         self.root
             .write(|| self.emit_self_prop_changed("RootContent"))
     }
@@ -77,7 +77,7 @@ impl TreeContent_Impl {
         self.children.read()
     }
 
-    pub fn children_mut(&self) -> Result<NotifyLockWriteGuard<'_, Vec<Content>, impl Fn()>> {
+    pub fn children_mut(&self) -> Result<NotifyLockWriteGuard<'_, Vec<Content>>> {
         self.children.write(|| self.emit_self_items_changed(-1))
     }
 }

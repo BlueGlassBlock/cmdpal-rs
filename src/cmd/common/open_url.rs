@@ -1,6 +1,5 @@
-use super::InvokableCommand;
 use crate::{
-    cmd::{BaseCommand, BaseCommandBuilder, CommandResult},
+    cmd::{BaseCommand, BaseCommandBuilder, CommandResult, InvokableCommand},
     icon::{IconData, IconInfo},
     utils::ComBuilder,
 };
@@ -24,7 +23,7 @@ impl OpenUrlCommandBuilder {
         Self {
             base: open_url_base_cmd(),
             target_fn: Box::new(move || target.clone()),
-            result: CommandResult::KeepOpen,
+            result: CommandResult::Dismiss,
         }
     }
 
@@ -32,7 +31,7 @@ impl OpenUrlCommandBuilder {
         Self {
             base: open_url_base_cmd(),
             target_fn,
-            result: CommandResult::KeepOpen,
+            result: CommandResult::Dismiss,
         }
     }
 

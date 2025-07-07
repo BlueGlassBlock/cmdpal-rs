@@ -1,6 +1,5 @@
-use super::InvokableCommand;
 use crate::{
-    cmd::{BaseCommand, BaseCommandBuilder, CommandResult},
+    cmd::{BaseCommand, BaseCommandBuilder, CommandResult, InvokableCommand},
     cmd_result::ToastArgs,
     icon::{IconData, IconInfo},
     utils::ComBuilder,

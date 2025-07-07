@@ -1,5 +1,5 @@
 use crate::icon::IconInfo;
-use crate::utils::{assert_send_sync, map_array};
+use crate::utils::{assert_send_sync, map_array, OkOrEmpty};
 use crate::{bindings::*, utils::ComBuilder};
 use windows::core::{ComObject, Result, implement};
 use windows_core::{AgileReference, HSTRING};
@@ -82,7 +82,7 @@ impl ITag_Impl for Tag_Impl {
         self.icon
             .as_ref()
             .map(|icon| icon.to_interface())
-            .ok_or(windows::core::Error::empty())
+            .ok_or_empty()
     }
 
     fn Text(&self) -> Result<windows_core::HSTRING> {
@@ -379,7 +379,7 @@ impl IDetails_Impl for Details_Impl {
         self.hero_image
             .as_ref()
             .map(|icon| icon.to_interface())
-            .ok_or(windows_core::Error::empty())
+            .ok_or_empty()
     }
 
     fn Title(&self) -> Result<windows_core::HSTRING> {

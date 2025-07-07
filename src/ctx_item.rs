@@ -78,7 +78,7 @@ impl CommandContextItem_Impl {
         self.critical.read()
     }
 
-    pub fn critical_mut(&self) -> Result<NotifyLockWriteGuard<'_, bool, impl Fn()>> {
+    pub fn critical_mut(&self) -> Result<NotifyLockWriteGuard<'_, bool>> {
         self.critical
             .write(|| self.emit_self_prop_changed("Critical"))
     }
@@ -86,7 +86,7 @@ impl CommandContextItem_Impl {
     pub fn shortcut(&self) -> Result<NotifyLockReadGuard<'_, Option<KeyChord>>> {
         self.shortcut.read()
     }
-    pub fn shortcut_mut(&self) -> Result<NotifyLockWriteGuard<'_, Option<KeyChord>, impl Fn()>> {
+    pub fn shortcut_mut(&self) -> Result<NotifyLockWriteGuard<'_, Option<KeyChord>>> {
         self.shortcut
             .write(|| self.emit_self_prop_changed("RequestedShortcut"))
     }

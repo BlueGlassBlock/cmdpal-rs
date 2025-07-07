@@ -82,7 +82,7 @@ impl BasePage_Impl {
         self.title.read()
     }
 
-    pub fn title_mut(&self) -> Result<NotifyLockWriteGuard<'_, HSTRING, impl Fn()>> {
+    pub fn title_mut(&self) -> Result<NotifyLockWriteGuard<'_, HSTRING>> {
         self.title
             .write(|| self.base.emit_prop_changed(self.to_interface(), "Title"))
     }
@@ -91,7 +91,7 @@ impl BasePage_Impl {
         self.loading.read()
     }
 
-    pub fn loading_mut(&self) -> Result<NotifyLockWriteGuard<'_, bool, impl Fn()>> {
+    pub fn loading_mut(&self) -> Result<NotifyLockWriteGuard<'_, bool>> {
         self.loading.write(|| {
             self.base
                 .emit_prop_changed(self.to_interface(), "Loading")
@@ -102,7 +102,7 @@ impl BasePage_Impl {
         self.accent_color.read()
     }
 
-    pub fn accent_color_mut(&self) -> Result<NotifyLockWriteGuard<'_, Option<Color>, impl Fn()>> {
+    pub fn accent_color_mut(&self) -> Result<NotifyLockWriteGuard<'_, Option<Color>>> {
         self.accent_color.write(|| {
             self.base
                 .emit_prop_changed(self.to_interface(), "AccentColor")

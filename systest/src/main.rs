@@ -11,7 +11,8 @@ const MD_CONTENT: &str = include_str!("../../README.md");
 
 fn com_main() -> Result<()> {
     tracing::info!("Hello, world!");
-    let md_box: ComObject<_> = cmdpal::content::markdown::MarkdownContent::new_unmanaged("".into()).into();
+    let md_box: ComObject<_> =
+        cmdpal::content::markdown::MarkdownContent::new_unmanaged("".into()).into();
     let task_box = md_box.clone();
     // start a thread to update the content to current time
     let _handle = std::thread::spawn(move || unsafe {
@@ -81,12 +82,14 @@ fn com_main() -> Result<()> {
         .build(),
     )
     .details(
-        cmdpal::details::DetailsBuilder::new()
+        DetailsBuilder::new()
             .title("Details Title")
             .body("Details Body")
             .build(),
     )
-    .try_add_content(cmdpal::content::markdown::MarkdownContent::new_unmanaged(MD_CONTENT.into()).into())?
+    .try_add_content(
+        MarkdownContent::new_unmanaged(MD_CONTENT.into()).into(),
+    )?
     .try_add_content(md_box.to_interface())?
     .try_add_command(
         CommandContextItemBuilder::new(copy_sample_item)
@@ -109,13 +112,13 @@ fn com_main() -> Result<()> {
             .to_interface(),
     )?
     .build();
-    let provider = cmdpal::cmd_provider::CommandProviderBuilder::new()
+    let provider = CommandProviderBuilder::new()
         .id("BlueG.PEP")
         .display_name("PEP Viewer")
         .icon(IconInfo::from(IconData::from(h!("\u{e8a5}").clone())).into())
         .frozen(true)
         .add_top_level(
-            cmdpal::cmd_item::CommandItemBuilder::try_new(cmd.to_interface())?
+            CommandItemBuilder::try_new(cmd.to_interface())?
                 .icon(IconInfo::from(IconData::from(h!("\u{f6fa}").clone())).into())
                 .title("View PEP")
                 .subtitle("Open a PEP by number")
@@ -124,7 +127,7 @@ fn com_main() -> Result<()> {
         )
         .build();
     ExtRegistry::new()
-        .register(EXTENSION_GUID, cmdpal::ext::Extension::from(&*provider))
+        .register(EXTENSION_GUID, Extension::from(&*provider))
         .serve()?;
     tracing::info!("Exiting...");
     Ok(())

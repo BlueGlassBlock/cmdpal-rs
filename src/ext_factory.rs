@@ -1,3 +1,7 @@
+//! Convenient implementation of `IClassFactory` for extensions.
+
+
+
 use crate::bindings::IExtension;
 use crate::ext::Extension;
 use windows::Win32::Foundation::E_POINTER;
@@ -5,6 +9,9 @@ use windows::Win32::System::Com::{IClassFactory, IClassFactory_Impl};
 use windows::core::{ComObject, implement};
 use windows_core::Interface;
 
+/// A class factory for Command Palette extensions.
+/// 
+/// Automatically used by [`crate::ext_registry::ExtRegistry::register`] to register extensions.
 #[implement(IClassFactory)]
 pub struct ExtensionClassFactory(pub ComObject<Extension>);
 
