@@ -1,6 +1,6 @@
 use super::Content;
 use crate::notify::*;
-use crate::utils::{assert_send_sync, ComBuilder};
+use crate::utils::{ComBuilder, assert_send_sync};
 use crate::{bindings::*, utils::map_array};
 use windows::core::{Event, IInspectable, IUnknownImpl as _, Result, implement};
 use windows_core::ComObject;
@@ -77,8 +77,9 @@ impl TreeContent_Impl {
         self.children.read()
     }
 
-    pub fn children_mut(&self) -> Result<NotifyLockWriteGuard<'_, Vec<Content>>> {
-        self.children.write(|| self.emit_self_items_changed(-1))
+    pub fn children_mut(&self) -> Result<NotifyLockWriteGuard<'_, Vec<Content>, usize>> {
+        self.children
+            .write_with_peek(|v| v.len(), |len| self.emit_self_items_changed(len as i32))
     }
 }
 

@@ -107,8 +107,9 @@ impl ContentPage_Impl {
 
     pub fn commands_mut(
         &self,
-    ) -> Result<NotifyLockWriteGuard<'_, Vec<AgileReference<IContextItem>>>> {
-        self.commands.write(|| self.emit_self_items_changed(-1))
+    ) -> Result<NotifyLockWriteGuard<'_, Vec<AgileReference<IContextItem>>, usize>> {
+        self.commands
+            .write_with_peek(|v| v.len(), |len| self.emit_self_items_changed(len as i32))
     }
 
     pub fn contents(&self) -> Result<NotifyLockReadGuard<'_, Vec<AgileReference<IContent>>>> {
@@ -117,17 +118,16 @@ impl ContentPage_Impl {
 
     pub fn contents_mut(
         &self,
-    ) -> Result<NotifyLockWriteGuard<'_, Vec<AgileReference<IContent>>>> {
-        self.contents.write(|| self.emit_self_items_changed(-1))
+    ) -> Result<NotifyLockWriteGuard<'_, Vec<AgileReference<IContent>>, usize>> {
+        self.contents
+            .write_with_peek(|v| v.len(), |len| self.emit_self_items_changed(len as i32))
     }
 
     pub fn details(&self) -> Result<NotifyLockReadGuard<'_, Option<ComObject<Details>>>> {
         self.details.read()
     }
 
-    pub fn details_mut(
-        &self,
-    ) -> Result<NotifyLockWriteGuard<'_, Option<ComObject<Details>>>> {
+    pub fn details_mut(&self) -> Result<NotifyLockWriteGuard<'_, Option<ComObject<Details>>>> {
         self.details.write(|| {
             self.base
                 .base

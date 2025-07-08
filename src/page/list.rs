@@ -287,9 +287,7 @@ impl ListPage_Impl {
         })
     }
 
-    pub(crate) fn search_text_mut_no_notify(
-        &self,
-    ) -> Result<NotifyLockWriteGuard<'_, HSTRING>> {
+    pub(crate) fn search_text_mut_no_notify(&self) -> Result<NotifyLockWriteGuard<'_, HSTRING>> {
         self.search_text.write(|| {})
     }
 
@@ -311,9 +309,7 @@ impl ListPage_Impl {
         self.filters.read()
     }
 
-    pub fn filters_mut(
-        &self,
-    ) -> Result<NotifyLockWriteGuard<'_, Option<ComObject<Filters>>>> {
+    pub fn filters_mut(&self) -> Result<NotifyLockWriteGuard<'_, Option<ComObject<Filters>>>> {
         self.filters.write(|| {
             self.base
                 .base
@@ -325,10 +321,9 @@ impl ListPage_Impl {
         self.items.read()
     }
 
-    pub fn items_mut(
-        &self,
-    ) -> Result<NotifyLockWriteGuard<'_, Vec<ComObject<ListItem>>>> {
-        self.items.write(|| self.emit_self_items_changed(-1))
+    pub fn items_mut(&self) -> Result<NotifyLockWriteGuard<'_, Vec<ComObject<ListItem>>, usize>> {
+        self.items
+            .write_with_peek(|v| v.len(), |len| self.emit_self_items_changed(len as i32))
     }
 
     pub fn grid_properties(
