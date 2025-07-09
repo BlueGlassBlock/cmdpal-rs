@@ -1,4 +1,4 @@
-//! Utility types and traits for cmdpal
+//! Utility types and traits for Command Palette
 
 use crate::bindings::*;
 use std::ops::DerefMut;

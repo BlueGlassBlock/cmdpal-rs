@@ -90,7 +90,6 @@ impl<T> NotifyLock<T> {
         PF: Fn(&T) -> P + 'a,
         NF: Fn(P) + 'a,
     {
-        // TODO: Refactor item change events to use this method
         self.lock
             .write()
             .map(|guard| NotifyLockWriteGuard {

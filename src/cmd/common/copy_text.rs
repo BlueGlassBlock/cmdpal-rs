@@ -15,7 +15,7 @@ pub struct CopyTextCommandBuilder {
 fn copy_text_base_cmd() -> ComObject<BaseCommand> {
     BaseCommandBuilder::new()
         .name("Copy")
-        .icon(IconInfo::from(IconData::from("\u{E8C8}")).into())
+        .icon(IconInfo::new(IconData::from("\u{E8C8}")))
         .build()
 }
 

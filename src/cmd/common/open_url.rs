@@ -1,3 +1,5 @@
+//! Utility for creating commands that open URLs in the system's default browser.
+
 use crate::{
     cmd::{BaseCommand, BaseCommandBuilder, CommandResult, InvokableCommand},
     icon::{IconData, IconInfo},
@@ -5,6 +7,7 @@ use crate::{
 };
 use windows::core::ComObject;
 
+/// Builds a command that opens a URL in the system's default browser.
 pub struct OpenUrlCommandBuilder {
     base: ComObject<BaseCommand>,
     target_fn: Box<dyn Send + Sync + Fn() -> String>,
@@ -14,11 +17,12 @@ pub struct OpenUrlCommandBuilder {
 fn open_url_base_cmd() -> ComObject<BaseCommand> {
     BaseCommandBuilder::new()
         .name("Open")
-        .icon(IconInfo::from(IconData::from("\u{E8A7}")).into())
+        .icon(IconInfo::new(IconData::from("\u{E8A7}")))
         .build()
 }
 
 impl OpenUrlCommandBuilder {
+    /// Creates a new `OpenUrlCommandBuilder` with a static target URL.
     pub fn new(target: String) -> Self {
         Self {
             base: open_url_base_cmd(),
@@ -27,6 +31,7 @@ impl OpenUrlCommandBuilder {
         }
     }
 
+    /// Creates a new `OpenUrlCommandBuilder` with a function that returns the target URL.
     pub fn new_dyn<F>(target_fn: F) -> Self
     where
         F: Send + Sync + Fn() -> String + 'static,
@@ -38,10 +43,17 @@ impl OpenUrlCommandBuilder {
         }
     }
 
+    /// Overrides the base command with a custom one.
+    ///
+    /// By default, it uses a command with the name "Open" and an icon representing opening a link.
     pub fn base(mut self, base: ComObject<BaseCommand>) -> Self {
         self.base = base;
         self
     }
+
+    /// Overrides the action to be performed when the URL is opened.
+    ///
+    /// By default, it is set to [`CommandResult::Dismiss`].
     pub fn result(mut self, result: CommandResult) -> Self {
         self.result = result;
         self

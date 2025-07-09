@@ -73,7 +73,7 @@ fn com_main() -> Result<()> {
         cmdpal::page::BasePageBuilder::new(
             cmdpal::cmd::BaseCommandBuilder::new()
                 .name("Example Page")
-                .icon(IconInfo::from(IconData::from(h!("\u{f6fa}").clone())).into())
+                .icon(IconInfo::new(IconData::from(h!("\u{f6fa}").clone())))
                 .id("BlueG.PEP.ExamplePage")
                 .build(),
         )
@@ -87,9 +87,7 @@ fn com_main() -> Result<()> {
             .body("Details Body")
             .build(),
     )
-    .try_add_content(
-        MarkdownContent::new_unmanaged(MD_CONTENT.into()).into(),
-    )?
+    .try_add_content(MarkdownContent::new_unmanaged(MD_CONTENT.into()).into())?
     .try_add_content(md_box.to_interface())?
     .try_add_command(
         CommandContextItemBuilder::new(copy_sample_item)
@@ -115,11 +113,11 @@ fn com_main() -> Result<()> {
     let provider = CommandProviderBuilder::new()
         .id("BlueG.PEP")
         .display_name("PEP Viewer")
-        .icon(IconInfo::from(IconData::from(h!("\u{e8a5}").clone())).into())
+        .icon(IconInfo::new(IconData::from(h!("\u{e8a5}").clone())))
         .frozen(true)
         .add_top_level(
             CommandItemBuilder::try_new(cmd.to_interface())?
-                .icon(IconInfo::from(IconData::from(h!("\u{f6fa}").clone())).into())
+                .icon(IconInfo::new(IconData::from(h!("\u{f6fa}").clone())))
                 .title("View PEP")
                 .subtitle("Open a PEP by number")
                 .build()

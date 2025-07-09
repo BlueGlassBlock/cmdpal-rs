@@ -14,7 +14,7 @@ pub struct RevealFileCommandBuilder {
 fn reveal_file_base_cmd() -> ComObject<BaseCommand> {
     BaseCommandBuilder::new()
         .name("Show in folder")
-        .icon(IconInfo::from(IconData::from("\u{E838}")).into())
+        .icon(IconInfo::new(IconData::from("\u{E838}")))
         .build()
 }
 
