@@ -9,9 +9,11 @@ pub use crate::cmd_result::CommandResult;
 use crate::icon::IconInfo;
 use crate::notify::*;
 use crate::utils::{ComBuilder, OkOrEmpty};
-use windows::core::{ComObject, Event, HSTRING, IInspectable, IUnknownImpl as _, implement};
+use windows_core::{ComObject, Event, HSTRING, IInspectable, IUnknownImpl as _, implement};
 
-/// Represents a basic properties of a command.
+/// Represents basic properties of a command.
+/// 
+/// See [`BaseCommand_Impl`] for field accessors.
 ///
 #[doc = include_str!("../bindings_docs/ICommand.md")]
 #[implement(ICommand, INotifyPropChanged)]
@@ -180,8 +182,7 @@ impl BaseCommand_Impl {
     }
 }
 
-pub type InvokableBox =
-    Box<dyn Send + Sync + Fn(&IInspectable) -> windows_core::Result<CommandResult>>;
+type InvokableBox = Box<dyn Send + Sync + Fn(&IInspectable) -> windows_core::Result<CommandResult>>;
 
 /// Represents a command that can be invoked.
 ///
@@ -200,7 +201,7 @@ pub struct InvokableCommandBuilder {
 
 impl InvokableCommandBuilder {
     /// Creates a new builder.
-    /// 
+    ///
     /// The invocation function is a no-op by default.
     pub fn new(base: ComObject<BaseCommand>) -> Self {
         Self {
@@ -210,7 +211,7 @@ impl InvokableCommandBuilder {
     }
 
     /// Sets the function to be invoked when the command is executed.
-    /// 
+    ///
     /// See [`IInvokableCommand::Invoke`] for more details.
     pub fn func<F>(mut self, func: F) -> Self
     where
@@ -221,7 +222,7 @@ impl InvokableCommandBuilder {
     }
 
     /// Sets an anonymous function to be invoked when the command is executed.
-    /// 
+    ///
     /// The function should return a `CommandResult`.
     pub fn anon_func<F>(mut self, func: F) -> Self
     where

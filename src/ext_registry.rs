@@ -11,7 +11,7 @@ use windows::Win32::System::Com::{
 use windows::Win32::UI::WindowsAndMessaging::{
     DispatchMessageW, GetMessageW, MSG, TranslateMessage,
 };
-use windows::core::{ComObject, GUID, Result};
+use windows_core::{ComObject, GUID, Result};
 
 /// A registry for extensions that can be registered and served.
 /// Convenient for building a extension executable that can host multiple extensions.

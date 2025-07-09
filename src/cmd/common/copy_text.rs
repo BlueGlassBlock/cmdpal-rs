@@ -5,7 +5,7 @@ use crate::{
     icon::{IconData, IconInfo},
     utils::ComBuilder,
 };
-use windows::core::{ComObject, HSTRING, h};
+use windows_core::{ComObject, HSTRING, h};
 
 /// Builder for a command that copies text to the clipboard.
 pub struct CopyTextCommandBuilder {
@@ -23,7 +23,8 @@ fn copy_text_base_cmd() -> ComObject<BaseCommand> {
 
 impl CopyTextCommandBuilder {
     /// Creates a new command builder that copies the specified text to the clipboard.
-    pub fn new(text: HSTRING) -> Self {
+    pub fn new(text: impl Into<HSTRING>) -> Self {
+        let text: HSTRING = text.into();
         Self {
             base: copy_text_base_cmd(),
             text_fn: Box::new(move || text.clone()),
@@ -52,7 +53,7 @@ impl CopyTextCommandBuilder {
     }
 
     /// Sets the result to be returned when the command is executed.
-    /// 
+    ///
     /// By default, the result is [`CommandResult::ShowToast`] with a toast message "Copied to clipboard".
     pub fn result(mut self, result: CommandResult) -> Self {
         self.result = result;
@@ -81,7 +82,7 @@ mod clipboard_helper {
     };
     use windows::Win32::System::Memory::{GHND, GlobalAlloc, GlobalLock, GlobalUnlock};
     use windows::Win32::System::Ole::CF_UNICODETEXT;
-    use windows::core::{HSTRING, Result};
+    use windows_core::{HSTRING, Result};
 
     pub(super) fn set_clipboard_text(text: HSTRING) -> Result<()> {
         // start a new thread with STA
@@ -99,7 +100,7 @@ mod clipboard_helper {
             return result;
         })
         .join()
-        .map_err(|_| windows::core::Error::from(E_FAIL))??;
+        .map_err(|_| windows_core::Error::from(E_FAIL))??;
         Ok(())
     }
 

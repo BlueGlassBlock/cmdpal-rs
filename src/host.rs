@@ -7,13 +7,15 @@ use crate::notify::*;
 use crate::utils::ComBuilder;
 use std::sync::RwLock;
 use windows::Win32::Foundation::E_INVALIDARG;
-use windows::core::AgileReference;
-use windows::core::{ComObject, IInspectable, IUnknownImpl as _, implement};
+use windows_core::AgileReference;
+use windows_core::{ComObject, IInspectable, IUnknownImpl as _, implement};
 
 pub(crate) static EXTENSION_HOST: RwLock<Option<AgileReference<IExtensionHost>>> =
     RwLock::new(None);
 
 /// Struct which represents the progress state of an operation.
+/// 
+/// See [`ProgressState_Impl`] for field accessors.
 ///
 #[doc = include_str!("./bindings_docs/IProgressState.md")]
 #[implement(IProgressState, INotifyPropChanged)]
@@ -208,6 +210,8 @@ impl From<StatusContext> for crate::bindings::StatusContext {
 }
 
 /// Struct which represents a status message.
+/// 
+/// See [`StatusMessage_Impl`] for field accessors.
 ///
 #[doc = include_str!("./bindings_docs/IStatusMessage.md")]
 #[implement(IStatusMessage, INotifyPropChanged)]

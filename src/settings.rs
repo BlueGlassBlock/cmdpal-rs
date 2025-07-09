@@ -1,5 +1,5 @@
 use crate::{bindings::*, page::content::ContentPage};
-use windows::core::{ComObject, implement};
+use windows_core::{ComObject, implement};
 
 // TODO: Add wrappers
 

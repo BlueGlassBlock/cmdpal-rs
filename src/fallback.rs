@@ -7,7 +7,7 @@ use crate::bindings::*;
 use crate::cmd_item::CommandItem_Impl;
 use crate::notify::*;
 use crate::utils::{ComBuilder, assert_send_sync};
-use windows::core::{ComObject, HSTRING, IUnknownImpl as _, Result, implement};
+use windows_core::{ComObject, HSTRING, IUnknownImpl as _, Result, implement};
 
 /// Fallback handler for command items with query-based content.
 ///
@@ -43,6 +43,7 @@ impl IFallbackHandler_Impl for FallbackHandler_Impl {
     }
 }
 
+// Builder for [`FallbackCommandItem`].
 pub struct FallbackCommandItemBuilder {
     base: ComObject<CommandItem>,
     handler: ComObject<FallbackHandler>,
@@ -50,6 +51,7 @@ pub struct FallbackCommandItemBuilder {
 }
 
 impl FallbackCommandItemBuilder {
+    /// Creates a new builder.
     pub fn new(base: ComObject<CommandItem>) -> Self {
         Self {
             base,
@@ -58,11 +60,13 @@ impl FallbackCommandItemBuilder {
         }
     }
 
+    /// Sets the handler for the fallback command item.
     pub fn handler(mut self, handler: ComObject<FallbackHandler>) -> Self {
         self.handler = handler;
         self
     }
 
+    /// Sets the title of the fallback command item.
     pub fn title(mut self, new_title: impl Into<HSTRING>) -> Self {
         self.title = new_title.into();
         self
@@ -80,6 +84,11 @@ impl ComBuilder for FallbackCommandItemBuilder {
     }
 }
 
+/// Fallback command item which can respond to dynamic queries.
+/// 
+/// See [`FallbackCommandItem_Impl`] for field accessors.
+/// 
+#[doc = include_str!("./bindings_docs/IFallbackCommandItem.md")]
 #[implement(IFallbackCommandItem, ICommandItem, INotifyPropChanged)]
 pub struct FallbackCommandItem {
     pub base: ComObject<CommandItem>,
@@ -95,10 +104,18 @@ impl Deref for FallbackCommandItem {
 }
 
 impl FallbackCommandItem_Impl {
+    /// Readonly access to [`IFallbackCommandItem::Title`].
+    /// 
+    #[doc = include_str!("./bindings_docs/IFallbackCommandItem/Title.md")]
     pub fn title(&self) -> Result<NotifyLockReadGuard<'_, HSTRING>> {
         self.title.read()
     }
 
+    /// Mutable access to [`IFallbackCommandItem::Title`].
+    /// 
+    #[doc = include_str!("./bindings_docs/IFallbackCommandItem/Title.md")]
+    ///
+    /// Notifies the host about the change when dropping the guard.
     pub fn title_mut(&self) -> Result<NotifyLockWriteGuard<'_, HSTRING>> {
         self.title.write(|| {
             self.base

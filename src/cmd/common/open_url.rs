@@ -5,7 +5,7 @@ use crate::{
     icon::{IconData, IconInfo},
     utils::ComBuilder,
 };
-use windows::core::ComObject;
+use windows_core::ComObject;
 
 /// Builder for a command that opens a URL in the system's default browser.
 pub struct OpenUrlCommandBuilder {
@@ -77,11 +77,11 @@ mod shell_helper {
     use windows::Win32::UI::Shell::{SHELLEXECUTEINFOW, ShellExecuteExW};
     use windows::Win32::UI::{Shell::SEE_MASK_NOCLOSEPROCESS, WindowsAndMessaging::SW_SHOWNORMAL};
 
-    pub(super) fn open_in_shell(target: &str) -> windows::core::Result<()> {
+    pub(super) fn open_in_shell(target: &str) -> windows_core::Result<()> {
         let mut sei = SHELLEXECUTEINFOW::default();
         sei.cbSize = std::mem::size_of::<SHELLEXECUTEINFOW>() as u32;
         sei.fMask = SEE_MASK_NOCLOSEPROCESS;
-        sei.lpFile = windows::core::PCWSTR::from_raw(windows::core::HSTRING::from(target).as_ptr());
+        sei.lpFile = windows_core::PCWSTR::from_raw(windows_core::HSTRING::from(target).as_ptr());
         sei.nShow = SW_SHOWNORMAL.0;
 
         unsafe { ShellExecuteExW(&mut sei) }

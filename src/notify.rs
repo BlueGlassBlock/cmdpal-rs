@@ -5,7 +5,7 @@ use std::ops::{Deref, DerefMut};
 use std::sync::{RwLock, RwLockWriteGuard};
 use windows::Foundation::TypedEventHandler;
 use windows::Win32::Foundation::ERROR_LOCK_VIOLATION;
-use windows::core::{Event, IInspectable, Result, implement};
+use windows_core::{Event, IInspectable, Result, implement};
 
 /// `NotifyLock` struct is a wrapper around [`RwLock`] that allows for notification callbacks.
 /// When exposing the interface, `NotifyLock` references shouldn't be returned directly.
@@ -106,7 +106,7 @@ pub type PropChangedEventHandler = Event<TypedEventHandler<IInspectable, IPropCh
 /// `PropChangedEventArgs` is used to notify about property changes in COM interfaces.
 /// It implements the `IPropChangedEventArgs` interface and contains the name of the property that changed.
 #[implement(IPropChangedEventArgs)]
-pub struct PropChangedEventArgs(pub windows::core::HSTRING);
+pub struct PropChangedEventArgs(pub windows_core::HSTRING);
 
 impl IPropChangedEventArgs_Impl for PropChangedEventArgs_Impl {
     fn PropertyName(&self) -> windows_core::Result<windows_core::HSTRING> {
@@ -114,8 +114,8 @@ impl IPropChangedEventArgs_Impl for PropChangedEventArgs_Impl {
     }
 }
 
-impl From<windows::core::HSTRING> for PropChangedEventArgs {
-    fn from(value: windows::core::HSTRING) -> Self {
+impl From<windows_core::HSTRING> for PropChangedEventArgs {
+    fn from(value: windows_core::HSTRING) -> Self {
         PropChangedEventArgs(value)
     }
 }

@@ -1,10 +1,17 @@
+//! Tree content that can be used to display nested content.
+
 use super::Content;
 use crate::notify::*;
 use crate::utils::{ComBuilder, assert_send_sync};
 use crate::{bindings::*, utils::map_array};
-use windows::core::{Event, IInspectable, IUnknownImpl as _, Result, implement};
+use windows_core::{Event, IInspectable, IUnknownImpl as _, Result, implement};
 use windows_core::ComObject;
 
+/// Tree content that can be used to display nested content.
+/// 
+/// See [`TreeContent_Impl`] for field accessors.
+///
+#[doc = include_str!("../bindings_docs/ITreeContent.md")]
 #[implement(ITreeContent, IContent, INotifyPropChanged, INotifyItemsChanged)]
 pub struct TreeContent {
     root: NotifyLock<Content>,
@@ -13,12 +20,14 @@ pub struct TreeContent {
     item_event: ItemsChangedEventHandler,
 }
 
+/// Builder for [`TreeContent`].
 pub struct TreeContentBuilder {
     root: Content,
     children: Vec<Content>,
 }
 
 impl TreeContentBuilder {
+    /// Creates a new builder with the specified root content.
     pub fn new(root: Content) -> Self {
         TreeContentBuilder {
             root,
@@ -26,11 +35,13 @@ impl TreeContentBuilder {
         }
     }
 
+    /// Sets the children of the tree node.
     pub fn children(mut self, children: Vec<Content>) -> Self {
         self.children = children;
         self
     }
 
+    /// Adds a child to the tree node.
     pub fn add_child(mut self, child: Content) -> Self {
         self.children.push(child);
         self
@@ -64,19 +75,35 @@ impl TreeContent_Impl {
             .call(|handler| handler.Invoke(&sender, &arg));
     }
 
+    /// Readonly access to [`ITreeContent::RootContent`].
+    /// 
+    #[doc = include_str!("../bindings_docs/ITreeContent/RootContent.md")]
     pub fn root(&self) -> Result<NotifyLockReadGuard<'_, Content>> {
         self.root.read()
     }
 
+    /// Mutable access to [`ITreeContent::RootContent`].
+    /// 
+    #[doc = include_str!("../bindings_docs/ITreeContent/RootContent.md")]
+    /// 
+    /// Notifies the host about the property change when dropping the guard.
     pub fn root_mut(&self) -> Result<NotifyLockWriteGuard<'_, Content>> {
         self.root
             .write(|| self.emit_self_prop_changed("RootContent"))
     }
 
+    /// Readonly access to [`ITreeContent::GetChildren`].
+    ///
+    #[doc = include_str!("../bindings_docs/ITreeContent/GetChildren.md")]
     pub fn children(&self) -> Result<NotifyLockReadGuard<'_, Vec<Content>>> {
         self.children.read()
     }
 
+    /// Mutable access to [`ITreeContent::GetChildren`].
+    ///
+    #[doc = include_str!("../bindings_docs/ITreeContent/GetChildren.md")]
+    ///
+    /// Notifies the host about the property change when dropping the guard.
     pub fn children_mut(&self) -> Result<NotifyLockWriteGuard<'_, Vec<Content>, usize>> {
         self.children
             .write_with_peek(|v| v.len(), |len| self.emit_self_items_changed(len as i32))

@@ -1,1 +1,1 @@
-The JSON representation of the data associated with the form content.
+JSON representation of the data associated with the form. It is used to get the data that defines the structure and content of the Adaptive Card to be displayed to the user.

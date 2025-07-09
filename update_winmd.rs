@@ -246,7 +246,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         "--implement",
     ]);
     let mut bindings = std::fs::read_to_string("src/bindings.rs")?;
-    bindings = String::from("//! Raw bindings for Microsoft.CommandPalette.Extensions\n") + &bindings;
+    bindings = String::from("//! Raw bindings for `Microsoft.CommandPalette.Extensions`\n") + &bindings;
     bindings = bindings.replace("windows_core::imp::define_interface!", "crate::_define_windows_core_interface_with_bindings_docs!");
     bindings = document_bindings(&bindings)?;
     std::fs::write("src/bindings.rs", bindings)?;

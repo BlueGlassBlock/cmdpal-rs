@@ -7,7 +7,7 @@ use crate::utils::{FrozenBuffer, OkOrEmpty};
 use windows::Storage::Streams::{
     IBuffer, IRandomAccessStream, InMemoryRandomAccessStream, RandomAccessStreamReference,
 };
-use windows::core::{AgileReference, HSTRING, implement};
+use windows_core::{AgileReference, HSTRING, implement};
 
 /// Represents icon data.
 ///
@@ -74,7 +74,7 @@ impl From<String> for IconData {
 }
 
 impl TryFrom<&Path> for IconData {
-    type Error = windows::core::Error;
+    type Error = windows_core::Error;
     fn try_from(value: &Path) -> Result<Self, Self::Error> {
         value
             .canonicalize()
@@ -83,7 +83,7 @@ impl TryFrom<&Path> for IconData {
                 data: None,
             })
             .map_err(|e| {
-                windows::core::Error::new(
+                windows_core::Error::new(
                     windows::Win32::Foundation::ERROR_FILE_NOT_FOUND.to_hresult(),
                     e.to_string(),
                 )
@@ -92,14 +92,14 @@ impl TryFrom<&Path> for IconData {
 }
 
 impl TryFrom<PathBuf> for IconData {
-    type Error = windows::core::Error;
+    type Error = windows_core::Error;
     fn try_from(value: PathBuf) -> Result<Self, Self::Error> {
         IconData::try_from(value.as_path())
     }
 }
 
 impl TryFrom<Vec<u8>> for IconData {
-    type Error = windows::core::Error;
+    type Error = windows_core::Error;
     fn try_from(value: Vec<u8>) -> Result<Self, Self::Error> {
         let buf: IBuffer = FrozenBuffer::from(value).into();
         let stream = InMemoryRandomAccessStream::new()?;
@@ -113,7 +113,7 @@ impl TryFrom<Vec<u8>> for IconData {
 }
 
 impl TryFrom<&[u8]> for IconData {
-    type Error = windows::core::Error;
+    type Error = windows_core::Error;
     fn try_from(value: &[u8]) -> Result<Self, Self::Error> {
         let buf: IBuffer = FrozenBuffer::from(value.to_vec()).into();
         let stream = InMemoryRandomAccessStream::new()?;

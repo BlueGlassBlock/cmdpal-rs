@@ -2,7 +2,7 @@
 
 use super::data::IconData;
 use crate::bindings::*;
-use windows::core::{ComObject, implement};
+use windows_core::{ComObject, implement};
 
 /// Representation of light and dark icon bundle.
 ///

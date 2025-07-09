@@ -1,3 +1,5 @@
+//! List page which can display a scrollable list of items.
+
 use std::ops::Deref;
 
 use crate::{
@@ -8,11 +10,16 @@ use crate::{
     notify::*,
     utils::{ComBuilder, GridProperties, OkOrEmpty, assert_send_sync, map_array},
 };
-use windows::core::{ComObject, IInspectable, IUnknownImpl as _, Result, implement};
+use windows_core::{ComObject, IInspectable, IUnknownImpl as _, Result, implement};
 use windows_core::HSTRING;
 
 use super::{BasePage, BasePage_Impl};
 
+/// Represents a single item in a list.
+///
+/// See [`ListItem_Impl`] for field accessors.
+/// 
+#[doc = include_str!("../bindings_docs/IListItem.md")]
 #[implement(IListItem, ICommandItem, INotifyPropChanged)]
 pub struct ListItem {
     pub base: ComObject<CommandItem>,
@@ -22,6 +29,7 @@ pub struct ListItem {
     suggestion: NotifyLock<HSTRING>,
 }
 
+/// Builder for [`ListItem`].
 pub struct ListItemBuilder {
     base: ComObject<CommandItem>,
     details: Option<ComObject<Details>>,
@@ -31,6 +39,7 @@ pub struct ListItemBuilder {
 }
 
 impl ListItemBuilder {
+    /// Creates a new builder with base.
     pub fn new(base: ComObject<CommandItem>) -> Self {
         ListItemBuilder {
             base,
@@ -41,26 +50,31 @@ impl ListItemBuilder {
         }
     }
 
+    /// Sets the details for the list item.
     pub fn details(mut self, details: ComObject<Details>) -> Self {
         self.details = Some(details);
         self
     }
 
+    /// Sets the tags for the list item.
     pub fn tags(mut self, tags: impl IntoIterator<Item = ComObject<Tag>>) -> Self {
         self.tags = tags.into_iter().collect();
         self
     }
 
+    /// Adds a tag to the list item.
     pub fn add_tag(mut self, tag: ComObject<Tag>) -> Self {
         self.tags.push(tag);
         self
     }
 
+    /// Sets the section for the list item.
     pub fn section(mut self, section: impl Into<HSTRING>) -> Self {
         self.section = Some(section.into());
         self
     }
 
+    /// Sets the suggestion text for the list item.
     pub fn suggestion(mut self, suggestion: impl Into<HSTRING>) -> Self {
         self.suggestion = Some(suggestion.into());
         self
@@ -85,6 +99,77 @@ impl Deref for ListItem {
 
     fn deref(&self) -> &Self::Target {
         &self.base
+    }
+}
+
+impl ListItem_Impl {
+    /// Readonly access to [`IListItem::Details`].
+    ///
+    #[doc = include_str!("../bindings_docs/IListItem/Details.md")]
+    pub fn details(&self) -> Result<NotifyLockReadGuard<'_, Option<ComObject<Details>>>> {
+        self.details.read()
+    }
+
+    /// Mutable access to [`IListItem::Details`].
+    ///
+    #[doc = include_str!("../bindings_docs/IListItem/Details.md")]
+    ///
+    /// Notifies the host about the change when dropping the guard.
+    pub fn details_mut(&self) -> Result<NotifyLockWriteGuard<'_, Option<ComObject<Details>>>> {
+        self.details
+            .write(|| self.base.emit_prop_changed(&self.to_interface(), "Details"))
+    }
+
+    /// Readonly access to [`IListItem::Tags`].
+    ///
+    #[doc = include_str!("../bindings_docs/IListItem/Tags.md")]
+    pub fn tags(&self) -> Result<NotifyLockReadGuard<'_, Vec<ComObject<Tag>>>> {
+        self.tags.read()
+    }
+
+    /// Mutable access to [`IListItem::Tags`].
+    ///
+    #[doc = include_str!("../bindings_docs/IListItem/Tags.md")]
+    ///
+    /// Notifies the host about the change when dropping the guard.
+    pub fn tags_mut(&self) -> Result<NotifyLockWriteGuard<'_, Vec<ComObject<Tag>>>> {
+        self.tags
+            .write(|| self.base.emit_prop_changed(&self.to_interface(), "Tags"))
+    }
+
+    /// Readonly access to [`IListItem::Section`].
+    ///
+    #[doc = include_str!("../bindings_docs/IListItem/Section.md")]
+    pub fn section(&self) -> Result<NotifyLockReadGuard<'_, HSTRING>> {
+        self.section.read()
+    }
+
+    /// Mutable access to [`IListItem::Section`].
+    ///
+    #[doc = include_str!("../bindings_docs/IListItem/Section.md")]
+    ///
+    /// Notifies the host about the change when dropping the guard.
+    pub fn section_mut(&self) -> Result<NotifyLockWriteGuard<'_, HSTRING>> {
+        self.section
+            .write(|| self.base.emit_prop_changed(&self.to_interface(), "Section"))
+    }
+    /// Readonly access to [`IListItem::TextToSuggest`].
+    ///
+    #[doc = include_str!("../bindings_docs/IListItem/TextToSuggest.md")]
+    pub fn suggestion(&self) -> Result<NotifyLockReadGuard<'_, HSTRING>> {
+        self.suggestion.read()
+    }
+
+    /// Mutable access to [`IListItem::TextToSuggest`].
+    ///
+    #[doc = include_str!("../bindings_docs/IListItem/TextToSuggest.md")]
+    ///
+    /// Notifies the host about the change when dropping the guard.
+    pub fn suggestion_mut(&self) -> Result<NotifyLockWriteGuard<'_, HSTRING>> {
+        self.suggestion.write(|| {
+            self.base
+                .emit_prop_changed(&self.to_interface(), "TextToSuggest")
+        })
     }
 }
 
@@ -148,6 +233,11 @@ impl INotifyPropChanged_Impl for ListItem_Impl {
     }
 }
 
+/// Represents a page that displays a list of items.
+///
+/// See [`ListPage_Impl`] for field accessors.
+/// 
+#[doc = include_str!("../bindings_docs/IListPage.md")]
 #[implement(IListPage, IPage, ICommand, INotifyPropChanged, INotifyItemsChanged)]
 pub struct ListPage {
     pub base: ComObject<BasePage>,
@@ -163,6 +253,7 @@ pub struct ListPage {
     item_event: ItemsChangedEventHandler,
 }
 
+/// Builder for [`ListPage`].
 pub struct ListPageBuilder {
     base: ComObject<BasePage>,
     empty_content: Option<ComObject<CommandItem>>,
@@ -176,6 +267,7 @@ pub struct ListPageBuilder {
 }
 
 impl ListPageBuilder {
+    /// Creates a new builder.
     pub fn new(base: ComObject<BasePage>) -> Self {
         ListPageBuilder {
             base,
@@ -190,41 +282,51 @@ impl ListPageBuilder {
         }
     }
 
+    /// Sets the empty content for the list page.
     pub fn empty_content(mut self, empty_content: ComObject<CommandItem>) -> Self {
         self.empty_content = Some(empty_content);
         self
     }
 
+    /// Sets the filters for the list page.
     pub fn filters(mut self, filters: ComObject<Filters>) -> Self {
         self.filters = Some(filters);
         self
     }
 
+    /// Sets the items for the list page.
     pub fn items(mut self, items: Vec<ComObject<ListItem>>) -> Self {
         self.items = items;
         self
     }
 
+    /// Adds an item to the list page.
     pub fn add_item(mut self, item: ComObject<ListItem>) -> Self {
         self.items.push(item);
         self
     }
 
+    /// Sets the grid properties for the list page.
+    ///
+    /// The grid properties define how much space each item should take in the grid layout.
     pub fn grid_properties(mut self, grid_properties: ComObject<GridProperties>) -> Self {
         self.grid_properties = Some(grid_properties);
         self
     }
 
+    /// Sets the placeholder text for the list page.
     pub fn placeholder(mut self, placeholder: impl Into<HSTRING>) -> Self {
         self.placeholder = Some(placeholder.into());
         self
     }
 
+    /// Sets the initial search text for the list page.
     pub fn search_text(mut self, search_text: impl Into<HSTRING>) -> Self {
         self.search_text = Some(search_text.into());
         self
     }
 
+    /// Sets the function to call when more items need to be loaded.
     pub fn more_fn<F>(mut self, more_fn: F) -> Self
     where
         F: Send + Sync + Fn(&ListPage_Impl) -> Result<()> + 'static,
@@ -233,6 +335,7 @@ impl ListPageBuilder {
         self
     }
 
+    /// Sets whether to show details for each item in the list.
     pub fn show_details(mut self, show_details: bool) -> Self {
         self.show_details = Some(show_details);
         self
@@ -273,17 +376,28 @@ impl Deref for ListPage {
 }
 
 impl ListPage_Impl {
-    pub fn emit_self_items_changed(&self, index: i32) {
+    pub(crate) fn emit_self_items_changed(&self, index: i32) {
         let sender: IInspectable = self.to_interface();
         let args: IItemsChangedEventArgs = ItemsChangedEventArgs(index).into();
         self.item_event
             .call(|handler| handler.Invoke(&sender, &args));
     }
 
+    /// Readonly access to [`IListPage::SearchText`].
+    ///
+    #[doc = include_str!("../bindings_docs/IListPage/SearchText.md")]
     pub fn search_text(&self) -> Result<NotifyLockReadGuard<'_, HSTRING>> {
         self.search_text.read()
     }
 
+    /// Mutable access to [`IListPage::SearchText`].
+    ///
+    /// Even for `DynamicListPage`, we do not recommend updating the search text directly,
+    /// as it causes confusion and may cause recurring updates if improperly handled.
+    ///
+    #[doc = include_str!("../bindings_docs/IListPage/SearchText.md")]
+    ///
+    /// Notifies the host about the change when dropping the guard.
     pub fn search_text_mut(&self) -> Result<NotifyLockWriteGuard<'_, HSTRING>> {
         self.search_text.write(|| {
             self.base
@@ -296,10 +410,18 @@ impl ListPage_Impl {
         self.search_text.write(|| {})
     }
 
+    /// Readonly access to [`IListPage::EmptyContent`].
+    ///
+    #[doc = include_str!("../bindings_docs/IListPage/EmptyContent.md")]
     pub fn empty_content(&self) -> Result<NotifyLockReadGuard<'_, Option<ComObject<CommandItem>>>> {
         self.empty_content.read()
     }
 
+    /// Mutable access to [`IListPage::EmptyContent`].
+    ///
+    #[doc = include_str!("../bindings_docs/IListPage/EmptyContent.md")]
+    ///
+    /// Notifies the host about the change when dropping the guard.
     pub fn empty_content_mut(
         &self,
     ) -> Result<NotifyLockWriteGuard<'_, Option<ComObject<CommandItem>>>> {
@@ -310,10 +432,16 @@ impl ListPage_Impl {
         })
     }
 
+    /// Readonly access to [`IListPage::Filters`].
+    ///
+    #[doc = include_str!("../bindings_docs/IListPage/Filters.md")]
     pub fn filters(&self) -> Result<NotifyLockReadGuard<'_, Option<ComObject<Filters>>>> {
         self.filters.read()
     }
 
+    /// Mutable access to [`IListPage::Filters`].
+    ///
+    #[doc = include_str!("../bindings_docs/IListPage/Filters.md")]
     pub fn filters_mut(&self) -> Result<NotifyLockWriteGuard<'_, Option<ComObject<Filters>>>> {
         self.filters.write(|| {
             self.base
@@ -322,21 +450,37 @@ impl ListPage_Impl {
         })
     }
 
+    /// Readonly access to [`IListPage::GetItems`].
+    ///
+    #[doc = include_str!("../bindings_docs/IListPage/GetItems.md")]
     pub fn items(&self) -> Result<NotifyLockReadGuard<'_, Vec<ComObject<ListItem>>>> {
         self.items.read()
     }
 
+    /// Mutable access to [`IListPage::GetItems`].
+    ///
+    #[doc = include_str!("../bindings_docs/IListPage/GetItems.md")]
+    ///
+    /// Notifies the host about the change when dropping the guard.
     pub fn items_mut(&self) -> Result<NotifyLockWriteGuard<'_, Vec<ComObject<ListItem>>, usize>> {
         self.items
             .write_with_peek(|v| v.len(), |len| self.emit_self_items_changed(len as i32))
     }
 
+    /// Readonly access to [`IListPage::GridProperties`].
+    ///
+    #[doc = include_str!("../bindings_docs/IListPage/GridProperties.md")]
     pub fn grid_properties(
         &self,
     ) -> Result<NotifyLockReadGuard<'_, Option<ComObject<GridProperties>>>> {
         self.grid_properties.read()
     }
 
+    /// Mutable access to [`IListPage::GridProperties`].
+    ///
+    #[doc = include_str!("../bindings_docs/IListPage/GridProperties.md")]
+    ///
+    /// Notifies the host about the change when dropping the guard.
     pub fn grid_properties_mut(
         &self,
     ) -> Result<NotifyLockWriteGuard<'_, Option<ComObject<GridProperties>>>> {
@@ -347,10 +491,18 @@ impl ListPage_Impl {
         })
     }
 
+    /// Readonly access to [`IListPage::HasMoreItems`].
+    ///
+    #[doc = include_str!("../bindings_docs/IListPage/HasMoreItems.md")]
     pub fn has_more(&self) -> Result<NotifyLockReadGuard<'_, bool>> {
         self.has_more.read()
     }
 
+    /// Mutable access to [`IListPage::HasMoreItems`].
+    ///
+    #[doc = include_str!("../bindings_docs/IListPage/HasMoreItems.md")]
+    ///
+    /// Notifies the host about the change when dropping the guard.
     pub fn has_more_mut(&self) -> Result<NotifyLockWriteGuard<'_, bool>> {
         self.has_more.write(|| {
             self.base
@@ -359,10 +511,18 @@ impl ListPage_Impl {
         })
     }
 
+    /// Readonly access to [`IListPage::PlaceholderText`].
+    ///
+    #[doc = include_str!("../bindings_docs/IListPage/PlaceholderText.md")]
     pub fn placeholder(&self) -> Result<NotifyLockReadGuard<'_, HSTRING>> {
         self.placeholder.read()
     }
 
+    /// Mutable access to [`IListPage::PlaceholderText`].
+    ///
+    #[doc = include_str!("../bindings_docs/IListPage/PlaceholderText.md")]
+    ///
+    /// Notifies the host about the change when dropping the guard.
     pub fn placeholder_mut(&self) -> Result<NotifyLockWriteGuard<'_, HSTRING>> {
         self.placeholder.write(|| {
             self.base
@@ -371,10 +531,17 @@ impl ListPage_Impl {
         })
     }
 
+    /// Readonly access to [`IListPage::ShowDetails`].
+    ///
+    #[doc = include_str!("../bindings_docs/IListPage/ShowDetails.md")]
     pub fn show_details(&self) -> Result<NotifyLockReadGuard<'_, bool>> {
         self.show_details.read()
     }
 
+    /// Mutable access to [`IListPage::ShowDetails`].
+    ///
+    /// Notifies the host about the change when dropping the guard.
+    #[doc = include_str!("../bindings_docs/IListPage/ShowDetails.md")]
     pub fn show_details_mut(&self) -> Result<NotifyLockWriteGuard<'_, bool>> {
         self.show_details.write(|| {
             self.base

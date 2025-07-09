@@ -5,7 +5,7 @@ use std::ops::Deref;
 use crate::cmd_item::{CommandItem, CommandItem_Impl};
 use crate::utils::{ComBuilder, OkOrEmpty, assert_send_sync};
 use crate::{bindings::*, notify::*};
-use windows::core::{ComObject, IInspectable, IUnknownImpl as _, Result, implement};
+use windows_core::{ComObject, IInspectable, IUnknownImpl as _, Result, implement};
 
 /// Represents a separator in the context menu.
 ///
@@ -24,6 +24,8 @@ impl IContextItem_Impl for SeparatorContextItem_Impl {}
 
 /// Represents a command item in the context menu.
 ///
+/// See [`CommandContextItem_Impl`] for field accessors.
+/// 
 #[doc = include_str!("./bindings_docs/ICommandContextItem.md")]
 #[implement(ICommandContextItem, IContextItem, ICommandItem, INotifyPropChanged)]
 pub struct CommandContextItem {
@@ -174,13 +176,37 @@ impl INotifyPropChanged_Impl for CommandContextItem_Impl {
 }
 
 /// Represents an item in the context menu, which can be either a separator or a command.
-/// 
+///
 #[doc = include_str!("./bindings_docs/IContextItem.md")]
 pub enum ContextItem {
     /// A separator item in the context menu.
     Separator(ComObject<SeparatorContextItem>),
     /// A command item in the context menu.
     Command(ComObject<CommandContextItem>),
+}
+
+impl From<SeparatorContextItem> for ContextItem {
+    fn from(item: SeparatorContextItem) -> Self {
+        ContextItem::Separator(ComObject::new(item))
+    }
+}
+
+impl From<CommandContextItem> for ContextItem {
+    fn from(item: CommandContextItem) -> Self {
+        ContextItem::Command(ComObject::new(item))
+    }
+}
+
+impl From<ComObject<SeparatorContextItem>> for ContextItem {
+    fn from(item: ComObject<SeparatorContextItem>) -> Self {
+        ContextItem::Separator(item)
+    }
+}
+
+impl From<ComObject<CommandContextItem>> for ContextItem {
+    fn from(item: ComObject<CommandContextItem>) -> Self {
+        ContextItem::Command(item)
+    }
 }
 
 impl From<&ContextItem> for IContextItem {

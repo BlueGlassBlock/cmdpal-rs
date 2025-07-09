@@ -4,7 +4,7 @@ use crate::bindings::*;
 use crate::cmd_provider::{CommandProvider, CommandProvider_Impl};
 use windows::Foundation::{IClosable, IClosable_Impl};
 use windows::Win32::Foundation::E_NOTIMPL;
-use windows::core::{ComObject, IUnknownImpl as _, implement};
+use windows_core::{ComObject, IUnknownImpl as _, implement};
 
 /// Representation of a Command Palette extension.
 ///

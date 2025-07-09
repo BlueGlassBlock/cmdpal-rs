@@ -64,13 +64,13 @@ impl ComBuilder for RevealFileCommandBuilder {
             func: Box::new(move |_| {
                 let path = (self.path_fn)()
                     .canonicalize()
-                    .map_err(|_| windows::core::Error::from(ERROR_FILE_INVALID))?;
+                    .map_err(|_| windows_core::Error::from(ERROR_FILE_INVALID))?;
                 match path.try_exists() {
                     Ok(true) => {
                         explorer_helper::reveal_file(&path.to_string_lossy().replace("/", r"\"))?;
                         Ok(self.result.clone())
                     }
-                    _ => Err(windows::core::Error::from(ERROR_FILE_INVALID)),
+                    _ => Err(windows_core::Error::from(ERROR_FILE_INVALID)),
                 }
             }),
         }
@@ -80,9 +80,9 @@ impl ComBuilder for RevealFileCommandBuilder {
 mod explorer_helper {
     use windows::Win32::UI::Shell::{SHELLEXECUTEINFOW, ShellExecuteExW};
     use windows::Win32::UI::{Shell::SEE_MASK_NOCLOSEPROCESS, WindowsAndMessaging::SW_SHOWNORMAL};
-    use windows::core::{HSTRING, PCWSTR, w};
+    use windows_core::{HSTRING, PCWSTR, w};
 
-    pub(super) fn reveal_file(target: &str) -> windows::core::Result<()> {
+    pub(super) fn reveal_file(target: &str) -> windows_core::Result<()> {
         let params = format!("/select,\"{}\"", target);
         println!("Revealing file in explorer with params: {}", params);
         let mut sei = SHELLEXECUTEINFOW::default();

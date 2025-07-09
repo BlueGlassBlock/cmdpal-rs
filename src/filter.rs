@@ -12,6 +12,8 @@ use windows::{
 };
 use windows_core::{Error, Result};
 
+/// Represents a separator in the filter list.
+/// 
 #[doc = include_str!("./bindings_docs/ISeparatorFilterItem.md")]
 #[implement(ISeparatorFilterItem, IFilterItem)]
 pub struct FilterSeparator;
@@ -19,6 +21,8 @@ pub struct FilterSeparator;
 impl ISeparatorFilterItem_Impl for FilterSeparator_Impl {}
 impl IFilterItem_Impl for FilterSeparator_Impl {}
 
+/// Represents a selectable filter item in the filter list.
+///
 #[doc = include_str!("./bindings_docs/IFilter.md")]
 #[implement(IFilter, IFilterItem)]
 pub struct Filter {

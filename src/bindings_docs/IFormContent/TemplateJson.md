@@ -1,1 +1,1 @@
-The JSON representation of the template associated with the form content.
+JSON representation of the template associated with the form. It is used to get the template data that defines the structure and layout of the Adaptive Card to be displayed to the user.

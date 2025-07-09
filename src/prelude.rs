@@ -10,8 +10,8 @@ pub use crate::{
     content::{FormContent, FormContentBuilder, MarkdownContent, TreeContent, TreeContentBuilder},
     ctx_item::{CommandContextItem, CommandContextItemBuilder, ContextItem, SeparatorContextItem},
     details::{
-        Details, DetailsBuilder, DetailsLink, DetailsLinkBuilder, DetailsSeparator, DetailsTags,
-        DetailsTagsBuilder, Tag, TagBuilder,
+        Details, DetailsBuilder, DetailsData, DetailsElement, DetailsLink, DetailsLinkBuilder,
+        DetailsSeparator, DetailsTags, DetailsTagsBuilder, Tag, TagBuilder,
     },
     ext::Extension,
     ext_registry::ExtRegistry,
@@ -31,7 +31,7 @@ pub use crate::{
     utils::{ComBuilder, GridProperties},
 };
 
-pub use windows::core::{
+pub use windows_core::{
     ComObject, Error as WinError, GUID, HSTRING, IUnknownImpl as IUnknown_Impl,
     Result as WinResult, h,
 };

@@ -1,1 +1,1 @@
-The JSON representation of the state associated with the form content.
+JSON representation of the state associated with the form. It is used to get the state data that defines the current status and values of the form fields.

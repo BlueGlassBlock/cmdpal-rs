@@ -11,8 +11,16 @@ const MD_CONTENT: &str = include_str!("../../README.md");
 
 fn com_main() -> Result<()> {
     tracing::info!("Hello, world!");
-    let md_box: ComObject<_> =
-        cmdpal::content::markdown::MarkdownContent::new_unmanaged("".into()).into();
+    let md_box: ComObject<_> = cmdpal::content::markdown::MarkdownContent::new("");
+    let form_box = cmdpal::content::form::FormContentBuilder::new()
+        .template_json(include_str!("./template.json"))
+        .submit(|_, inputs, data| {
+            tracing::info!("Form submitted with inputs: {}, data: {}", inputs, data);
+            // Here you can process the form inputs and data
+            // For now, just return KeepOpen to keep the form open
+            Ok(CommandResult::KeepOpen)
+        })
+        .build();
     let task_box = md_box.clone();
     // start a thread to update the content to current time
     let _handle = std::thread::spawn(move || unsafe {
@@ -35,7 +43,7 @@ fn com_main() -> Result<()> {
         .build()
         .to_interface(),
     )?
-    .title("Copy Sample Text") // TODO: The display text is determined by InvokableCommand's title?
+    .title("Copy Sample Text")
     .build();
     let copy_time_box = md_box.clone();
     let copy_time_item: ComObject<CommandItem> = CommandItemBuilder::try_new(
@@ -87,28 +95,13 @@ fn com_main() -> Result<()> {
             .body("Details Body")
             .build(),
     )
-    .try_add_content(MarkdownContent::new_unmanaged(MD_CONTENT.into()).into())?
-    .try_add_content(md_box.to_interface())?
-    .try_add_command(
-        CommandContextItemBuilder::new(copy_sample_item)
-            .build()
-            .to_interface(),
-    )?
-    .try_add_command(
-        CommandContextItemBuilder::new(copy_time_item)
-            .build()
-            .to_interface(),
-    )?
-    .try_add_command(
-        CommandContextItemBuilder::new(open_nonebot_dev_item)
-            .build()
-            .to_interface(),
-    )?
-    .try_add_command(
-        CommandContextItemBuilder::new(reveal_file_item)
-            .build()
-            .to_interface(),
-    )?
+    .add_content(md_box)
+    .add_content(MarkdownContent::new(MD_CONTENT))
+    .add_content(form_box)
+    .add_context_item(CommandContextItemBuilder::new(copy_sample_item).build())
+    .add_context_item(CommandContextItemBuilder::new(copy_time_item).build())
+    .add_context_item(CommandContextItemBuilder::new(open_nonebot_dev_item).build())
+    .add_context_item(CommandContextItemBuilder::new(reveal_file_item).build())
     .build();
     let provider = CommandProviderBuilder::new()
         .id("BlueG.PEP")

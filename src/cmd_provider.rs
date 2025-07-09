@@ -1,11 +1,15 @@
+//! Command Provider that provides extension information and commands.
 use crate::bindings::*;
 use crate::icon::IconInfo;
 use crate::notify::ItemsChangedEventHandler;
 use crate::utils::{ComBuilder, OkOrEmpty, map_array};
 use windows::Foundation::{IClosable, IClosable_Impl, TypedEventHandler};
-use windows::core::{ComObject, implement};
+use windows_core::{ComObject, implement};
 use windows_core::{Event, HSTRING, IInspectable};
 
+/// Command Provider that provides extension information and commands.
+/// 
+#[doc = include_str!("./bindings_docs/ICommandProvider.md")]
 #[implement(ICommandProvider, IClosable, INotifyItemsChanged)]
 pub struct CommandProvider {
     id: windows_core::HSTRING,
@@ -18,6 +22,7 @@ pub struct CommandProvider {
     event: ItemsChangedEventHandler,
 }
 
+/// Builder for [`CommandProvider`].
 pub struct CommandProviderBuilder {
     id: windows_core::HSTRING,
     display_name: windows_core::HSTRING,
@@ -29,6 +34,7 @@ pub struct CommandProviderBuilder {
 }
 
 impl CommandProviderBuilder {
+    /// Creates a new builder.
     pub fn new() -> Self {
         CommandProviderBuilder {
             id: HSTRING::new(),
@@ -41,46 +47,61 @@ impl CommandProviderBuilder {
         }
     }
 
+    /// Sets the ID of the command provider.
     pub fn id(mut self, id: impl Into<windows_core::HSTRING>) -> Self {
         self.id = id.into();
         self
     }
 
+    /// Sets the display name of the command provider.
+    /// 
+    /// The name will be displayed at the settings page of the extension.
     pub fn display_name(mut self, display_name: impl Into<windows_core::HSTRING>) -> Self {
         self.display_name = display_name.into();
         self
     }
 
+    /// Sets the icon of the command provider.
     pub fn icon(mut self, icon: ComObject<IconInfo>) -> Self {
         self.icon = Some(icon);
         self
     }
 
+    /// Sets the settings page of the command provider.
     pub fn settings(mut self, settings: ICommandSettings) -> Self {
         self.settings = Some(settings);
         self
     }
 
+    /// Sets whether the command provider is frozen.
+    /// 
+    /// If frozen, Command Palette will try to cache the commands and call `GetCommand` to accelerate command retrieval process.
     pub fn frozen(mut self, frozen: bool) -> Self {
         self.frozen = frozen;
         self
     }
 
+    /// Sets the top-level commands of the command provider.
     pub fn top_level(mut self, top_level: Vec<ICommandItem>) -> Self {
         self.top_level = top_level;
         self
     }
 
+    /// Adds a top-level command to the command provider.
     pub fn add_top_level(mut self, item: ICommandItem) -> Self {
         self.top_level.push(item);
         self
     }
 
+    /// Sets the fallback commands of the command provider.
+    /// 
+    /// Fallback commands are dynamic commands that can respond to dynamic queries.
     pub fn fallbacks(mut self, fallbacks: Vec<IFallbackCommandItem>) -> Self {
         self.fallbacks = fallbacks;
         self
     }
 
+    /// Adds a fallback command to the command provider.
     pub fn add_fallback(mut self, item: IFallbackCommandItem) -> Self {
         self.fallbacks.push(item);
         self
@@ -142,7 +163,7 @@ impl ICommandProvider_Impl for CommandProvider_Impl {
     }
 
     fn GetCommand(&self, _: &windows_core::HSTRING) -> windows_core::Result<ICommand> {
-        Err(windows::core::Error::empty())
+        Err(windows_core::Error::empty())
     }
 
     fn InitializeWithHost(

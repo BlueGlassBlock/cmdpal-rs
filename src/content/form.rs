@@ -1,8 +1,9 @@
+//! Form content that can be used to accept user input.
 use crate::bindings::*;
 use crate::cmd::CommandResult;
 use crate::notify::*;
 use crate::utils::{ComBuilder, assert_send_sync};
-use windows::core::{ComObject, Event, HSTRING, IInspectable, IUnknownImpl as _, implement};
+use windows_core::{ComObject, Event, HSTRING, IInspectable, IUnknownImpl as _, implement};
 
 pub type SubmitBox = Box<
     dyn Send
@@ -10,6 +11,11 @@ pub type SubmitBox = Box<
         + Fn(&FormContent_Impl, &HSTRING, &HSTRING) -> windows_core::Result<CommandResult>,
 >;
 
+/// Form content that can be used to accept user input.
+///
+/// See [`FormContent_Impl`] for field accessors.
+///
+#[doc = include_str!("../bindings_docs/IFormContent.md")]
 #[implement(IFormContent, IContent, INotifyPropChanged)]
 pub struct FormContent {
     template_json: NotifyLock<HSTRING>,
@@ -19,6 +25,7 @@ pub struct FormContent {
     event: PropChangedEventHandler,
 }
 
+/// Builder for [`FormContent`].
 pub struct FormContentBuilder {
     template_json: HSTRING,
     data_json: HSTRING,
@@ -27,6 +34,7 @@ pub struct FormContentBuilder {
 }
 
 impl FormContentBuilder {
+    /// Creates a new builder.
     pub fn new() -> Self {
         FormContentBuilder {
             template_json: HSTRING::default(),
@@ -36,21 +44,42 @@ impl FormContentBuilder {
         }
     }
 
-    pub fn template_json(mut self, template_json: HSTRING) -> Self {
-        self.template_json = template_json;
+    /// Sets the template JSON for the form.
+    pub fn template_json(mut self, template_json: impl Into<HSTRING>) -> Self {
+        self.template_json = template_json.into();
         self
     }
 
-    pub fn data_json(mut self, data_json: HSTRING) -> Self {
-        self.data_json = data_json;
+    /// Sets the data JSON for the form.
+    ///
+    /// # Note
+    /// Currently not used by Command Palette?
+    pub fn data_json(mut self, data_json: impl Into<HSTRING>) -> Self {
+        self.data_json = data_json.into();
         self
     }
 
-    pub fn state_json(mut self, state_json: HSTRING) -> Self {
-        self.state_json = state_json;
+    /// Sets the state JSON for the form.
+    ///
+    /// # Note
+    /// Currently not used by Command Palette?
+    pub fn state_json(mut self, state_json: impl Into<HSTRING>) -> Self {
+        self.state_json = state_json.into();
         self
     }
 
+    /// Sets the submit handler for the form.
+    ///
+    /// # Note
+    ///
+    /// The submit function should accept (self, inputs, data) as parameters:
+    /// - `self` is a `&FormContent_Impl` for convenient field access
+    /// - `inputs` is a JSON string of raw form inputs (`Map<String, Value>`),
+    /// - `data` is:
+    ///     - empty string `""` if the action is not `Action.Submit`,
+    ///     - string `"null"` if the action is `Action.Submit` with no `data` key (serialized `null`),
+    ///     - a JSON string corresponding to the `data` key if the action is `Action.Submit` with a `data` key.
+    ///
     pub fn submit<F>(mut self, submit: F) -> Self
     where
         F: Send

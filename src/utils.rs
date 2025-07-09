@@ -5,7 +5,7 @@ use std::ops::DerefMut;
 use windows::Storage::Streams::{IBuffer, IBuffer_Impl};
 use windows::Win32::Foundation::E_NOTIMPL;
 use windows::Win32::System::WinRT::{IBufferByteAccess, IBufferByteAccess_Impl};
-use windows::core::{Array, implement};
+use windows_core::{Array, implement};
 
 #[implement(IBuffer, IBufferByteAccess)]
 pub(crate) struct FrozenBuffer {
@@ -66,7 +66,7 @@ impl IGridProperties_Impl for GridProperties_Impl {
 /// (Most of the time, T::Default is `Option<T>`).
 pub fn map_array<T, S, F>(slice: &[S], map: F) -> Array<T>
 where
-    T: windows::core::Type<T>,
+    T: windows_core::Type<T>,
     F: Fn(&S) -> T::Default,
 {
     let mut arr = Array::with_len(slice.len());
@@ -97,7 +97,7 @@ pub trait OkOrEmpty {
     type Output;
 
     /// Returns `Ok(T)` if `self` can be perceived as a non-null value,
-    /// else `Err(windows::core::Error::empty())`.
+    /// else `Err(windows_core::Error::empty())`.
     fn ok_or_empty(self) -> windows_core::Result<Self::Output>;
 }
 
@@ -110,11 +110,11 @@ impl<T> OkOrEmpty for Option<T> {
 
 /// A trait for types that can be built into a COM object.
 pub trait ComBuilder: Sized {
-    type Output: windows::core::ComObjectInner;
+    type Output: windows_core::ComObjectInner;
     /// Build the unmanaged object.
     fn build_unmanaged(self) -> Self::Output;
     /// Build the reference-counted COM object.
-    fn build(self) -> windows::core::ComObject<Self::Output> {
+    fn build(self) -> windows_core::ComObject<Self::Output> {
         self.build_unmanaged().into()
     }
 }

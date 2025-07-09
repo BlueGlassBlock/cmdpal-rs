@@ -1,3 +1,4 @@
+//! Dynamic list page that can customize items based on search text.
 use std::ops::Deref;
 
 use crate::{
@@ -5,13 +6,16 @@ use crate::{
     page::list::ListPage_Impl,
     utils::{ComBuilder, assert_send_sync},
 };
-use windows::core::{ComObject, HSTRING, Result, implement};
+use windows_core::{ComObject, HSTRING, Result, implement};
 
 use super::list::ListPage;
 
 pub type SearchTextUpdateBox =
     Box<dyn Send + Sync + Fn(&DynamicListPage_Impl, HSTRING, HSTRING) -> Result<()>>;
 
+/// Dynamic list page that can customize items based on search text.
+///
+#[doc = include_str!("../bindings_docs/IDynamicListPage.md")]
 #[implement(
     IDynamicListPage,
     IListPage,
@@ -25,12 +29,14 @@ pub struct DynamicListPage {
     update_fn: SearchTextUpdateBox,
 }
 
+/// Builder for [`DynamicListPage`].
 pub struct DynamicListPageBuilder {
     base: ComObject<ListPage>,
     update_fn: SearchTextUpdateBox,
 }
 
 impl DynamicListPageBuilder {
+    /// Creates a new builder.
     pub fn new(base: ComObject<ListPage>) -> Self {
         DynamicListPageBuilder {
             base,
@@ -38,6 +44,18 @@ impl DynamicListPageBuilder {
         }
     }
 
+    /// Sets the update function for search text changes.
+    /// 
+    /// The update function takes (self, old_search_text, new_search_text) as parameters.
+    /// 
+    /// # Note
+    /// 
+    /// The update function should block as little as possible, else the subsequent updates will clutter,
+    /// causing incorrect ordering of search text updates.
+    /// 
+    /// Solutions include:
+    /// - Fire a unblocking task to handle the update, and cancel the previous task if it is still running.
+    /// - Delegate updates to a background thread, and prioritize the latest chronological update.
     pub fn update_fn<F>(mut self, update_fn: F) -> Self
     where
         F: Send + Sync + Fn(&DynamicListPage_Impl, HSTRING, HSTRING) -> Result<()> + 'static,
