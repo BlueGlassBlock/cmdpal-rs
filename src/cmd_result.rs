@@ -1,4 +1,4 @@
-//! Execution result representation of [`crate::cmd::InvokableCommand`]
+//! Execution result representation of [`InvokableCommand`][`crate::cmd::InvokableCommand`]
 
 use crate::bindings::{
     CommandResultKind, ICommand, ICommandResult, ICommandResult_Impl, ICommandResultArgs,

@@ -4,7 +4,7 @@ pub mod data;
 pub mod info;
 
 #[doc(inline)]
-pub use data::IconData as IconData;
+pub use data::IconData;
 
 #[doc(inline)]
-pub use info::IconInfo as IconInfo;
+pub use info::IconInfo;

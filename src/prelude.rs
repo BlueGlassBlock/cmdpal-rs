@@ -3,10 +3,7 @@
 pub use crate::{
     cmd::{
         BaseCommand, BaseCommandBuilder, CommandResult, InvokableCommand,
-        common::{
-            CopyTextCommandBuilder, NoOpCommandBuilder, OpenUrlCommandBuilder,
-            RevealFileCommandBuilder,
-        },
+        common::{CopyTextCommandBuilder, OpenUrlCommandBuilder, RevealFileCommandBuilder},
     },
     cmd_item::{CommandItem, CommandItemBuilder},
     cmd_provider::{CommandProvider, CommandProviderBuilder},

@@ -1,3 +1,5 @@
+//! Builder for creating commands that reveals a path in the system's file explorer.
+
 use crate::{
     cmd::{BaseCommand, BaseCommandBuilder, CommandResult, InvokableCommand},
     icon::{IconData, IconInfo},
@@ -5,6 +7,7 @@ use crate::{
 };
 use windows::{Win32::Foundation::ERROR_FILE_INVALID, core::ComObject};
 
+/// Builder for a command that reveals a file in the system's file explorer.
 pub struct RevealFileCommandBuilder {
     base: ComObject<BaseCommand>,
     path_fn: Box<dyn Send + Sync + Fn() -> std::path::PathBuf>,
@@ -19,6 +22,7 @@ fn reveal_file_base_cmd() -> ComObject<BaseCommand> {
 }
 
 impl RevealFileCommandBuilder {
+    /// Creates a new `RevealFileCommandBuilder` with a static path.
     pub fn new(path: std::path::PathBuf) -> Self {
         Self {
             base: reveal_file_base_cmd(),
@@ -27,6 +31,7 @@ impl RevealFileCommandBuilder {
         }
     }
 
+    /// Creates a new `RevealFileCommandBuilder` with a function that returns the path.
     pub fn new_dyn<F>(path_fn: F) -> Self
     where
         F: Send + Sync + Fn() -> std::path::PathBuf + 'static,
@@ -38,6 +43,9 @@ impl RevealFileCommandBuilder {
         }
     }
 
+    /// Sets the base command for this reveal file command.
+    ///
+    /// By default, the base command has name "Show in folder" with a folder icon "\u{E8B7}".
     pub fn base(mut self, base: ComObject<BaseCommand>) -> Self {
         self.base = base;
         self

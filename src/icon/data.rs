@@ -12,7 +12,7 @@ use windows::core::{AgileReference, HSTRING, implement};
 /// Represents icon data.
 ///
 /// Use [`From`] or [`TryFrom`] to create an instance from various types and their references:
-/// - [`HSTRING`] / [`String`]: URL or a canonical path to the icon.
+/// - [`HSTRING`] / [`String`]: [Segoe Fluent Icon](https://learn.microsoft.com/en-us/windows/apps/design/style/segoe-fluent-icons-font) codepoint, URL or a canonical path to the icon.
 /// - [`PathBuf`]: Path to the icon file, which will be canonicalized.
 /// - [`Vec<u8>`]: Raw icon data
 ///

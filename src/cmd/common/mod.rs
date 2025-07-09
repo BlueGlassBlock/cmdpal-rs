@@ -1,9 +1,14 @@
+//! Common invokable command implementations.
+
 pub mod copy_text;
-pub mod no_op;
 pub mod open_url;
 pub mod reveal_file;
 
+#[doc(inline)]
 pub use copy_text::CopyTextCommandBuilder;
-pub use no_op::NoOpCommandBuilder;
+
+#[doc(inline)]
 pub use open_url::OpenUrlCommandBuilder;
+
+#[doc(inline)]
 pub use reveal_file::RevealFileCommandBuilder;

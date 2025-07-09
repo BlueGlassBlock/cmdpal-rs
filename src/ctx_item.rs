@@ -1,3 +1,5 @@
+//! Context menu items.
+
 use std::ops::Deref;
 
 use crate::cmd_item::{CommandItem, CommandItem_Impl};
@@ -5,6 +7,9 @@ use crate::utils::{ComBuilder, OkOrEmpty, assert_send_sync};
 use crate::{bindings::*, notify::*};
 use windows::core::{ComObject, IInspectable, IUnknownImpl as _, Result, implement};
 
+/// Represents a separator in the context menu.
+///
+#[doc = include_str!("./bindings_docs/ISeparatorContextItem.md")]
 #[implement(ISeparatorContextItem, IContextItem)]
 pub struct SeparatorContextItem;
 
@@ -17,8 +22,12 @@ impl SeparatorContextItem {
 impl ISeparatorContextItem_Impl for SeparatorContextItem_Impl {}
 impl IContextItem_Impl for SeparatorContextItem_Impl {}
 
+/// Represents a command item in the context menu.
+///
+#[doc = include_str!("./bindings_docs/ICommandContextItem.md")]
 #[implement(ICommandContextItem, IContextItem, ICommandItem, INotifyPropChanged)]
 pub struct CommandContextItem {
+    /// The base command item that this context item wraps.
     pub base: ComObject<CommandItem>,
     critical: NotifyLock<bool>,
     shortcut: NotifyLock<Option<KeyChord>>,
@@ -31,6 +40,7 @@ pub struct CommandContextItemBuilder {
 }
 
 impl CommandContextItemBuilder {
+    /// Creates a new builder.
     pub fn new(base: ComObject<CommandItem>) -> Self {
         CommandContextItemBuilder {
             base,
@@ -39,13 +49,15 @@ impl CommandContextItemBuilder {
         }
     }
 
+    /// Sets whether the command is critical.
     pub fn critical(mut self, critical: bool) -> Self {
         self.critical = critical;
         self
     }
 
-    pub fn shortcut(mut self, shortcut: Option<KeyChord>) -> Self {
-        self.shortcut = shortcut;
+    /// Sets the keyboard shortcut for the command.
+    pub fn shortcut(mut self, shortcut: KeyChord) -> Self {
+        self.shortcut = Some(shortcut);
         self
     }
 }
@@ -74,18 +86,35 @@ impl CommandContextItem_Impl {
         self.base.emit_prop_changed(&sender, prop);
     }
 
+    /// Readonly access to [`ICommandContextItem::IsCritical`].
+    ///
+    #[doc = include_str!("./bindings_docs/ICommandContextItem/IsCritical.md")]
     pub fn critical(&self) -> Result<NotifyLockReadGuard<'_, bool>> {
         self.critical.read()
     }
 
+    /// Mutable access to [`ICommandContextItem::IsCritical`].
+    ///
+    #[doc = include_str!("./bindings_docs/ICommandContextItem/RequestedShortcut.md")]
+    ///
+    /// Notifies the host about the property change when dropping the guard.
     pub fn critical_mut(&self) -> Result<NotifyLockWriteGuard<'_, bool>> {
         self.critical
             .write(|| self.emit_self_prop_changed("Critical"))
     }
 
+    /// Readonly access to [`ICommandContextItem::RequestedShortcut`].
+    ///
+    #[doc = include_str!("./bindings_docs/ICommandContextItem/RequestedShortcut.md")]
     pub fn shortcut(&self) -> Result<NotifyLockReadGuard<'_, Option<KeyChord>>> {
         self.shortcut.read()
     }
+
+    /// Mutable access to [`ICommandContextItem::RequestedShortcut`].
+    ///
+    #[doc = include_str!("./bindings_docs/ICommandContextItem/RequestedShortcut.md")]
+    ///
+    /// Notifies the host about the property change when dropping the guard.
     pub fn shortcut_mut(&self) -> Result<NotifyLockWriteGuard<'_, Option<KeyChord>>> {
         self.shortcut
             .write(|| self.emit_self_prop_changed("RequestedShortcut"))
@@ -144,8 +173,13 @@ impl INotifyPropChanged_Impl for CommandContextItem_Impl {
     }
 }
 
+/// Represents an item in the context menu, which can be either a separator or a command.
+/// 
+#[doc = include_str!("./bindings_docs/IContextItem.md")]
 pub enum ContextItem {
+    /// A separator item in the context menu.
     Separator(ComObject<SeparatorContextItem>),
+    /// A command item in the context menu.
     Command(ComObject<CommandContextItem>),
 }
 

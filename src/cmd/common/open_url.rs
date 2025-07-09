@@ -1,4 +1,4 @@
-//! Utility for creating commands that open URLs in the system's default browser.
+//! Builder for creating commands that open URLs in the system's default browser.
 
 use crate::{
     cmd::{BaseCommand, BaseCommandBuilder, CommandResult, InvokableCommand},
@@ -7,7 +7,7 @@ use crate::{
 };
 use windows::core::ComObject;
 
-/// Builds a command that opens a URL in the system's default browser.
+/// Builder for a command that opens a URL in the system's default browser.
 pub struct OpenUrlCommandBuilder {
     base: ComObject<BaseCommand>,
     target_fn: Box<dyn Send + Sync + Fn() -> String>,
@@ -45,7 +45,7 @@ impl OpenUrlCommandBuilder {
 
     /// Overrides the base command with a custom one.
     ///
-    /// By default, it uses a command with the name "Open" and an icon representing opening a link.
+    /// By default, it uses a command with the name "Open" and an OpenInNewWindow icon "\u{E8A7}".
     pub fn base(mut self, base: ComObject<BaseCommand>) -> Self {
         self.base = base;
         self
