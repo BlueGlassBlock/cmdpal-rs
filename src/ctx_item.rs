@@ -51,7 +51,7 @@ impl CommandContextItemBuilder {
 }
 
 impl ComBuilder for CommandContextItemBuilder {
-    type Target = CommandContextItem;
+    type Output = CommandContextItem;
     fn build_unmanaged(self) -> CommandContextItem {
         CommandContextItem {
             base: self.base,

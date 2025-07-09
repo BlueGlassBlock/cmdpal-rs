@@ -27,10 +27,13 @@ impl RevealFileCommandBuilder {
         }
     }
 
-    pub fn new_dyn(path_fn: Box<dyn Send + Sync + Fn() -> std::path::PathBuf>) -> Self {
+    pub fn new_dyn<F>(path_fn: F) -> Self
+    where
+        F: Send + Sync + Fn() -> std::path::PathBuf + 'static,
+    {
         Self {
             base: reveal_file_base_cmd(),
-            path_fn,
+            path_fn: Box::new(path_fn),
             result: CommandResult::Dismiss,
         }
     }
@@ -46,7 +49,7 @@ impl RevealFileCommandBuilder {
 }
 
 impl ComBuilder for RevealFileCommandBuilder {
-    type Target = InvokableCommand;
+    type Output = InvokableCommand;
     fn build_unmanaged(self) -> InvokableCommand {
         InvokableCommand {
             base: self.base,

@@ -68,7 +68,7 @@ impl CommandItemBuilder {
 }
 
 impl ComBuilder for CommandItemBuilder {
-    type Target = CommandItem;
+    type Output = CommandItem;
     fn build_unmanaged(self) -> CommandItem {
         let title = self.title.unwrap_or_else(|| HSTRING::new());
         let subtitle = self.subtitle.unwrap_or_else(|| HSTRING::new());

@@ -38,7 +38,7 @@ impl TreeContentBuilder {
 }
 
 impl ComBuilder for TreeContentBuilder {
-    type Target = TreeContent;
+    type Output = TreeContent;
     fn build_unmanaged(self) -> TreeContent {
         TreeContent {
             root: NotifyLock::new(self.root),

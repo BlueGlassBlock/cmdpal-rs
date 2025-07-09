@@ -23,7 +23,7 @@ impl NoOpCommandBuilder {
 }
 
 impl ComBuilder for NoOpCommandBuilder {
-    type Target = InvokableCommand;
+    type Output = InvokableCommand;
     fn build_unmanaged(self) -> InvokableCommand {
         InvokableCommand {
             base: self.base,

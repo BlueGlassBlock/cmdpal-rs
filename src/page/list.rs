@@ -68,7 +68,7 @@ impl ListItemBuilder {
 }
 
 impl ComBuilder for ListItemBuilder {
-    type Target = ListItem;
+    type Output = ListItem;
     fn build_unmanaged(self) -> ListItem {
         ListItem {
             base: self.base,
@@ -225,6 +225,14 @@ impl ListPageBuilder {
         self
     }
 
+    pub fn more_fn<F>(mut self, more_fn: F) -> Self
+    where
+        F: Send + Sync + Fn(&ListPage_Impl) -> Result<()> + 'static,
+    {
+        self.more_fn = Some(Box::new(more_fn));
+        self
+    }
+
     pub fn show_details(mut self, show_details: bool) -> Self {
         self.show_details = Some(show_details);
         self
@@ -232,7 +240,7 @@ impl ListPageBuilder {
 }
 
 impl ComBuilder for ListPageBuilder {
-    type Target = ListPage;
+    type Output = ListPage;
     fn build_unmanaged(self) -> ListPage {
         ListPage {
             base: self.base,
@@ -245,12 +253,9 @@ impl ComBuilder for ListPageBuilder {
             has_more: NotifyLock::new(self.more_fn.is_some()),
             more_fn: self.more_fn.unwrap_or_else(|| {
                 Box::new(|page| {
-                    page.has_more_mut()
-                        .map(|mut guard| {
-                            *guard = false;
-                            Ok(())
-                        })
-                        .unwrap_or_else(|e| Err(e))
+                    page.has_more_mut().map(|mut guard| {
+                        *guard = false;
+                    })
                 })
             }),
             show_details: NotifyLock::new(self.show_details.unwrap_or(false)),

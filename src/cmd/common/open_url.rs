@@ -27,10 +27,13 @@ impl OpenUrlCommandBuilder {
         }
     }
 
-    pub fn new_dyn(target_fn: Box<dyn Send + Sync + Fn() -> String>) -> Self {
+    pub fn new_dyn<F>(target_fn: F) -> Self
+    where
+        F: Send + Sync + Fn() -> String + 'static,
+    {
         Self {
             base: open_url_base_cmd(),
-            target_fn,
+            target_fn: Box::new(target_fn),
             result: CommandResult::Dismiss,
         }
     }
@@ -46,7 +49,7 @@ impl OpenUrlCommandBuilder {
 }
 
 impl ComBuilder for OpenUrlCommandBuilder {
-    type Target = InvokableCommand;
+    type Output = InvokableCommand;
     fn build_unmanaged(self) -> InvokableCommand {
         InvokableCommand {
             base: self.base,

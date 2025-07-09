@@ -71,7 +71,7 @@ impl ContentPageBuilder {
 }
 
 impl ComBuilder for ContentPageBuilder {
-    type Target = ContentPage;
+    type Output = ContentPage;
     fn build_unmanaged(self) -> ContentPage {
         ContentPage {
             base: self.base,

@@ -1,3 +1,5 @@
+//! Fallback command items for command items with dynamic attributes.
+
 use std::ops::Deref;
 
 use super::cmd_item::CommandItem;
@@ -7,17 +9,30 @@ use crate::notify::*;
 use crate::utils::{ComBuilder, assert_send_sync};
 use windows::core::{ComObject, HSTRING, IUnknownImpl as _, Result, implement};
 
+/// Fallback handler for command items with query-based content.
+///
+#[doc = include_str!("./bindings_docs/IFallbackHandler.md")]
 #[implement(IFallbackHandler)]
 pub struct FallbackHandler {
     querier: Box<dyn Send + Sync + Fn(HSTRING) -> Result<()>>,
 }
 
 impl FallbackHandler {
-    pub fn new_unmanaged(querier: Box<dyn Send + Sync + Fn(HSTRING) -> Result<()>>) -> Self {
-        Self { querier }
+    /// Build a unmanaged fallback handler.
+    pub fn new_unmanaged<F>(querier: F) -> Self
+    where
+        F: Send + Sync + Fn(HSTRING) -> Result<()> + 'static,
+    {
+        Self {
+            querier: Box::new(querier),
+        }
     }
 
-    pub fn new(querier: Box<dyn Send + Sync + Fn(HSTRING) -> Result<()>>) -> ComObject<Self> {
+    /// Build a reference-counted COM object for the fallback handler.
+    pub fn new<F>(querier: F) -> ComObject<Self>
+    where
+        F: Send + Sync + Fn(HSTRING) -> Result<()> + 'static,
+    {
         Self::new_unmanaged(querier).into()
     }
 }
@@ -55,7 +70,7 @@ impl FallbackCommandItemBuilder {
 }
 
 impl ComBuilder for FallbackCommandItemBuilder {
-    type Target = FallbackCommandItem;
+    type Output = FallbackCommandItem;
     fn build_unmanaged(self) -> FallbackCommandItem {
         FallbackCommandItem {
             base: self.base,

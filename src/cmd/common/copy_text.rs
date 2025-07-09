@@ -28,10 +28,13 @@ impl CopyTextCommandBuilder {
         }
     }
 
-    pub fn new_dyn(text_fn: Box<dyn Send + Sync + Fn() -> HSTRING>) -> Self {
+    pub fn new_dyn<F>(text_fn: F) -> Self
+    where
+        F: Send + Sync + Fn() -> HSTRING + 'static,
+    {
         Self {
             base: copy_text_base_cmd(),
-            text_fn,
+            text_fn: Box::new(text_fn),
             result: CommandResult::ShowToast(ToastArgs::from(h!("Copied to clipboard")).into()),
         }
     }
@@ -47,7 +50,7 @@ impl CopyTextCommandBuilder {
 }
 
 impl ComBuilder for CopyTextCommandBuilder {
-    type Target = InvokableCommand;
+    type Output = InvokableCommand;
     fn build_unmanaged(self) -> InvokableCommand {
         InvokableCommand {
             base: self.base,

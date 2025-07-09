@@ -59,7 +59,7 @@ impl TagBuilder {
 }
 
 impl ComBuilder for TagBuilder {
-    type Target = Tag;
+    type Output = Tag;
     fn build_unmanaged(self) -> Tag {
         Tag {
             icon: self.icon,
@@ -128,7 +128,7 @@ impl DetailsTagsBuilder {
 }
 
 impl ComBuilder for DetailsTagsBuilder {
-    type Target = DetailsTags;
+    type Output = DetailsTags;
     fn build_unmanaged(self) -> DetailsTags {
         DetailsTags { tags: self.tags }
     }
@@ -176,7 +176,7 @@ impl DetailsLinkBuilder {
 }
 
 impl ComBuilder for DetailsLinkBuilder {
-    type Target = DetailsLink;
+    type Output = DetailsLink;
     fn build_unmanaged(self) -> DetailsLink {
         DetailsLink {
             text: self.text.unwrap_or_else(|| HSTRING::new()),
@@ -341,7 +341,7 @@ impl DetailsBuilder {
 }
 
 impl ComBuilder for DetailsBuilder {
-    type Target = Details;
+    type Output = Details;
     fn build_unmanaged(self) -> Details {
         Details {
             hero_image: self.hero_image,

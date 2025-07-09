@@ -49,7 +49,7 @@ impl BaseCommandBuilder {
 }
 
 impl ComBuilder for BaseCommandBuilder {
-    type Target = BaseCommand;
+    type Output = BaseCommand;
     fn build_unmanaged(self) -> BaseCommand {
         BaseCommand {
             name: NotifyLock::new(self.name),

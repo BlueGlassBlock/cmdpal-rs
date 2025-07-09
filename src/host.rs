@@ -52,9 +52,9 @@ impl ProgressStateBuilder {
 }
 
 impl ComBuilder for ProgressStateBuilder {
-    type Target = ProgressState;
+    type Output = ProgressState;
 
-    fn build_unmanaged(self) -> Self::Target {
+    fn build_unmanaged(self) -> Self::Output {
         ProgressState {
             indeterminate: NotifyLock::new(self.indeterminate),
             percentage: NotifyLock::new(self.percentage),

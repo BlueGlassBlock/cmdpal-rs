@@ -4,7 +4,7 @@ use crate::notify::*;
 use crate::utils::{ComBuilder, assert_send_sync};
 use windows::core::{ComObject, Event, HSTRING, IInspectable, IUnknownImpl as _, implement};
 
-pub type SubmitFn = Box<
+pub type SubmitBox = Box<
     dyn Send
         + Sync
         + Fn(&FormContent_Impl, &HSTRING, &HSTRING) -> windows_core::Result<CommandResult>,
@@ -15,7 +15,7 @@ pub struct FormContent {
     template_json: NotifyLock<HSTRING>,
     data_json: NotifyLock<HSTRING>,
     state_json: NotifyLock<HSTRING>,
-    submit: SubmitFn,
+    submit: SubmitBox,
     event: PropChangedEventHandler,
 }
 
@@ -23,7 +23,7 @@ pub struct FormContentBuilder {
     template_json: HSTRING,
     data_json: HSTRING,
     state_json: HSTRING,
-    submit: SubmitFn,
+    submit: SubmitBox,
 }
 
 impl FormContentBuilder {
@@ -51,14 +51,20 @@ impl FormContentBuilder {
         self
     }
 
-    pub fn submit(mut self, submit: SubmitFn) -> Self {
-        self.submit = submit;
+    pub fn submit<F>(mut self, submit: F) -> Self
+    where
+        F: Send
+            + Sync
+            + Fn(&FormContent_Impl, &HSTRING, &HSTRING) -> windows_core::Result<CommandResult>
+            + 'static,
+    {
+        self.submit = Box::new(submit);
         self
     }
 }
 
 impl ComBuilder for FormContentBuilder {
-    type Target = FormContent;
+    type Output = FormContent;
     fn build_unmanaged(self) -> FormContent {
         FormContent {
             template_json: NotifyLock::new(self.template_json),
@@ -81,9 +87,7 @@ impl FormContent_Impl {
         self.template_json.read()
     }
 
-    pub fn template_json_mut(
-        &self,
-    ) -> windows_core::Result<NotifyLockWriteGuard<'_, HSTRING>> {
+    pub fn template_json_mut(&self) -> windows_core::Result<NotifyLockWriteGuard<'_, HSTRING>> {
         self.template_json
             .write(|| self.emit_self_prop_changed("TemplateJson"))
     }
@@ -92,9 +96,7 @@ impl FormContent_Impl {
         self.data_json.read()
     }
 
-    pub fn data_json_mut(
-        &self,
-    ) -> windows_core::Result<NotifyLockWriteGuard<'_, HSTRING>> {
+    pub fn data_json_mut(&self) -> windows_core::Result<NotifyLockWriteGuard<'_, HSTRING>> {
         self.data_json
             .write(|| self.emit_self_prop_changed("DataJson"))
     }
@@ -103,9 +105,7 @@ impl FormContent_Impl {
         self.state_json.read()
     }
 
-    pub fn state_json_mut(
-        &self,
-    ) -> windows_core::Result<NotifyLockWriteGuard<'_, HSTRING>> {
+    pub fn state_json_mut(&self) -> windows_core::Result<NotifyLockWriteGuard<'_, HSTRING>> {
         self.state_json
             .write(|| self.emit_self_prop_changed("StateJson"))
     }

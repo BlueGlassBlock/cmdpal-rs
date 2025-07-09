@@ -116,22 +116,21 @@ impl FiltersBuilder {
     /// The callback should accept old and new current filter items,
     /// Update the list of items based on the new filter,
     /// and return a `Result<()>`.
-    pub fn on_update(
-        mut self,
-        func: Box<
-            dyn Send
-                + Sync
-                + Fn(Option<ComObject<Filter>>, Option<ComObject<Filter>>) -> Result<()>,
-        >,
-    ) -> Self {
-        self.on_update = func;
+    pub fn on_update<F>(mut self, func: F) -> Self
+    where
+        F: Send
+            + Sync
+            + Fn(Option<ComObject<Filter>>, Option<ComObject<Filter>>) -> Result<()>
+            + 'static,
+    {
+        self.on_update = Box::new(func);
         self
     }
 }
 
 impl ComBuilder for FiltersBuilder {
-    type Target = Filters;
-    fn build_unmanaged(self) -> Self::Target {
+    type Output = Filters;
+    fn build_unmanaged(self) -> Self::Output {
         Filters {
             items: self.items,
             current: RwLock::new(None),

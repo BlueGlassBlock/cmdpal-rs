@@ -64,7 +64,11 @@ impl IGridProperties_Impl for GridProperties_Impl {
 /// Create an windows [`Array`] from a slice, mapping each element using the provided function.
 /// This is useful for making a Windows array from a Rust slice.
 /// (Most of the time, T::Default is `Option<T>`).
-pub fn map_array<T: windows::core::Type<T>, S>(slice: &[S], map: fn(&S) -> T::Default) -> Array<T> {
+pub fn map_array<T, S, F>(slice: &[S], map: F) -> Array<T>
+where
+    T: windows::core::Type<T>,
+    F: Fn(&S) -> T::Default,
+{
     let mut arr = Array::with_len(slice.len());
     for (i, item) in slice.iter().enumerate() {
         arr.deref_mut()[i] = map(item);
@@ -90,27 +94,27 @@ impl From<Option<Color>> for OptionalColor {
 /// A small trait to convert an `Option<T>` into a `windows_core::Result<T>`.
 /// Useful when you want to pass `NULL` to windows APIs.
 pub trait OkOrEmpty {
-    type Target;
+    type Output;
 
     /// Returns `Ok(T)` if `self` can be perceived as a non-null value,
     /// else `Err(windows::core::Error::empty())`.
-    fn ok_or_empty(self) -> windows_core::Result<Self::Target>;
+    fn ok_or_empty(self) -> windows_core::Result<Self::Output>;
 }
 
 impl<T> OkOrEmpty for Option<T> {
-    type Target = T;
-    fn ok_or_empty(self) -> windows_core::Result<Self::Target> {
+    type Output = T;
+    fn ok_or_empty(self) -> windows_core::Result<Self::Output> {
         self.ok_or(windows_core::Error::empty())
     }
 }
 
 /// A trait for types that can be built into a COM object.
 pub trait ComBuilder: Sized {
-    type Target: windows::core::ComObjectInner;
+    type Output: windows::core::ComObjectInner;
     /// Build the unmanaged object.
-    fn build_unmanaged(self) -> Self::Target;
+    fn build_unmanaged(self) -> Self::Output;
     /// Build the reference-counted COM object.
-    fn build(self) -> windows::core::ComObject<Self::Target> {
+    fn build(self) -> windows::core::ComObject<Self::Output> {
         self.build_unmanaged().into()
     }
 }
@@ -125,10 +129,10 @@ macro_rules! _define_windows_core_interface_with_bindings_docs {
         #[repr(transparent)]
         #[derive(::core::cmp::PartialEq, ::core::cmp::Eq, ::core::clone::Clone)]
         #[doc = include_str!(concat!(
-                    "./bindings_docs/",
-                    stringify!($name),
-                    ".md"
-                ))]
+                                                    "./bindings_docs/",
+                                                    stringify!($name),
+                                                    ".md"
+                                                ))]
         pub struct $name(::windows_core::IUnknown);
         unsafe impl ::windows_core::Interface for $name {
             type Vtable = $vtbl;
@@ -146,10 +150,10 @@ macro_rules! _define_windows_core_interface_with_bindings_docs {
         #[repr(transparent)]
         #[derive(::core::cmp::PartialEq, ::core::cmp::Eq, ::core::clone::Clone)]
         #[doc = include_str!(concat!(
-                    "./bindings_docs/",
-                    stringify!($name),
-                    ".md"
-                ))]
+                                                    "./bindings_docs/",
+                                                    stringify!($name),
+                                                    ".md"
+                                                ))]
         pub struct $name(::core::ptr::NonNull<::core::ffi::c_void>);
         unsafe impl ::windows_core::Interface for $name {
             type Vtable = $vtbl;

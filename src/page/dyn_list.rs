@@ -9,7 +9,7 @@ use windows::core::{ComObject, HSTRING, Result, implement};
 
 use super::list::ListPage;
 
-pub type SearchTextUpdateFn =
+pub type SearchTextUpdateBox =
     Box<dyn Send + Sync + Fn(&DynamicListPage_Impl, HSTRING, HSTRING) -> Result<()>>;
 
 #[implement(
@@ -22,12 +22,12 @@ pub type SearchTextUpdateFn =
 )]
 pub struct DynamicListPage {
     pub base: ComObject<ListPage>,
-    update_fn: SearchTextUpdateFn,
+    update_fn: SearchTextUpdateBox,
 }
 
 pub struct DynamicListPageBuilder {
     base: ComObject<ListPage>,
-    update_fn: SearchTextUpdateFn,
+    update_fn: SearchTextUpdateBox,
 }
 
 impl DynamicListPageBuilder {
@@ -38,14 +38,17 @@ impl DynamicListPageBuilder {
         }
     }
 
-    pub fn update_fn(mut self, update_fn: SearchTextUpdateFn) -> Self {
-        self.update_fn = update_fn;
+    pub fn update_fn<F>(mut self, update_fn: F) -> Self
+    where
+        F: Send + Sync + Fn(&DynamicListPage_Impl, HSTRING, HSTRING) -> Result<()> + 'static,
+    {
+        self.update_fn = Box::new(update_fn);
         self
     }
 }
 
 impl ComBuilder for DynamicListPageBuilder {
-    type Target = DynamicListPage;
+    type Output = DynamicListPage;
     fn build_unmanaged(self) -> DynamicListPage {
         DynamicListPage {
             base: self.base,

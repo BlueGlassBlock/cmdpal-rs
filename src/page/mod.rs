@@ -58,7 +58,7 @@ impl BasePageBuilder {
 }
 
 impl ComBuilder for BasePageBuilder {
-    type Target = BasePage;
+    type Output = BasePage;
     fn build_unmanaged(self) -> BasePage {
         BasePage {
             title: NotifyLock::new(self.title),
