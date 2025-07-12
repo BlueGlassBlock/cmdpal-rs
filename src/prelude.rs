@@ -28,6 +28,10 @@ pub use crate::{
         dyn_list::{DynamicListPage, DynamicListPageBuilder},
         list::{ListItem, ListItemBuilder, ListPage, ListPageBuilder},
     },
+    settings::{
+        SettingBasePropModifier, Choice, ChoiceSetSetting, CommandSettings, JsonCommandSettings,
+        NumberSetting, TextSetting, ToggleSetting,
+    },
     utils::{ComBuilder, GridProperties},
 };
 

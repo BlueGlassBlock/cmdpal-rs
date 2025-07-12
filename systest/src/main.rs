@@ -11,6 +11,35 @@ const MD_CONTENT: &str = include_str!("../../README.md");
 
 fn com_main() -> Result<()> {
     tracing::info!("Hello, world!");
+
+    let mut settings =
+        JsonCommandSettings::new("D:/Projects/cmdpal/target/debug/settings.json".into());
+    let token = settings.add_setting(
+        TextSetting::new("llm-token")
+            .placeholder("Bring Your Own Key")
+            .caption("Token"),
+    );
+    let temperature = settings.add_setting(
+        NumberSetting::new("llm-temperature")
+            .default(0.7)
+            .min(0.0)
+            .max(1.0)
+            .caption("Temperature"),
+    );
+    let toggle = settings.add_setting(
+        ToggleSetting::new("llm-toggle")
+            .default(true)
+            .caption("Enable LLM"),
+    );
+    let model = settings.add_setting(
+        ChoiceSetSetting::<&str>::new("llm-model")
+            .add_choice("gpt-3.5-turbo".into())
+            .add_choice("gpt-4".into())
+            .add_choice("gpt-4o".into())
+            .default("gpt-3.5-turbo".into())
+            .caption("Model"),
+    );
+
     let md_box: ComObject<_> = cmdpal::content::markdown::MarkdownContent::new("");
     let form_box = cmdpal::content::form::FormContentBuilder::new()
         .template_json(include_str!("./template.json"))
@@ -31,7 +60,24 @@ fn com_main() -> Result<()> {
                 time.wYear, time.wMonth, time.wDay, time.wHour, time.wMinute, time.wSecond
             );
             if let Ok(mut body) = task_box.body_mut() {
-                *body = format!("# Current Time\n{}", time).into();
+                *body = format!(
+                    r#"
+# Current Time
+{}
+
+# Configurations
+- Token: {:?}
+- Temperature: {:?}
+- Toggle: {:?}
+- Model: {:?}
+"#,
+                    time,
+                    token.lock().ok().map(|v| v.clone()).flatten(),
+                    temperature.lock().ok().map(|v| v.clone()).flatten(),
+                    toggle.lock().ok().map(|v| v.clone()).flatten(),
+                    model.lock().ok().map(|v| v.clone()).flatten()
+                )
+                .into();
             }
             std::thread::sleep(std::time::Duration::from_secs(1));
         }
@@ -116,6 +162,7 @@ fn com_main() -> Result<()> {
                 .build()
                 .to_interface(),
         )
+        .settings(settings.into())
         .build();
     ExtRegistry::new()
         .register(EXTENSION_GUID, Extension::from(&*provider))
