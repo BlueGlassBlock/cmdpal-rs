@@ -23,8 +23,8 @@
     "actions": [
         {
             "type": "Action.Submit",
-            "title": "Action.Submit",
-            "data": "testyourmom"
+            "title": "Submit!",
+            "data": "formSubmitExtra"
         }
     ]
 }

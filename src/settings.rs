@@ -651,7 +651,6 @@ impl JsonCommandSettings {
             }
           ]
         });
-        dbg!(v.clone());
         v
     }
 

@@ -12,8 +12,10 @@ const MD_CONTENT: &str = include_str!("../../README.md");
 fn com_main() -> Result<()> {
     tracing::info!("Hello, world!");
 
-    let mut settings =
-        JsonCommandSettings::new("D:/Projects/cmdpal/target/debug/settings.json".into());
+    let exe_path = std::env::current_exe()?;
+    tracing::info!("Current exe path: {:?}", exe_path);
+
+    let mut settings = JsonCommandSettings::new(exe_path.parent().unwrap().join("settings.json"));
     let token = settings.add_setting(
         TextSetting::new("llm-token")
             .placeholder("Bring Your Own Key")
@@ -115,9 +117,14 @@ fn com_main() -> Result<()> {
     .title("Open nonebot.dev")
     .build();
     let reveal_file_item = CommandItemBuilder::try_new(
-        cmdpal::cmd::common::reveal_file::RevealFileCommandBuilder::new(std::path::PathBuf::from(
-            "D:/Projects/cmdpal/README.md",
-        ))
+        cmdpal::cmd::common::reveal_file::RevealFileCommandBuilder::new(
+            exe_path
+                .parent()
+                .unwrap()
+                .parent()
+                .unwrap()
+                .join("README.md"),
+        )
         .build()
         .to_interface(),
     )?
@@ -173,7 +180,10 @@ fn com_main() -> Result<()> {
 
 fn main() {
     use tracing_subscriber::prelude::*;
-    let file = tracing_appender::rolling::daily("D:/Projects/cmdpal/target/debug/", "cmdpal.log");
+    let file = tracing_appender::rolling::daily(
+        std::env::current_exe().unwrap().parent().unwrap(),
+        "cmdpal.log",
+    );
     let (non_blocking, _guard) = tracing_appender::non_blocking(file);
     // log to stdout and file
     tracing_subscriber::registry()

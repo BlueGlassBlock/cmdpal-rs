@@ -115,7 +115,7 @@ impl AppxManifest {
         </com:Extension>
         <uap3:Extension Category="windows.appExtension">
           <uap3:AppExtension Name="com.microsoft.commandpalette"
-            Id="PG-SP-ID"
+            Id="ID"
             PublicFolder="Public"
             DisplayName="{display_name}"
             Description="{description}">
@@ -136,6 +136,7 @@ impl AppxManifest {
   </Applications>
 
   <Capabilities>
+    <Capability Name="internetClient" />
     <rescap:Capability Name="runFullTrust" />
   </Capabilities>
 </Package>
@@ -279,10 +280,12 @@ impl AppxManifestBuilder {
     }
 
     fn infer_executable() -> String {
-        std::env::var("CARGO_BIN_NAME").unwrap_or_else(|_| {
-            println!("cargo::warning=CARGO_BIN_NAME is not set, using 'cmdpal-extension'");
-            "cmdpal-extension".into()
-        }) + ".exe"
+        let inferred_name = std::env::var("CARGO_PKG_NAME")
+            .ok()
+            .or_else(|| std::env::var("CARGO_BIN_NAME").ok())
+            .unwrap_or("cmdpal-extension".into());
+        println!("cargo::warning=executable is not set, inferred '{}' as default", inferred_name);
+        format!("{}.exe", inferred_name)
     }
 
     fn infer_version() -> String {

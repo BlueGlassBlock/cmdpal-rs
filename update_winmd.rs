@@ -209,6 +209,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .last()
         .ok_or("Failed to get the latest version")?
         .clone();
+    println!("Downloading {} version {}", PACKAGE_NAME, version);
     let nupkg = client
         .get(format!(
             "https://api.nuget.org/v3-flatcontainer/{}/{}/{}.{}.nupkg",
@@ -219,7 +220,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         ))
         .send()?
         .bytes()?;
-    println!("Downloading {} version {}", PACKAGE_NAME, version);
     println!("Size: {} bytes", nupkg.len());
     let mut archive = ZipArchive::new(std::io::Cursor::new(nupkg))?;
     let mut buf = Vec::new();
