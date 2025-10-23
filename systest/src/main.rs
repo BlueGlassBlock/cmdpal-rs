@@ -134,7 +134,7 @@ fn com_main() -> Result<()> {
         cmdpal::page::BasePageBuilder::new(
             cmdpal::cmd::BaseCommandBuilder::new()
                 .name("Example Page")
-                .icon(IconInfo::new(IconData::from(h!("\u{f6fa}").clone())))
+                .icon(IconInfo::new(IconData::from_glyph_and_family("M", "Wingdings"))) // M is a bomb in Wingdings
                 .id("BlueG.PEP.ExamplePage")
                 .build(),
         )
