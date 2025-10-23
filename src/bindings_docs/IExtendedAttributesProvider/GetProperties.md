@@ -1,0 +1,1 @@
+Gets additional attributes defined by the object.

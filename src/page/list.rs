@@ -10,15 +10,15 @@ use crate::{
     notify::*,
     utils::{ComBuilder, GridProperties, OkOrEmpty, assert_send_sync, map_array},
 };
-use windows_core::{ComObject, IInspectable, IUnknownImpl as _, Result, implement};
 use windows_core::HSTRING;
+use windows_core::{ComObject, IInspectable, IUnknownImpl as _, Result, implement};
 
 use super::{BasePage, BasePage_Impl};
 
 /// Represents a single item in a list.
 ///
 /// See [`ListItem_Impl`] for field accessors.
-/// 
+///
 #[doc = include_str!("../bindings_docs/IListItem.md")]
 #[implement(IListItem, ICommandItem, INotifyPropChanged)]
 pub struct ListItem {
@@ -236,7 +236,7 @@ impl INotifyPropChanged_Impl for ListItem_Impl {
 /// Represents a page that displays a list of items.
 ///
 /// See [`ListPage_Impl`] for field accessors.
-/// 
+///
 #[doc = include_str!("../bindings_docs/IListPage.md")]
 #[implement(IListPage, IPage, ICommand, INotifyPropChanged, INotifyItemsChanged)]
 pub struct ListPage {

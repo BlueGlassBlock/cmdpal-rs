@@ -1,6 +1,6 @@
 //! Rust idiomatic bindings and SDK for the
 //! [Command Palette](https://learn.microsoft.com/en-us/windows/powertoys/command-palette/overview).
- 
+
 pub mod bindings;
 pub mod cmd;
 pub mod cmd_item;
@@ -10,6 +10,7 @@ pub mod content;
 pub mod ctx_item;
 pub mod details;
 pub mod ext;
+pub mod ext_api_stubs;
 pub mod ext_factory;
 pub mod ext_registry;
 pub mod fallback;

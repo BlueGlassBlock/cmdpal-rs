@@ -12,7 +12,7 @@ use crate::utils::{ComBuilder, OkOrEmpty};
 use windows_core::{ComObject, Event, HSTRING, IInspectable, IUnknownImpl as _, implement};
 
 /// Represents basic properties of a command.
-/// 
+///
 /// See [`BaseCommand_Impl`] for field accessors.
 ///
 #[doc = include_str!("../bindings_docs/ICommand.md")]

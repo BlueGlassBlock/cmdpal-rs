@@ -25,7 +25,7 @@ impl IContextItem_Impl for SeparatorContextItem_Impl {}
 /// Represents a command item in the context menu.
 ///
 /// See [`CommandContextItem_Impl`] for field accessors.
-/// 
+///
 #[doc = include_str!("./bindings_docs/ICommandContextItem.md")]
 #[implement(ICommandContextItem, IContextItem, ICommandItem, INotifyPropChanged)]
 pub struct CommandContextItem {

@@ -45,14 +45,14 @@ impl DynamicListPageBuilder {
     }
 
     /// Sets the update function for search text changes.
-    /// 
+    ///
     /// The update function takes (self, old_search_text, new_search_text) as parameters.
-    /// 
+    ///
     /// # Note
-    /// 
+    ///
     /// The update function should block as little as possible, else the subsequent updates will clutter,
     /// causing incorrect ordering of search text updates.
-    /// 
+    ///
     /// Solutions include:
     /// - Fire a unblocking task to handle the update, and cancel the previous task if it is still running.
     /// - Delegate updates to a background thread, and prioritize the latest chronological update.

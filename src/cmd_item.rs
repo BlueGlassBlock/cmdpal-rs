@@ -145,7 +145,7 @@ impl CommandItem_Impl {
     /// Readonly access to [`ICommandItem::Icon`].
     ///
     /// Preferred over [`ICommand::Icon`] of `self.command` when displaying the icon.
-    /// 
+    ///
     #[doc = include_str!("./bindings_docs/ICommandItem/Icon.md")]
     pub fn icon(
         &self,
@@ -156,7 +156,7 @@ impl CommandItem_Impl {
     /// Mutable access to [`ICommandItem::Icon`].
     ///
     /// Preferred over [`ICommand::Icon`] of `self.command` when displaying the icon.
-    /// 
+    ///
     #[doc = include_str!("./bindings_docs/ICommandItem/Icon.md")]
     ///
     /// Notifies the host about the property change when dropping the guard.
@@ -169,10 +169,10 @@ impl CommandItem_Impl {
     /// Readonly access to [`ICommandItem::Title`].
     ///
     /// Preferred over [`ICommand::Name`] of `self.command` when displaying the title.
-    /// 
+    ///
     /// Note that the text displayed for default action (alongside <kbd>↲</kbd>) is determined by
     /// [`ICommand::Name`] of `self.command`, not this title.
-    /// 
+    ///
     #[doc = include_str!("./bindings_docs/ICommandItem/Title.md")]
     pub fn title(&self) -> windows_core::Result<NotifyLockReadGuard<'_, HSTRING>> {
         self.title.read()
@@ -181,10 +181,10 @@ impl CommandItem_Impl {
     /// Mutable access to [`ICommandItem::Title`].
     ///
     /// Preferred over [`ICommand::Name`] of `self.command` when displaying the title.
-    /// 
+    ///
     /// Note that the text displayed for default action (alongside <kbd>↲</kbd>) is determined by
     /// [`ICommand::Name`] of `self.command`, not this title.
-    /// 
+    ///
     #[doc = include_str!("./bindings_docs/ICommandItem/Title.md")]
     ///
     /// Notifies the host about the property change when dropping the guard.

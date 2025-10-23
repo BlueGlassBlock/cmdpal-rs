@@ -116,11 +116,11 @@ impl ICommand {
     pub fn PropChanged<P0>(&self, handler: P0) -> windows_core::Result<i64>
     where
         P0: windows_core::Param<
-            windows::Foundation::TypedEventHandler<
-                windows_core::IInspectable,
-                IPropChangedEventArgs,
+                windows::Foundation::TypedEventHandler<
+                    windows_core::IInspectable,
+                    IPropChangedEventArgs,
+                >,
             >,
-        >,
     {
         let this = &windows_core::Interface::cast::<INotifyPropChanged>(self)?;
         unsafe {
@@ -346,11 +346,11 @@ impl ICommandContextItem {
     pub fn PropChanged<P0>(&self, handler: P0) -> windows_core::Result<i64>
     where
         P0: windows_core::Param<
-            windows::Foundation::TypedEventHandler<
-                windows_core::IInspectable,
-                IPropChangedEventArgs,
+                windows::Foundation::TypedEventHandler<
+                    windows_core::IInspectable,
+                    IPropChangedEventArgs,
+                >,
             >,
-        >,
     {
         let this = &windows_core::Interface::cast::<INotifyPropChanged>(self)?;
         unsafe {
@@ -526,11 +526,11 @@ impl ICommandItem {
     pub fn PropChanged<P0>(&self, handler: P0) -> windows_core::Result<i64>
     where
         P0: windows_core::Param<
-            windows::Foundation::TypedEventHandler<
-                windows_core::IInspectable,
-                IPropChangedEventArgs,
+                windows::Foundation::TypedEventHandler<
+                    windows_core::IInspectable,
+                    IPropChangedEventArgs,
+                >,
             >,
-        >,
     {
         let this = &windows_core::Interface::cast::<INotifyPropChanged>(self)?;
         unsafe {
@@ -844,11 +844,11 @@ impl ICommandProvider {
     pub fn ItemsChanged<P0>(&self, handler: P0) -> windows_core::Result<i64>
     where
         P0: windows_core::Param<
-            windows::Foundation::TypedEventHandler<
-                windows_core::IInspectable,
-                IItemsChangedEventArgs,
+                windows::Foundation::TypedEventHandler<
+                    windows_core::IInspectable,
+                    IItemsChangedEventArgs,
+                >,
             >,
-        >,
     {
         let this = &windows_core::Interface::cast::<INotifyItemsChanged>(self)?;
         unsafe {
@@ -1117,6 +1117,257 @@ pub struct ICommandProvider_Vtbl {
     pub InitializeWithHost: unsafe extern "system" fn(
         *mut core::ffi::c_void,
         *mut core::ffi::c_void,
+    ) -> windows_core::HRESULT,
+}
+crate::_define_windows_core_interface_with_bindings_docs!(
+    ICommandProvider2,
+    ICommandProvider2_Vtbl,
+    0xcc965e1c_1b49_5ab7_8abf_0a59c36a5e19
+);
+impl windows_core::RuntimeType for ICommandProvider2 {
+    const SIGNATURE: windows_core::imp::ConstBuffer =
+        windows_core::imp::ConstBuffer::for_interface::<Self>();
+}
+windows_core::imp::interface_hierarchy!(
+    ICommandProvider2,
+    windows_core::IUnknown,
+    windows_core::IInspectable
+);
+windows_core::imp::required_hierarchy!(
+    ICommandProvider2,
+    windows::Foundation::IClosable,
+    ICommandProvider,
+    INotifyItemsChanged
+);
+impl ICommandProvider2 {
+    #[doc = include_str!("./bindings_docs/ICommandProvider2/GetApiExtensionStubs.md")]
+    pub fn GetApiExtensionStubs(
+        &self,
+    ) -> windows_core::Result<windows_core::Array<windows_core::IInspectable>> {
+        let this = self;
+        unsafe {
+            let mut result__ = core::mem::MaybeUninit::zeroed();
+            (windows_core::Interface::vtable(this).GetApiExtensionStubs)(
+                windows_core::Interface::as_raw(this),
+                windows_core::Array::<windows_core::IInspectable>::set_abi_len(
+                    core::mem::transmute(&mut result__),
+                ),
+                result__.as_mut_ptr() as *mut _ as _,
+            )
+            .map(|| result__.assume_init())
+        }
+    }
+    #[doc = include_str!("./bindings_docs/ICommandProvider2/Close.md")]
+    pub fn Close(&self) -> windows_core::Result<()> {
+        let this = &windows_core::Interface::cast::<windows::Foundation::IClosable>(self)?;
+        unsafe {
+            (windows_core::Interface::vtable(this).Close)(windows_core::Interface::as_raw(this))
+                .ok()
+        }
+    }
+    #[doc = include_str!("./bindings_docs/ICommandProvider2/Id.md")]
+    pub fn Id(&self) -> windows_core::Result<windows_core::HSTRING> {
+        let this = &windows_core::Interface::cast::<ICommandProvider>(self)?;
+        unsafe {
+            let mut result__ = core::mem::zeroed();
+            (windows_core::Interface::vtable(this).Id)(
+                windows_core::Interface::as_raw(this),
+                &mut result__,
+            )
+            .map(|| core::mem::transmute(result__))
+        }
+    }
+    #[doc = include_str!("./bindings_docs/ICommandProvider2/DisplayName.md")]
+    pub fn DisplayName(&self) -> windows_core::Result<windows_core::HSTRING> {
+        let this = &windows_core::Interface::cast::<ICommandProvider>(self)?;
+        unsafe {
+            let mut result__ = core::mem::zeroed();
+            (windows_core::Interface::vtable(this).DisplayName)(
+                windows_core::Interface::as_raw(this),
+                &mut result__,
+            )
+            .map(|| core::mem::transmute(result__))
+        }
+    }
+    #[doc = include_str!("./bindings_docs/ICommandProvider2/Icon.md")]
+    pub fn Icon(&self) -> windows_core::Result<IIconInfo> {
+        let this = &windows_core::Interface::cast::<ICommandProvider>(self)?;
+        unsafe {
+            let mut result__ = core::mem::zeroed();
+            (windows_core::Interface::vtable(this).Icon)(
+                windows_core::Interface::as_raw(this),
+                &mut result__,
+            )
+            .and_then(|| windows_core::Type::from_abi(result__))
+        }
+    }
+    #[doc = include_str!("./bindings_docs/ICommandProvider2/Settings.md")]
+    pub fn Settings(&self) -> windows_core::Result<ICommandSettings> {
+        let this = &windows_core::Interface::cast::<ICommandProvider>(self)?;
+        unsafe {
+            let mut result__ = core::mem::zeroed();
+            (windows_core::Interface::vtable(this).Settings)(
+                windows_core::Interface::as_raw(this),
+                &mut result__,
+            )
+            .and_then(|| windows_core::Type::from_abi(result__))
+        }
+    }
+    #[doc = include_str!("./bindings_docs/ICommandProvider2/Frozen.md")]
+    pub fn Frozen(&self) -> windows_core::Result<bool> {
+        let this = &windows_core::Interface::cast::<ICommandProvider>(self)?;
+        unsafe {
+            let mut result__ = core::mem::zeroed();
+            (windows_core::Interface::vtable(this).Frozen)(
+                windows_core::Interface::as_raw(this),
+                &mut result__,
+            )
+            .map(|| result__)
+        }
+    }
+    #[doc = include_str!("./bindings_docs/ICommandProvider2/TopLevelCommands.md")]
+    pub fn TopLevelCommands(&self) -> windows_core::Result<windows_core::Array<ICommandItem>> {
+        let this = &windows_core::Interface::cast::<ICommandProvider>(self)?;
+        unsafe {
+            let mut result__ = core::mem::MaybeUninit::zeroed();
+            (windows_core::Interface::vtable(this).TopLevelCommands)(
+                windows_core::Interface::as_raw(this),
+                windows_core::Array::<ICommandItem>::set_abi_len(core::mem::transmute(
+                    &mut result__,
+                )),
+                result__.as_mut_ptr() as *mut _ as _,
+            )
+            .map(|| result__.assume_init())
+        }
+    }
+    #[doc = include_str!("./bindings_docs/ICommandProvider2/FallbackCommands.md")]
+    pub fn FallbackCommands(
+        &self,
+    ) -> windows_core::Result<windows_core::Array<IFallbackCommandItem>> {
+        let this = &windows_core::Interface::cast::<ICommandProvider>(self)?;
+        unsafe {
+            let mut result__ = core::mem::MaybeUninit::zeroed();
+            (windows_core::Interface::vtable(this).FallbackCommands)(
+                windows_core::Interface::as_raw(this),
+                windows_core::Array::<IFallbackCommandItem>::set_abi_len(core::mem::transmute(
+                    &mut result__,
+                )),
+                result__.as_mut_ptr() as *mut _ as _,
+            )
+            .map(|| result__.assume_init())
+        }
+    }
+    #[doc = include_str!("./bindings_docs/ICommandProvider2/GetCommand.md")]
+    pub fn GetCommand(&self, id: &windows_core::HSTRING) -> windows_core::Result<ICommand> {
+        let this = &windows_core::Interface::cast::<ICommandProvider>(self)?;
+        unsafe {
+            let mut result__ = core::mem::zeroed();
+            (windows_core::Interface::vtable(this).GetCommand)(
+                windows_core::Interface::as_raw(this),
+                core::mem::transmute_copy(id),
+                &mut result__,
+            )
+            .and_then(|| windows_core::Type::from_abi(result__))
+        }
+    }
+    #[doc = include_str!("./bindings_docs/ICommandProvider2/InitializeWithHost.md")]
+    pub fn InitializeWithHost<P0>(&self, host: P0) -> windows_core::Result<()>
+    where
+        P0: windows_core::Param<IExtensionHost>,
+    {
+        let this = &windows_core::Interface::cast::<ICommandProvider>(self)?;
+        unsafe {
+            (windows_core::Interface::vtable(this).InitializeWithHost)(
+                windows_core::Interface::as_raw(this),
+                host.param().abi(),
+            )
+            .ok()
+        }
+    }
+    #[doc = include_str!("./bindings_docs/ICommandProvider2/ItemsChanged.md")]
+    pub fn ItemsChanged<P0>(&self, handler: P0) -> windows_core::Result<i64>
+    where
+        P0: windows_core::Param<
+                windows::Foundation::TypedEventHandler<
+                    windows_core::IInspectable,
+                    IItemsChangedEventArgs,
+                >,
+            >,
+    {
+        let this = &windows_core::Interface::cast::<INotifyItemsChanged>(self)?;
+        unsafe {
+            let mut result__ = core::mem::zeroed();
+            (windows_core::Interface::vtable(this).ItemsChanged)(
+                windows_core::Interface::as_raw(this),
+                handler.param().abi(),
+                &mut result__,
+            )
+            .map(|| result__)
+        }
+    }
+    #[doc = include_str!("./bindings_docs/ICommandProvider2/RemoveItemsChanged.md")]
+    pub fn RemoveItemsChanged(&self, token: i64) -> windows_core::Result<()> {
+        let this = &windows_core::Interface::cast::<INotifyItemsChanged>(self)?;
+        unsafe {
+            (windows_core::Interface::vtable(this).RemoveItemsChanged)(
+                windows_core::Interface::as_raw(this),
+                token,
+            )
+            .ok()
+        }
+    }
+}
+impl windows_core::RuntimeName for ICommandProvider2 {
+    const NAME: &'static str = "Microsoft.CommandPalette.Extensions.ICommandProvider2";
+}
+pub trait ICommandProvider2_Impl:
+    windows::Foundation::IClosable_Impl + ICommandProvider_Impl + INotifyItemsChanged_Impl
+{
+    fn GetApiExtensionStubs(
+        &self,
+    ) -> windows_core::Result<windows_core::Array<windows_core::IInspectable>>;
+}
+impl ICommandProvider2_Vtbl {
+    pub const fn new<Identity: ICommandProvider2_Impl, const OFFSET: isize>() -> Self {
+        unsafe extern "system" fn GetApiExtensionStubs<
+            Identity: ICommandProvider2_Impl,
+            const OFFSET: isize,
+        >(
+            this: *mut core::ffi::c_void,
+            result_size__: *mut u32,
+            result__: *mut *mut *mut core::ffi::c_void,
+        ) -> windows_core::HRESULT {
+            unsafe {
+                let this: &Identity =
+                    &*((this as *const *const ()).offset(OFFSET) as *const Identity);
+                match ICommandProvider2_Impl::GetApiExtensionStubs(this) {
+                    Ok(ok__) => {
+                        let (ok_data__, ok_data_len__) = ok__.into_abi();
+                        result__.write(core::mem::transmute(ok_data__));
+                        result_size__.write(ok_data_len__);
+                        windows_core::HRESULT(0)
+                    }
+                    Err(err) => err.into(),
+                }
+            }
+        }
+        Self {
+            base__: windows_core::IInspectable_Vtbl::new::<Identity, ICommandProvider2, OFFSET>(),
+            GetApiExtensionStubs: GetApiExtensionStubs::<Identity, OFFSET>,
+        }
+    }
+    pub fn matches(iid: &windows_core::GUID) -> bool {
+        iid == &<ICommandProvider2 as windows_core::Interface>::IID
+    }
+}
+#[repr(C)]
+#[doc(hidden)]
+pub struct ICommandProvider2_Vtbl {
+    pub base__: windows_core::IInspectable_Vtbl,
+    pub GetApiExtensionStubs: unsafe extern "system" fn(
+        *mut core::ffi::c_void,
+        *mut u32,
+        *mut *mut *mut core::ffi::c_void,
     ) -> windows_core::HRESULT,
 }
 crate::_define_windows_core_interface_with_bindings_docs!(
@@ -1534,11 +1785,11 @@ impl IContent {
     pub fn PropChanged<P0>(&self, handler: P0) -> windows_core::Result<i64>
     where
         P0: windows_core::Param<
-            windows::Foundation::TypedEventHandler<
-                windows_core::IInspectable,
-                IPropChangedEventArgs,
+                windows::Foundation::TypedEventHandler<
+                    windows_core::IInspectable,
+                    IPropChangedEventArgs,
+                >,
             >,
-        >,
     {
         let this = &windows_core::Interface::cast::<INotifyPropChanged>(self)?;
         unsafe {
@@ -1684,11 +1935,11 @@ impl IContentPage {
     pub fn ItemsChanged<P0>(&self, handler: P0) -> windows_core::Result<i64>
     where
         P0: windows_core::Param<
-            windows::Foundation::TypedEventHandler<
-                windows_core::IInspectable,
-                IItemsChangedEventArgs,
+                windows::Foundation::TypedEventHandler<
+                    windows_core::IInspectable,
+                    IItemsChangedEventArgs,
+                >,
             >,
-        >,
     {
         let this = &windows_core::Interface::cast::<INotifyItemsChanged>(self)?;
         unsafe {
@@ -1716,11 +1967,11 @@ impl IContentPage {
     pub fn PropChanged<P0>(&self, handler: P0) -> windows_core::Result<i64>
     where
         P0: windows_core::Param<
-            windows::Foundation::TypedEventHandler<
-                windows_core::IInspectable,
-                IPropChangedEventArgs,
+                windows::Foundation::TypedEventHandler<
+                    windows_core::IInspectable,
+                    IPropChangedEventArgs,
+                >,
             >,
-        >,
     {
         let this = &windows_core::Interface::cast::<INotifyPropChanged>(self)?;
         unsafe {
@@ -2094,53 +2345,56 @@ pub struct IDetails_Vtbl {
     ) -> windows_core::HRESULT,
 }
 crate::_define_windows_core_interface_with_bindings_docs!(
-    IDetailsCommand,
-    IDetailsCommand_Vtbl,
-    0x3b0a6c65_f52c_57b3_b3e5_99e5f0678f8e
+    IDetailsCommands,
+    IDetailsCommands_Vtbl,
+    0xb1f3ddcc_a47c_5480_9495_4f7ec06fc781
 );
-impl windows_core::RuntimeType for IDetailsCommand {
+impl windows_core::RuntimeType for IDetailsCommands {
     const SIGNATURE: windows_core::imp::ConstBuffer =
         windows_core::imp::ConstBuffer::for_interface::<Self>();
 }
 windows_core::imp::interface_hierarchy!(
-    IDetailsCommand,
+    IDetailsCommands,
     windows_core::IUnknown,
     windows_core::IInspectable
 );
-windows_core::imp::required_hierarchy!(IDetailsCommand, IDetailsData);
-impl IDetailsCommand {
-    #[doc = include_str!("./bindings_docs/IDetailsCommand/Command.md")]
-    pub fn Command(&self) -> windows_core::Result<ICommand> {
+windows_core::imp::required_hierarchy!(IDetailsCommands, IDetailsData);
+impl IDetailsCommands {
+    #[doc = include_str!("./bindings_docs/IDetailsCommands/Commands.md")]
+    pub fn Commands(&self) -> windows_core::Result<windows_core::Array<ICommand>> {
         let this = self;
         unsafe {
-            let mut result__ = core::mem::zeroed();
-            (windows_core::Interface::vtable(this).Command)(
+            let mut result__ = core::mem::MaybeUninit::zeroed();
+            (windows_core::Interface::vtable(this).Commands)(
                 windows_core::Interface::as_raw(this),
-                &mut result__,
+                windows_core::Array::<ICommand>::set_abi_len(core::mem::transmute(&mut result__)),
+                result__.as_mut_ptr() as *mut _ as _,
             )
-            .and_then(|| windows_core::Type::from_abi(result__))
+            .map(|| result__.assume_init())
         }
     }
 }
-impl windows_core::RuntimeName for IDetailsCommand {
-    const NAME: &'static str = "Microsoft.CommandPalette.Extensions.IDetailsCommand";
+impl windows_core::RuntimeName for IDetailsCommands {
+    const NAME: &'static str = "Microsoft.CommandPalette.Extensions.IDetailsCommands";
 }
-pub trait IDetailsCommand_Impl: IDetailsData_Impl {
-    fn Command(&self) -> windows_core::Result<ICommand>;
+pub trait IDetailsCommands_Impl: IDetailsData_Impl {
+    fn Commands(&self) -> windows_core::Result<windows_core::Array<ICommand>>;
 }
-impl IDetailsCommand_Vtbl {
-    pub const fn new<Identity: IDetailsCommand_Impl, const OFFSET: isize>() -> Self {
-        unsafe extern "system" fn Command<Identity: IDetailsCommand_Impl, const OFFSET: isize>(
+impl IDetailsCommands_Vtbl {
+    pub const fn new<Identity: IDetailsCommands_Impl, const OFFSET: isize>() -> Self {
+        unsafe extern "system" fn Commands<Identity: IDetailsCommands_Impl, const OFFSET: isize>(
             this: *mut core::ffi::c_void,
-            result__: *mut *mut core::ffi::c_void,
+            result_size__: *mut u32,
+            result__: *mut *mut *mut core::ffi::c_void,
         ) -> windows_core::HRESULT {
             unsafe {
                 let this: &Identity =
                     &*((this as *const *const ()).offset(OFFSET) as *const Identity);
-                match IDetailsCommand_Impl::Command(this) {
+                match IDetailsCommands_Impl::Commands(this) {
                     Ok(ok__) => {
-                        result__.write(core::mem::transmute_copy(&ok__));
-                        core::mem::forget(ok__);
+                        let (ok_data__, ok_data_len__) = ok__.into_abi();
+                        result__.write(core::mem::transmute(ok_data__));
+                        result_size__.write(ok_data_len__);
                         windows_core::HRESULT(0)
                     }
                     Err(err) => err.into(),
@@ -2148,21 +2402,22 @@ impl IDetailsCommand_Vtbl {
             }
         }
         Self {
-            base__: windows_core::IInspectable_Vtbl::new::<Identity, IDetailsCommand, OFFSET>(),
-            Command: Command::<Identity, OFFSET>,
+            base__: windows_core::IInspectable_Vtbl::new::<Identity, IDetailsCommands, OFFSET>(),
+            Commands: Commands::<Identity, OFFSET>,
         }
     }
     pub fn matches(iid: &windows_core::GUID) -> bool {
-        iid == &<IDetailsCommand as windows_core::Interface>::IID
+        iid == &<IDetailsCommands as windows_core::Interface>::IID
     }
 }
 #[repr(C)]
 #[doc(hidden)]
-pub struct IDetailsCommand_Vtbl {
+pub struct IDetailsCommands_Vtbl {
     pub base__: windows_core::IInspectable_Vtbl,
-    pub Command: unsafe extern "system" fn(
+    pub Commands: unsafe extern "system" fn(
         *mut core::ffi::c_void,
-        *mut *mut core::ffi::c_void,
+        *mut u32,
+        *mut *mut *mut core::ffi::c_void,
     ) -> windows_core::HRESULT,
 }
 crate::_define_windows_core_interface_with_bindings_docs!(
@@ -2700,11 +2955,11 @@ impl IDynamicListPage {
     pub fn ItemsChanged<P0>(&self, handler: P0) -> windows_core::Result<i64>
     where
         P0: windows_core::Param<
-            windows::Foundation::TypedEventHandler<
-                windows_core::IInspectable,
-                IItemsChangedEventArgs,
+                windows::Foundation::TypedEventHandler<
+                    windows_core::IInspectable,
+                    IItemsChangedEventArgs,
+                >,
             >,
-        >,
     {
         let this = &windows_core::Interface::cast::<INotifyItemsChanged>(self)?;
         unsafe {
@@ -2732,11 +2987,11 @@ impl IDynamicListPage {
     pub fn PropChanged<P0>(&self, handler: P0) -> windows_core::Result<i64>
     where
         P0: windows_core::Param<
-            windows::Foundation::TypedEventHandler<
-                windows_core::IInspectable,
-                IPropChangedEventArgs,
+                windows::Foundation::TypedEventHandler<
+                    windows_core::IInspectable,
+                    IPropChangedEventArgs,
+                >,
             >,
-        >,
     {
         let this = &windows_core::Interface::cast::<INotifyPropChanged>(self)?;
         unsafe {
@@ -2836,6 +3091,92 @@ pub struct IDynamicListPage_Vtbl {
     pub SetSearchText: unsafe extern "system" fn(
         *mut core::ffi::c_void,
         *mut core::ffi::c_void,
+    ) -> windows_core::HRESULT,
+}
+crate::_define_windows_core_interface_with_bindings_docs!(
+    IExtendedAttributesProvider,
+    IExtendedAttributesProvider_Vtbl,
+    0xf9677ab1_9cc8_5a19_9c49_5ddea4bfd04f
+);
+impl windows_core::RuntimeType for IExtendedAttributesProvider {
+    const SIGNATURE: windows_core::imp::ConstBuffer =
+        windows_core::imp::ConstBuffer::for_interface::<Self>();
+}
+windows_core::imp::interface_hierarchy!(
+    IExtendedAttributesProvider,
+    windows_core::IUnknown,
+    windows_core::IInspectable
+);
+impl IExtendedAttributesProvider {
+    #[doc = include_str!("./bindings_docs/IExtendedAttributesProvider/GetProperties.md")]
+    pub fn GetProperties(
+        &self,
+    ) -> windows_core::Result<
+        windows_collections::IMap<windows_core::HSTRING, windows_core::IInspectable>,
+    > {
+        let this = self;
+        unsafe {
+            let mut result__ = core::mem::zeroed();
+            (windows_core::Interface::vtable(this).GetProperties)(
+                windows_core::Interface::as_raw(this),
+                &mut result__,
+            )
+            .and_then(|| windows_core::Type::from_abi(result__))
+        }
+    }
+}
+impl windows_core::RuntimeName for IExtendedAttributesProvider {
+    const NAME: &'static str = "Microsoft.CommandPalette.Extensions.IExtendedAttributesProvider";
+}
+pub trait IExtendedAttributesProvider_Impl: windows_core::IUnknownImpl {
+    fn GetProperties(
+        &self,
+    ) -> windows_core::Result<
+        windows_collections::IMap<windows_core::HSTRING, windows_core::IInspectable>,
+    >;
+}
+impl IExtendedAttributesProvider_Vtbl {
+    pub const fn new<Identity: IExtendedAttributesProvider_Impl, const OFFSET: isize>() -> Self {
+        unsafe extern "system" fn GetProperties<
+            Identity: IExtendedAttributesProvider_Impl,
+            const OFFSET: isize,
+        >(
+            this: *mut core::ffi::c_void,
+            result__: *mut *mut core::ffi::c_void,
+        ) -> windows_core::HRESULT {
+            unsafe {
+                let this: &Identity =
+                    &*((this as *const *const ()).offset(OFFSET) as *const Identity);
+                match IExtendedAttributesProvider_Impl::GetProperties(this) {
+                    Ok(ok__) => {
+                        result__.write(core::mem::transmute_copy(&ok__));
+                        core::mem::forget(ok__);
+                        windows_core::HRESULT(0)
+                    }
+                    Err(err) => err.into(),
+                }
+            }
+        }
+        Self {
+            base__: windows_core::IInspectable_Vtbl::new::<
+                Identity,
+                IExtendedAttributesProvider,
+                OFFSET,
+            >(),
+            GetProperties: GetProperties::<Identity, OFFSET>,
+        }
+    }
+    pub fn matches(iid: &windows_core::GUID) -> bool {
+        iid == &<IExtendedAttributesProvider as windows_core::Interface>::IID
+    }
+}
+#[repr(C)]
+#[doc(hidden)]
+pub struct IExtendedAttributesProvider_Vtbl {
+    pub base__: windows_core::IInspectable_Vtbl,
+    pub GetProperties: unsafe extern "system" fn(
+        *mut core::ffi::c_void,
+        *mut *mut core::ffi::c_void,
     ) -> windows_core::HRESULT,
 }
 crate::_define_windows_core_interface_with_bindings_docs!(
@@ -3225,11 +3566,11 @@ impl IFallbackCommandItem {
     pub fn PropChanged<P0>(&self, handler: P0) -> windows_core::Result<i64>
     where
         P0: windows_core::Param<
-            windows::Foundation::TypedEventHandler<
-                windows_core::IInspectable,
-                IPropChangedEventArgs,
+                windows::Foundation::TypedEventHandler<
+                    windows_core::IInspectable,
+                    IPropChangedEventArgs,
+                >,
             >,
-        >,
     {
         let this = &windows_core::Interface::cast::<INotifyPropChanged>(self)?;
         unsafe {
@@ -3407,7 +3748,7 @@ windows_core::imp::interface_hierarchy!(
     windows_core::IUnknown,
     windows_core::IInspectable
 );
-windows_core::imp::required_hierarchy!(IFilter, IFilterItem);
+windows_core::imp::required_hierarchy!(IFilter, IFilterItem, INotifyPropChanged);
 impl IFilter {
     #[doc = include_str!("./bindings_docs/IFilter/Id.md")]
     pub fn Id(&self) -> windows_core::Result<windows_core::HSTRING> {
@@ -3445,11 +3786,43 @@ impl IFilter {
             .and_then(|| windows_core::Type::from_abi(result__))
         }
     }
+    #[doc = include_str!("./bindings_docs/IFilter/PropChanged.md")]
+    pub fn PropChanged<P0>(&self, handler: P0) -> windows_core::Result<i64>
+    where
+        P0: windows_core::Param<
+                windows::Foundation::TypedEventHandler<
+                    windows_core::IInspectable,
+                    IPropChangedEventArgs,
+                >,
+            >,
+    {
+        let this = &windows_core::Interface::cast::<INotifyPropChanged>(self)?;
+        unsafe {
+            let mut result__ = core::mem::zeroed();
+            (windows_core::Interface::vtable(this).PropChanged)(
+                windows_core::Interface::as_raw(this),
+                handler.param().abi(),
+                &mut result__,
+            )
+            .map(|| result__)
+        }
+    }
+    #[doc = include_str!("./bindings_docs/IFilter/RemovePropChanged.md")]
+    pub fn RemovePropChanged(&self, token: i64) -> windows_core::Result<()> {
+        let this = &windows_core::Interface::cast::<INotifyPropChanged>(self)?;
+        unsafe {
+            (windows_core::Interface::vtable(this).RemovePropChanged)(
+                windows_core::Interface::as_raw(this),
+                token,
+            )
+            .ok()
+        }
+    }
 }
 impl windows_core::RuntimeName for IFilter {
     const NAME: &'static str = "Microsoft.CommandPalette.Extensions.IFilter";
 }
-pub trait IFilter_Impl: IFilterItem_Impl {
+pub trait IFilter_Impl: IFilterItem_Impl + INotifyPropChanged_Impl {
     fn Id(&self) -> windows_core::Result<windows_core::HSTRING>;
     fn Name(&self) -> windows_core::Result<windows_core::HSTRING>;
     fn Icon(&self) -> windows_core::Result<IIconInfo>;
@@ -3571,7 +3944,7 @@ pub struct IFilterItem_Vtbl {
 crate::_define_windows_core_interface_with_bindings_docs!(
     IFilters,
     IFilters_Vtbl,
-    0xc7f16dc1_074c_5dae_a021_e06107573698
+    0x3fd88fb7_9930_570f_bb43_6216bd571166
 );
 impl windows_core::RuntimeType for IFilters {
     const SIGNATURE: windows_core::imp::ConstBuffer =
@@ -3606,12 +3979,12 @@ impl IFilters {
             .ok()
         }
     }
-    #[doc = include_str!("./bindings_docs/IFilters/Filters.md")]
-    pub fn Filters(&self) -> windows_core::Result<windows_core::Array<IFilterItem>> {
+    #[doc = include_str!("./bindings_docs/IFilters/GetFilters.md")]
+    pub fn GetFilters(&self) -> windows_core::Result<windows_core::Array<IFilterItem>> {
         let this = self;
         unsafe {
             let mut result__ = core::mem::MaybeUninit::zeroed();
-            (windows_core::Interface::vtable(this).Filters)(
+            (windows_core::Interface::vtable(this).GetFilters)(
                 windows_core::Interface::as_raw(this),
                 windows_core::Array::<IFilterItem>::set_abi_len(core::mem::transmute(
                     &mut result__,
@@ -3628,7 +4001,7 @@ impl windows_core::RuntimeName for IFilters {
 pub trait IFilters_Impl: windows_core::IUnknownImpl {
     fn CurrentFilterId(&self) -> windows_core::Result<windows_core::HSTRING>;
     fn SetCurrentFilterId(&self, value: &windows_core::HSTRING) -> windows_core::Result<()>;
-    fn Filters(&self) -> windows_core::Result<windows_core::Array<IFilterItem>>;
+    fn GetFilters(&self) -> windows_core::Result<windows_core::Array<IFilterItem>>;
 }
 impl IFilters_Vtbl {
     pub const fn new<Identity: IFilters_Impl, const OFFSET: isize>() -> Self {
@@ -3662,7 +4035,7 @@ impl IFilters_Vtbl {
                 IFilters_Impl::SetCurrentFilterId(this, core::mem::transmute(&value)).into()
             }
         }
-        unsafe extern "system" fn Filters<Identity: IFilters_Impl, const OFFSET: isize>(
+        unsafe extern "system" fn GetFilters<Identity: IFilters_Impl, const OFFSET: isize>(
             this: *mut core::ffi::c_void,
             result_size__: *mut u32,
             result__: *mut *mut *mut core::ffi::c_void,
@@ -3670,7 +4043,7 @@ impl IFilters_Vtbl {
             unsafe {
                 let this: &Identity =
                     &*((this as *const *const ()).offset(OFFSET) as *const Identity);
-                match IFilters_Impl::Filters(this) {
+                match IFilters_Impl::GetFilters(this) {
                     Ok(ok__) => {
                         let (ok_data__, ok_data_len__) = ok__.into_abi();
                         result__.write(core::mem::transmute(ok_data__));
@@ -3685,7 +4058,7 @@ impl IFilters_Vtbl {
             base__: windows_core::IInspectable_Vtbl::new::<Identity, IFilters, OFFSET>(),
             CurrentFilterId: CurrentFilterId::<Identity, OFFSET>,
             SetCurrentFilterId: SetCurrentFilterId::<Identity, OFFSET>,
-            Filters: Filters::<Identity, OFFSET>,
+            GetFilters: GetFilters::<Identity, OFFSET>,
         }
     }
     pub fn matches(iid: &windows_core::GUID) -> bool {
@@ -3704,7 +4077,7 @@ pub struct IFilters_Vtbl {
         *mut core::ffi::c_void,
         *mut core::ffi::c_void,
     ) -> windows_core::HRESULT,
-    pub Filters: unsafe extern "system" fn(
+    pub GetFilters: unsafe extern "system" fn(
         *mut core::ffi::c_void,
         *mut u32,
         *mut *mut *mut core::ffi::c_void,
@@ -3784,11 +4157,11 @@ impl IFormContent {
     pub fn PropChanged<P0>(&self, handler: P0) -> windows_core::Result<i64>
     where
         P0: windows_core::Param<
-            windows::Foundation::TypedEventHandler<
-                windows_core::IInspectable,
-                IPropChangedEventArgs,
+                windows::Foundation::TypedEventHandler<
+                    windows_core::IInspectable,
+                    IPropChangedEventArgs,
+                >,
             >,
-        >,
     {
         let this = &windows_core::Interface::cast::<INotifyPropChanged>(self)?;
         unsafe {
@@ -4164,7 +4537,7 @@ impl windows_core::RuntimeName for IIconData {
 pub trait IIconData_Impl: windows_core::IUnknownImpl {
     fn Icon(&self) -> windows_core::Result<windows_core::HSTRING>;
     fn Data(&self)
-        -> windows_core::Result<windows::Storage::Streams::IRandomAccessStreamReference>;
+    -> windows_core::Result<windows::Storage::Streams::IRandomAccessStreamReference>;
 }
 impl IIconData_Vtbl {
     pub const fn new<Identity: IIconData_Impl, const OFFSET: isize>() -> Self {
@@ -4403,11 +4776,11 @@ impl IInvokableCommand {
     pub fn PropChanged<P0>(&self, handler: P0) -> windows_core::Result<i64>
     where
         P0: windows_core::Param<
-            windows::Foundation::TypedEventHandler<
-                windows_core::IInspectable,
-                IPropChangedEventArgs,
+                windows::Foundation::TypedEventHandler<
+                    windows_core::IInspectable,
+                    IPropChangedEventArgs,
+                >,
             >,
-        >,
     {
         let this = &windows_core::Interface::cast::<INotifyPropChanged>(self)?;
         unsafe {
@@ -4684,11 +5057,11 @@ impl IListItem {
     pub fn PropChanged<P0>(&self, handler: P0) -> windows_core::Result<i64>
     where
         P0: windows_core::Param<
-            windows::Foundation::TypedEventHandler<
-                windows_core::IInspectable,
-                IPropChangedEventArgs,
+                windows::Foundation::TypedEventHandler<
+                    windows_core::IInspectable,
+                    IPropChangedEventArgs,
+                >,
             >,
-        >,
     {
         let this = &windows_core::Interface::cast::<INotifyPropChanged>(self)?;
         unsafe {
@@ -4995,11 +5368,11 @@ impl IListPage {
     pub fn ItemsChanged<P0>(&self, handler: P0) -> windows_core::Result<i64>
     where
         P0: windows_core::Param<
-            windows::Foundation::TypedEventHandler<
-                windows_core::IInspectable,
-                IItemsChangedEventArgs,
+                windows::Foundation::TypedEventHandler<
+                    windows_core::IInspectable,
+                    IItemsChangedEventArgs,
+                >,
             >,
-        >,
     {
         let this = &windows_core::Interface::cast::<INotifyItemsChanged>(self)?;
         unsafe {
@@ -5027,11 +5400,11 @@ impl IListPage {
     pub fn PropChanged<P0>(&self, handler: P0) -> windows_core::Result<i64>
     where
         P0: windows_core::Param<
-            windows::Foundation::TypedEventHandler<
-                windows_core::IInspectable,
-                IPropChangedEventArgs,
+                windows::Foundation::TypedEventHandler<
+                    windows_core::IInspectable,
+                    IPropChangedEventArgs,
+                >,
             >,
-        >,
     {
         let this = &windows_core::Interface::cast::<INotifyPropChanged>(self)?;
         unsafe {
@@ -5444,11 +5817,11 @@ impl IMarkdownContent {
     pub fn PropChanged<P0>(&self, handler: P0) -> windows_core::Result<i64>
     where
         P0: windows_core::Param<
-            windows::Foundation::TypedEventHandler<
-                windows_core::IInspectable,
-                IPropChangedEventArgs,
+                windows::Foundation::TypedEventHandler<
+                    windows_core::IInspectable,
+                    IPropChangedEventArgs,
+                >,
             >,
-        >,
     {
         let this = &windows_core::Interface::cast::<INotifyPropChanged>(self)?;
         unsafe {
@@ -5535,11 +5908,11 @@ impl INotifyItemsChanged {
     pub fn ItemsChanged<P0>(&self, handler: P0) -> windows_core::Result<i64>
     where
         P0: windows_core::Param<
-            windows::Foundation::TypedEventHandler<
-                windows_core::IInspectable,
-                IItemsChangedEventArgs,
+                windows::Foundation::TypedEventHandler<
+                    windows_core::IInspectable,
+                    IItemsChangedEventArgs,
+                >,
             >,
-        >,
     {
         let this = self;
         unsafe {
@@ -5659,11 +6032,11 @@ impl INotifyPropChanged {
     pub fn PropChanged<P0>(&self, handler: P0) -> windows_core::Result<i64>
     where
         P0: windows_core::Param<
-            windows::Foundation::TypedEventHandler<
-                windows_core::IInspectable,
-                IPropChangedEventArgs,
+                windows::Foundation::TypedEventHandler<
+                    windows_core::IInspectable,
+                    IPropChangedEventArgs,
+                >,
             >,
-        >,
     {
         let this = self;
         unsafe {
@@ -5764,7 +6137,11 @@ pub struct INotifyPropChanged_Vtbl {
     pub RemovePropChanged:
         unsafe extern "system" fn(*mut core::ffi::c_void, i64) -> windows_core::HRESULT,
 }
-crate::_define_windows_core_interface_with_bindings_docs!(IPage, IPage_Vtbl, 0x6ce8b297_a600_57da_8656_32e950813546);
+crate::_define_windows_core_interface_with_bindings_docs!(
+    IPage,
+    IPage_Vtbl,
+    0x6ce8b297_a600_57da_8656_32e950813546
+);
 impl windows_core::RuntimeType for IPage {
     const SIGNATURE: windows_core::imp::ConstBuffer =
         windows_core::imp::ConstBuffer::for_interface::<Self>();
@@ -5848,11 +6225,11 @@ impl IPage {
     pub fn PropChanged<P0>(&self, handler: P0) -> windows_core::Result<i64>
     where
         P0: windows_core::Param<
-            windows::Foundation::TypedEventHandler<
-                windows_core::IInspectable,
-                IPropChangedEventArgs,
+                windows::Foundation::TypedEventHandler<
+                    windows_core::IInspectable,
+                    IPropChangedEventArgs,
+                >,
             >,
-        >,
     {
         let this = &windows_core::Interface::cast::<INotifyPropChanged>(self)?;
         unsafe {
@@ -6006,11 +6383,11 @@ impl IProgressState {
     pub fn PropChanged<P0>(&self, handler: P0) -> windows_core::Result<i64>
     where
         P0: windows_core::Param<
-            windows::Foundation::TypedEventHandler<
-                windows_core::IInspectable,
-                IPropChangedEventArgs,
+                windows::Foundation::TypedEventHandler<
+                    windows_core::IInspectable,
+                    IPropChangedEventArgs,
+                >,
             >,
-        >,
     {
         let this = &windows_core::Interface::cast::<INotifyPropChanged>(self)?;
         unsafe {
@@ -6302,11 +6679,11 @@ impl IStatusMessage {
     pub fn PropChanged<P0>(&self, handler: P0) -> windows_core::Result<i64>
     where
         P0: windows_core::Param<
-            windows::Foundation::TypedEventHandler<
-                windows_core::IInspectable,
-                IPropChangedEventArgs,
+                windows::Foundation::TypedEventHandler<
+                    windows_core::IInspectable,
+                    IPropChangedEventArgs,
+                >,
             >,
-        >,
     {
         let this = &windows_core::Interface::cast::<INotifyPropChanged>(self)?;
         unsafe {
@@ -6419,7 +6796,11 @@ pub struct IStatusMessage_Vtbl {
         *mut *mut core::ffi::c_void,
     ) -> windows_core::HRESULT,
 }
-crate::_define_windows_core_interface_with_bindings_docs!(ITag, ITag_Vtbl, 0x580386ef_4197_5ff0_99f7_fdf82d5748ec);
+crate::_define_windows_core_interface_with_bindings_docs!(
+    ITag,
+    ITag_Vtbl,
+    0x580386ef_4197_5ff0_99f7_fdf82d5748ec
+);
 impl windows_core::RuntimeType for ITag {
     const SIGNATURE: windows_core::imp::ConstBuffer =
         windows_core::imp::ConstBuffer::for_interface::<Self>();
@@ -6777,11 +7158,11 @@ impl ITreeContent {
     pub fn ItemsChanged<P0>(&self, handler: P0) -> windows_core::Result<i64>
     where
         P0: windows_core::Param<
-            windows::Foundation::TypedEventHandler<
-                windows_core::IInspectable,
-                IItemsChangedEventArgs,
+                windows::Foundation::TypedEventHandler<
+                    windows_core::IInspectable,
+                    IItemsChangedEventArgs,
+                >,
             >,
-        >,
     {
         let this = &windows_core::Interface::cast::<INotifyItemsChanged>(self)?;
         unsafe {
@@ -6809,11 +7190,11 @@ impl ITreeContent {
     pub fn PropChanged<P0>(&self, handler: P0) -> windows_core::Result<i64>
     where
         P0: windows_core::Param<
-            windows::Foundation::TypedEventHandler<
-                windows_core::IInspectable,
-                IPropChangedEventArgs,
+                windows::Foundation::TypedEventHandler<
+                    windows_core::IInspectable,
+                    IPropChangedEventArgs,
+                >,
             >,
-        >,
     {
         let this = &windows_core::Interface::cast::<INotifyPropChanged>(self)?;
         unsafe {

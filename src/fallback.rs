@@ -85,9 +85,9 @@ impl ComBuilder for FallbackCommandItemBuilder {
 }
 
 /// Fallback command item which can respond to dynamic queries.
-/// 
+///
 /// See [`FallbackCommandItem_Impl`] for field accessors.
-/// 
+///
 #[doc = include_str!("./bindings_docs/IFallbackCommandItem.md")]
 #[implement(IFallbackCommandItem, ICommandItem, INotifyPropChanged)]
 pub struct FallbackCommandItem {
@@ -105,14 +105,14 @@ impl Deref for FallbackCommandItem {
 
 impl FallbackCommandItem_Impl {
     /// Readonly access to [`IFallbackCommandItem::Title`].
-    /// 
+    ///
     #[doc = include_str!("./bindings_docs/IFallbackCommandItem/Title.md")]
     pub fn title(&self) -> Result<NotifyLockReadGuard<'_, HSTRING>> {
         self.title.read()
     }
 
     /// Mutable access to [`IFallbackCommandItem::Title`].
-    /// 
+    ///
     #[doc = include_str!("./bindings_docs/IFallbackCommandItem/Title.md")]
     ///
     /// Notifies the host about the change when dropping the guard.

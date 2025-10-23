@@ -7,7 +7,7 @@ use crate::utils::{FrozenBuffer, OkOrEmpty};
 use windows::Storage::Streams::{
     IBuffer, IRandomAccessStream, InMemoryRandomAccessStream, RandomAccessStreamReference,
 };
-use windows_core::{AgileReference, HSTRING, implement};
+use windows_core::{AgileReference, HSTRING, Interface, implement};
 
 /// Represents icon data.
 ///
@@ -17,10 +17,11 @@ use windows_core::{AgileReference, HSTRING, implement};
 /// - [`Vec<u8>`]: Raw icon data
 ///
 #[doc = include_str!("../bindings_docs/IIconData.md")]
-#[implement(IIconData)]
+#[implement(IIconData, IExtendedAttributesProvider)]
 #[derive(Debug, Clone)]
 pub struct IconData {
     icon: HSTRING,
+    font_family: HSTRING,
     data: Option<AgileReference<IRandomAccessStream>>,
 }
 
@@ -37,10 +38,48 @@ impl IIconData_Impl for IconData_Impl {
     }
 }
 
+impl IExtendedAttributesProvider_Impl for IconData_Impl {
+    fn GetProperties(
+        &self,
+    ) -> windows_core::Result<
+        windows_collections::IMap<windows_core::HSTRING, windows_core::IInspectable>,
+    > {
+        let map = windows::Foundation::Collections::ValueSet::new()?;
+        if !self.font_family.is_empty() {
+            map.Insert(
+                &"FontFamily".into(),
+                &windows::Foundation::PropertyValue::CreateString(&self.font_family)?,
+            )?;
+        }
+        Ok(Interface::cast(&map)?)
+    }
+}
+
+impl IconData {
+    /// Creates an icon data from font glyph and its font family.
+    ///
+    /// Note that Command Palette will default to using the Segoe Fluent Icons,
+    /// Segoe MDL2 Assets font for glyphs in the Segoe UI Symbol range, or Segoe
+    /// UI for any other glyphs. Use this function if you want a non-Segoe font
+    /// icon.
+    pub fn from_glyph_and_family<G, F>(glyph: G, font_family: F) -> Self
+    where
+        G: Into<HSTRING>,
+        F: Into<HSTRING>,
+    {
+        IconData {
+            icon: glyph.into(),
+            font_family: font_family.into(),
+            data: None,
+        }
+    }
+}
+
 impl From<HSTRING> for IconData {
     fn from(value: HSTRING) -> Self {
         IconData {
             icon: value,
+            font_family: HSTRING::new(),
             data: None,
         }
     }
@@ -50,6 +89,7 @@ impl From<&HSTRING> for IconData {
     fn from(value: &HSTRING) -> Self {
         IconData {
             icon: value.clone(),
+            font_family: HSTRING::new(),
             data: None,
         }
     }
@@ -59,6 +99,7 @@ impl From<&str> for IconData {
     fn from(value: &str) -> Self {
         IconData {
             icon: HSTRING::from(value),
+            font_family: HSTRING::new(),
             data: None,
         }
     }
@@ -68,6 +109,7 @@ impl From<String> for IconData {
     fn from(value: String) -> Self {
         IconData {
             icon: HSTRING::from(value),
+            font_family: HSTRING::new(),
             data: None,
         }
     }
@@ -80,6 +122,7 @@ impl TryFrom<&Path> for IconData {
             .canonicalize()
             .map(|path| IconData {
                 icon: HSTRING::from(path.as_os_str()),
+                font_family: HSTRING::new(),
                 data: None,
             })
             .map_err(|e| {
@@ -104,9 +147,10 @@ impl TryFrom<Vec<u8>> for IconData {
         let buf: IBuffer = FrozenBuffer::from(value).into();
         let stream = InMemoryRandomAccessStream::new()?;
         let op = stream.WriteAsync(&buf)?;
-        op.get()?;
+        op.join()?;
         Ok(IconData {
-            icon: HSTRING::from(""),
+            icon: HSTRING::new(),
+            font_family: HSTRING::new(),
             data: Some(AgileReference::new(&stream.into())?),
         })
     }
@@ -118,9 +162,10 @@ impl TryFrom<&[u8]> for IconData {
         let buf: IBuffer = FrozenBuffer::from(value.to_vec()).into();
         let stream = InMemoryRandomAccessStream::new()?;
         let op = stream.WriteAsync(&buf)?;
-        op.get()?;
+        op.join()?;
         Ok(IconData {
-            icon: HSTRING::from(""),
+            icon: HSTRING::new(),
+            font_family: HSTRING::new(),
             data: Some(AgileReference::new(&stream.into())?),
         })
     }

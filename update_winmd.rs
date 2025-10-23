@@ -13,6 +13,7 @@
 
 use reqwest::blocking::Client;
 use std::collections::HashMap;
+use std::collections::HashSet;
 use std::io::{Read, Write};
 use regex::Regex;
 use windows_bindgen;
@@ -32,7 +33,7 @@ fn document_bindings(content: &str) -> Result<String, Box<dyn std::error::Error>
     let const_re = Regex::new(r"^(\s*)(pub\s+)?const\s+(\w+)\s*:\s*[^,]+,?\s*$")?;
 
     let mut output = Vec::new();
-    let mut paths = Vec::new();
+    let mut paths = HashSet::new();
     let mut i = 0;
     let mut brace_stack = 0;
 
@@ -54,7 +55,7 @@ fn document_bindings(content: &str) -> Result<String, Box<dyn std::error::Error>
             let doc_path = format!("./bindings_docs/{}.md", name);
 
             if i == 0 || !lines[i - 1].contains("include_str!") {
-                paths.push(doc_path.clone());
+                paths.insert(doc_path.clone());
                 output.push(format!("{indent}#[doc = include_str!(\"{doc_path}\")]"));
             }
             output.push(line.clone());
@@ -69,7 +70,7 @@ fn document_bindings(content: &str) -> Result<String, Box<dyn std::error::Error>
                     let f_doc_path = format!("./bindings_docs/{}/{}.md", name, f_name);
 
                     if i == 0 || !lines[i - 1].contains(&f_doc_path) {
-                        paths.push(f_doc_path.clone());
+                        paths.insert(f_doc_path.clone());
                         output.push(format!("{f_indent}#[doc = include_str!(\"{f_doc_path}\")]"));
                     }
                 }
@@ -80,7 +81,7 @@ fn document_bindings(content: &str) -> Result<String, Box<dyn std::error::Error>
                     let const_doc_path = format!("./bindings_docs/{}/{}.md", name, const_name);
 
                     if i == 0 || !lines[i - 1].contains(&const_doc_path) {
-                        paths.push(const_doc_path.clone());
+                        paths.insert(const_doc_path.clone());
                         output.push(format!(
                             "{const_indent}#[doc = include_str!(\"{const_doc_path}\")]"
                         ));
@@ -102,7 +103,7 @@ fn document_bindings(content: &str) -> Result<String, Box<dyn std::error::Error>
             let doc_path = format!("./bindings_docs/{}.md", name);
 
             if i == 0 || !lines[i - 1].contains("include_str!") {
-                paths.push(doc_path.clone());
+                paths.insert(doc_path.clone());
                 output.push(format!("{indent}#[doc = include_str!(\"{doc_path}\")]"));
             }
 
@@ -118,7 +119,7 @@ fn document_bindings(content: &str) -> Result<String, Box<dyn std::error::Error>
                     let v_doc_path = format!("./bindings_docs/{}/{}.md", name, v_name);
 
                     if i == 0 || !lines[i - 1].contains(&v_doc_path) {
-                        paths.push(v_doc_path.clone());
+                        paths.insert(v_doc_path.clone());
                         output.push(format!("{v_indent}#[doc = include_str!(\"{v_doc_path}\")]"));
                     }
                 }
@@ -137,6 +138,9 @@ fn document_bindings(content: &str) -> Result<String, Box<dyn std::error::Error>
             output.push(line.clone());
             i += 1;
 
+            let impl_doc_path = format!("./bindings_docs/{}.md", name);
+            paths.insert(impl_doc_path.clone());
+
             while i < lines.len() {
                 let current = &lines[i];
 
@@ -146,7 +150,7 @@ fn document_bindings(content: &str) -> Result<String, Box<dyn std::error::Error>
                     let fn_doc_path = format!("./bindings_docs/{}/{}.md", name, fn_name);
 
                     if i == 0 || !lines[i - 1].contains(&fn_doc_path) {
-                        paths.push(fn_doc_path.clone());
+                        paths.insert(fn_doc_path.clone());
                         output.push(format!(
                             "{fn_indent}#[doc = include_str!(\"{fn_doc_path}\")]"
                         ));
@@ -157,7 +161,7 @@ fn document_bindings(content: &str) -> Result<String, Box<dyn std::error::Error>
                     let const_doc_path = format!("./bindings_docs/{}/{}.md", name, const_name);
 
                     if i == 0 || !lines[i - 1].contains(&const_doc_path) {
-                        paths.push(const_doc_path.clone());
+                        paths.insert(const_doc_path.clone());
                         output.push(format!(
                             "{const_indent}#[doc = include_str!(\"{const_doc_path}\")]"
                         ));

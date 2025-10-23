@@ -1,0 +1,1 @@
+The `ICommandProvider2` interface extends `ICommandProvider` to support future API expansion. It allows an extension to return stub objects for additional interfaces, enabling the Command Palette to preload type information and recognize new capabilities without breaking ABI compatibility.

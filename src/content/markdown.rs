@@ -3,11 +3,11 @@
 use crate::bindings::*;
 use crate::notify::*;
 use crate::utils::assert_send_sync;
-use windows_core::{Event, HSTRING, IInspectable, IUnknownImpl as _, implement};
 use windows_core::ComObject;
+use windows_core::{Event, HSTRING, IInspectable, IUnknownImpl as _, implement};
 
 /// Markdown content that can be used to display formatted text.
-/// 
+///
 /// See [`MarkdownContent_Impl`] for field accessors.
 ///
 #[doc = include_str!("../bindings_docs/IMarkdownContent.md")]

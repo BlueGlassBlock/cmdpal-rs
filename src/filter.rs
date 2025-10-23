@@ -2,18 +2,18 @@
 //!
 //! This module currently doesn't work: <https://github.com/microsoft/PowerToys/issues/38318>
 
+use crate::bindings::*;
 use crate::icon::IconInfo;
-use crate::utils::{ComBuilder, assert_send_sync, map_array};
-use crate::{bindings::*, utils::OkOrEmpty};
+use crate::notify::*;
+use crate::utils::{ComBuilder, OkOrEmpty, assert_send_sync, map_array};
 use std::sync::RwLock;
-use windows::{
-    Win32::Foundation::ERROR_LOCK_VIOLATION,
-    core::{ComObject, HSTRING, implement},
+use windows::Win32::Foundation::ERROR_LOCK_VIOLATION;
+use windows_core::{
+    ComObject, Error, Event, HSTRING, IInspectable, IUnknownImpl as _, Result, implement,
 };
-use windows_core::{Error, Result};
 
 /// Represents a separator in the filter list.
-/// 
+///
 #[doc = include_str!("./bindings_docs/ISeparatorFilterItem.md")]
 #[implement(ISeparatorFilterItem, IFilterItem)]
 pub struct FilterSeparator;
@@ -24,32 +24,172 @@ impl IFilterItem_Impl for FilterSeparator_Impl {}
 /// Represents a selectable filter item in the filter list.
 ///
 #[doc = include_str!("./bindings_docs/IFilter.md")]
-#[implement(IFilter, IFilterItem)]
+#[implement(IFilter, IFilterItem, INotifyPropChanged)]
 pub struct Filter {
-    #[doc = include_str!("./bindings_docs/IFilter/Icon.md")]
-    pub icon: Option<ComObject<IconInfo>>,
-    #[doc = include_str!("./bindings_docs/IFilter/Id.md")]
-    pub id: HSTRING,
-    #[doc = include_str!("./bindings_docs/IFilter/Name.md")]
-    pub name: HSTRING,
+    name: NotifyLock<HSTRING>,
+    id: NotifyLock<HSTRING>,
+    icon: NotifyLock<Option<ComObject<IconInfo>>>,
+    event: PropChangedEventHandler,
+}
+
+/// Builder for [`Filter`].
+pub struct FilterBuilder {
+    name: HSTRING,
+    id: HSTRING,
+    icon: Option<ComObject<IconInfo>>,
+}
+
+impl FilterBuilder {
+    /// Creates a new builder.
+    pub fn new() -> Self {
+        Self {
+            name: HSTRING::new(),
+            id: HSTRING::new(),
+            icon: None,
+        }
+    }
+
+    /// Sets the name of the filter.
+    pub fn name(mut self, name: impl Into<HSTRING>) -> Self {
+        self.name = name.into();
+        self
+    }
+
+    /// Sets the unique identifier of the filter.
+    pub fn id(mut self, id: impl Into<HSTRING>) -> Self {
+        self.id = id.into();
+        self
+    }
+
+    /// Sets the icon for the filter.
+    pub fn icon(mut self, icon: ComObject<IconInfo>) -> Self {
+        self.icon = Some(icon);
+        self
+    }
+}
+
+impl ComBuilder for FilterBuilder {
+    type Output = Filter;
+    fn build_unmanaged(self) -> Filter {
+        Filter {
+            name: NotifyLock::new(self.name),
+            id: NotifyLock::new(self.id),
+            icon: NotifyLock::new(self.icon),
+            event: Event::new(),
+        }
+    }
+}
+
+impl Default for FilterBuilder {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl IFilter_Impl for Filter_Impl {
     fn Icon(&self) -> windows_core::Result<IIconInfo> {
         self.icon
+            .read()?
             .as_ref()
             .map(|icon| icon.to_interface())
             .ok_or_empty()
     }
 
     fn Id(&self) -> windows_core::Result<windows_core::HSTRING> {
-        Ok(self.id.clone())
+        self.id.read().map(|id| id.clone())
     }
 
     fn Name(&self) -> windows_core::Result<windows_core::HSTRING> {
-        Ok(self.name.clone())
+        self.name.read().map(|name| name.clone())
     }
 }
+
+impl INotifyPropChanged_Impl for Filter_Impl {
+    fn PropChanged(
+        &self,
+        handler: windows_core::Ref<
+            '_,
+            windows::Foundation::TypedEventHandler<
+                windows_core::IInspectable,
+                IPropChangedEventArgs,
+            >,
+        >,
+    ) -> windows_core::Result<i64> {
+        self.event.add(handler.ok()?)
+    }
+
+    fn RemovePropChanged(&self, token: i64) -> windows_core::Result<()> {
+        self.event.remove(token);
+        Ok(())
+    }
+}
+
+impl Filter_Impl {
+    pub(crate) fn emit_prop_changed(&self, sender: IInspectable, prop: &str) {
+        let args: IPropChangedEventArgs = PropChangedEventArgs(prop.into()).into();
+        self.event
+            .call(|handler| handler.Invoke(&sender, &args.clone()));
+    }
+
+    fn emit_self_prop_changed(&self, prop: &str) {
+        self.emit_prop_changed(self.to_interface(), prop);
+    }
+
+    /// Readonly access to [`IFilter::Name`].
+    ///
+    #[doc = include_str!("./bindings_docs/IFilter/Name.md")]
+    pub fn name(&self) -> windows_core::Result<NotifyLockReadGuard<'_, windows_core::HSTRING>> {
+        self.name.read()
+    }
+
+    /// Mutable access to [`IFilter::Name`].
+    ///
+    #[doc = include_str!("./bindings_docs/IFilter/Name.md")]
+    ///
+    /// Notifies the host about the property change when dropping the guard.
+    pub fn name_mut(
+        &self,
+    ) -> windows_core::Result<NotifyLockWriteGuard<'_, windows_core::HSTRING>> {
+        self.name.write(|| self.emit_self_prop_changed("Name"))
+    }
+
+    /// Readonly access to [`IFilter::Id`].
+    ///
+    #[doc = include_str!("./bindings_docs/IFilter/Id.md")]
+    pub fn id(&self) -> windows_core::Result<NotifyLockReadGuard<'_, windows_core::HSTRING>> {
+        self.id.read()
+    }
+
+    /// Mutable access to [`IFilter::Id`].
+    ///
+    #[doc = include_str!("./bindings_docs/IFilter/Id.md")]
+    ///
+    /// Notifies the host about the property change when dropping the guard.
+    pub fn id_mut(&self) -> windows_core::Result<NotifyLockWriteGuard<'_, windows_core::HSTRING>> {
+        self.id.write(|| self.emit_self_prop_changed("Id"))
+    }
+
+    /// Readonly access to [`IFilter::Icon`].
+    ///
+    #[doc = include_str!("./bindings_docs/IFilter/Icon.md")]
+    pub fn icon(
+        &self,
+    ) -> windows_core::Result<NotifyLockReadGuard<'_, Option<ComObject<IconInfo>>>> {
+        self.icon.read()
+    }
+
+    /// Mutable access to [`IFilter::Icon`].
+    ///
+    #[doc = include_str!("./bindings_docs/IFilter/Icon.md")]
+    ///
+    /// Notifies the host about the property change when dropping the guard.
+    pub fn icon_mut(
+        &self,
+    ) -> windows_core::Result<NotifyLockWriteGuard<'_, Option<ComObject<IconInfo>>>> {
+        self.icon.write(|| self.emit_self_prop_changed("Icon"))
+    }
+}
+
 impl IFilterItem_Impl for Filter_Impl {}
 
 /// A filter item that can be used to build [`Filters`] struct.
@@ -149,11 +289,12 @@ impl IFilters_Impl for Filters_Impl {
             .read()
             .map_err(|_| Error::from(ERROR_LOCK_VIOLATION))?
             .as_ref()
-            .map(|item| item.id.clone())
-            .ok_or_empty()
+            .ok_or_empty()?
+            .id()
+            .map(|id| id.clone())
     }
 
-    fn Filters(&self) -> windows_core::Result<windows_core::Array<IFilterItem>> {
+    fn GetFilters(&self) -> windows_core::Result<windows_core::Array<IFilterItem>> {
         Ok(map_array(&self.items, |filter| {
             Some(IFilterItem::from(filter))
         }))
@@ -170,7 +311,9 @@ impl IFilters_Impl for Filters_Impl {
             match filter {
                 FilterItem::Separator(_) => continue,
                 FilterItem::Filter(item) => {
-                    if item.id == *value {
+                    if let Some(id) = item.id().ok()
+                        && *id == *value
+                    {
                         new = Some(item.clone());
                         break;
                     }

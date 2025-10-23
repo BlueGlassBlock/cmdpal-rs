@@ -1,5 +1,5 @@
 //! Pages which can be used to provide more information.
-//! 
+//!
 //! When selecting a command item that contains a page, the page will be displayed.
 
 pub mod content;
@@ -18,7 +18,7 @@ use windows_core::{HSTRING, IUnknownImpl as _, Result};
 /// Represents basic properties of a page.
 ///
 /// See [`BasePage_Impl`] for field accessors.
-/// 
+///
 #[doc = include_str!("../bindings_docs/IPage.md")]
 #[implement(IPage)]
 pub struct BasePage {
@@ -88,14 +88,14 @@ impl Deref for BasePage {
 
 impl BasePage_Impl {
     /// Readonly access to [`IPage::Title`].
-    /// 
+    ///
     #[doc = include_str!("../bindings_docs/IPage/Title.md")]
     pub fn title(&self) -> Result<NotifyLockReadGuard<'_, HSTRING>> {
         self.title.read()
     }
 
     /// Mutable access to [`IPage::Title`].
-    /// 
+    ///
     #[doc = include_str!("../bindings_docs/IPage/Title.md")]
     ///
     /// Notifies the host about the property change when dropping the guard.
@@ -105,33 +105,31 @@ impl BasePage_Impl {
     }
 
     /// Readonly access to [`IPage::IsLoading`].
-    /// 
+    ///
     #[doc = include_str!("../bindings_docs/IPage/IsLoading.md")]
     pub fn loading(&self) -> Result<NotifyLockReadGuard<'_, bool>> {
         self.loading.read()
     }
 
     /// Mutable access to [`IPage::IsLoading`].
-    /// 
+    ///
     #[doc = include_str!("../bindings_docs/IPage/IsLoading.md")]
     ///
     /// Notifies the host about the property change when dropping the guard.
     pub fn loading_mut(&self) -> Result<NotifyLockWriteGuard<'_, bool>> {
-        self.loading.write(|| {
-            self.base
-                .emit_prop_changed(self.to_interface(), "Loading")
-        })
+        self.loading
+            .write(|| self.base.emit_prop_changed(self.to_interface(), "Loading"))
     }
 
     /// Readonly access to [`IPage::AccentColor`].
-    /// 
+    ///
     #[doc = include_str!("../bindings_docs/IPage/AccentColor.md")]
     pub fn accent_color(&self) -> Result<NotifyLockReadGuard<'_, Option<Color>>> {
         self.accent_color.read()
     }
 
     /// Mutable access to [`IPage::AccentColor`].
-    /// 
+    ///
     #[doc = include_str!("../bindings_docs/IPage/AccentColor.md")]
     ///
     /// Notifies the host about the property change when dropping the guard.

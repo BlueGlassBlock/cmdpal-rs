@@ -1,6 +1,6 @@
 [package]
 name = "cmdpal"
-version = "0.2.0"
+version = "0.3.0"
 edition = "2024"
 authors = ["Nyuan Zhang <blueglassblock@outlook.com>"]
 license = "MIT OR Apache-2.0"
@@ -27,9 +27,10 @@ rustdoc-args = ["--cfg", "docsrs"]
 schemars = "1.0.2"
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
-windows = { version = "0.61", features = [
+windows = { version = "0.62", features = [
     "Storage_Streams",
     "System",
+    "Foundation_Collections",
     "Win32_System_Com",
     "Win32_System_DataExchange",
     "Win32_System_Memory",
@@ -39,8 +40,9 @@ windows = { version = "0.61", features = [
     "Win32_UI_Shell",
     "Win32_UI_WindowsAndMessaging",
 ] }
-windows-core = "0.61"
-windows-future = "0.2"
+windows-core = "0.62"
+windows-future = "0.3"
+windows-collections = "0.3"
 
 [features]
 unstable-doc = []

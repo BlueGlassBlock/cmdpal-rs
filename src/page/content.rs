@@ -46,12 +46,12 @@ impl ContentPageBuilder {
     }
 
     /// Sets the context menu items.
-    /// 
+    ///
     /// First two of context menu items will become "shortcut commands" and
     /// have extra bindings (<kbd>↲</kbd> and <kbd>Ctrl + ↲</kbd>),
     /// with display text being [`ICommand::Name`] of `cmd_ctx_item.base.command`
     /// instead of [`ICommandItem::Title`] of `cmd_ctx_item.base`.
-    /// 
+    ///
     pub fn context_menu(mut self, context_menu: Vec<ContextItem>) -> Self {
         self.context_menu = context_menu;
         self

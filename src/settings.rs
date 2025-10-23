@@ -107,7 +107,7 @@ pub struct TextSetting {
 
 impl TextSetting {
     /// Creates a new `TextSetting` with the given ID.
-    /// 
+    ///
     /// The ID should be unique across all settings in this `CommandSettings`.
     pub fn new(id: impl ToString) -> Self {
         Self {
@@ -149,7 +149,7 @@ impl TextSetting {
 }
 
 /// A setting item that allows users to input a number.
-/// 
+///
 /// The number input will always be a floating point value.
 #[derive(Debug, Clone)]
 pub struct NumberSetting {
@@ -162,7 +162,7 @@ pub struct NumberSetting {
 
 impl NumberSetting {
     /// Creates a new `NumberSetting` with the given ID.
-    /// 
+    ///
     /// The ID should be unique across all settings in this `CommandSettings`.
     pub fn new(id: impl ToString) -> Self {
         Self {
@@ -194,7 +194,7 @@ impl NumberSetting {
     }
 
     /// Specifies a default value for the input field.
-    /// 
+    ///
     /// This will be used when there are no prior settings saved.
     pub fn default(self, value: f64) -> Self {
         self.value.lock().ok().map(|mut v| v.replace(value));
@@ -203,7 +203,7 @@ impl NumberSetting {
 }
 
 /// A setting item that allows users to toggle a boolean value.
-/// 
+///
 /// This is typically used for settings that can be enabled or disabled, like a switch.
 #[derive(Debug, Clone)]
 pub struct ToggleSetting {
@@ -213,7 +213,7 @@ pub struct ToggleSetting {
 
 impl ToggleSetting {
     /// Creates a new `ToggleSetting` with the given ID.
-    /// 
+    ///
     /// The ID should be unique across all settings in this `CommandSettings`.
     pub fn new(id: impl ToString) -> Self {
         Self {
@@ -223,7 +223,7 @@ impl ToggleSetting {
     }
 
     /// Specifies a default value for the toggle setting.
-    /// 
+    ///
     /// This will be used when there are no prior settings saved.
     pub fn default(self, value: bool) -> Self {
         self.value.lock().ok().map(|mut v| v.replace(value));
@@ -232,22 +232,22 @@ impl ToggleSetting {
 }
 
 /// A trait for defining choices in a choice set setting.
-/// 
+///
 /// The trait has already been implemented for `String`, `&str`, and tuples of `(&str, &str)`.
-/// 
+///
 /// You can implement this trait for your own types to use them in a [`ChoiceSetSetting`]
 /// (as long as their `value` don't collide with each other):
-/// 
+///
 /// ```rust
 /// # use cmdpal::settings::Choice;
-/// 
+///
 /// #[derive(Debug, Clone)]
 /// enum TextSize {
 ///     Small,
 ///     Medium,
 ///     Large
 /// }
-/// 
+///
 /// impl Choice for TextSize {
 ///     fn value(&self) -> &str {
 ///         match self {
@@ -267,7 +267,7 @@ impl ToggleSetting {
 /// ```
 pub trait Choice: Sized + Clone + 'static {
     /// Returns the value of the choice.
-    /// 
+    ///
     /// This value should be unique across all choices in the set.
     fn value(&self) -> &str;
 
@@ -315,7 +315,7 @@ pub struct ChoiceSetSetting<T> {
 
 impl<T: Choice> ChoiceSetSetting<T> {
     /// Creates a new `ChoiceSetSetting` with the given ID.
-    /// 
+    ///
     /// The ID should be unique across all settings in this `CommandSettings`.
     pub fn new(id: impl ToString) -> Self {
         Self {
@@ -326,7 +326,7 @@ impl<T: Choice> ChoiceSetSetting<T> {
     }
 
     /// Adds a choice to the set.
-    /// 
+    ///
     /// The choice must implement the [`Choice`] trait.
     pub fn add_choice(mut self, choice: T) -> Self {
         self.choices.push(choice);
@@ -334,7 +334,7 @@ impl<T: Choice> ChoiceSetSetting<T> {
     }
 
     /// Sets the choices for the set.
-    /// 
+    ///
     /// This will replace any existing choices.
     pub fn choices(mut self, choices: Vec<T>) -> Self {
         self.choices = choices;
@@ -342,7 +342,7 @@ impl<T: Choice> ChoiceSetSetting<T> {
     }
 
     /// Specifies a default choice for the set.
-    /// 
+    ///
     /// This will be used when there are no prior settings saved.
     pub fn default(self, value: T) -> Self {
         self.value.lock().ok().map(|mut v| v.replace(value));
@@ -564,7 +564,7 @@ impl<T: Choice> ValueLock for ChoiceSetSetting<T> {
 }
 
 /// A detailed implementation of the [`ICommandSettings`] interface which preserves config in a JSON file.
-/// 
+///
 /// This struct automatically handles read and write of JSON settings file,
 /// and exposes `Arc<Mutex<Option<T>>>` for each setting item for developer to access the value.
 #[implement(ICommandSettings)]
@@ -577,10 +577,10 @@ pub struct JsonCommandSettings {
 
 impl JsonCommandSettings {
     /// Creates a new `JsonCommandSettings` with the given path.
-    /// 
+    ///
     /// The path should point to a JSON file where the settings will be stored.
     /// If the file does not exist, it will be created.
-    /// 
+    ///
     /// It will also attempt to create parent directories when writing the config file,
     /// if they do not exist.
     pub fn new(path: std::path::PathBuf) -> Self {
@@ -606,13 +606,13 @@ impl JsonCommandSettings {
     }
 
     /// Adds a setting item to the settings page.
-    /// 
+    ///
     /// Valid setting items are:
     /// - [`TextSetting`]
     /// - [`NumberSetting`]
     /// - [`ToggleSetting`]
     /// - [`ChoiceSetSetting`]
-    /// 
+    ///
     /// Returns an `Arc<Mutex<Option<V>>>` that can be used to access the real-time value of the setting.
     #[allow(private_bounds, reason = "Trait bounds are only for internal use")]
     pub fn add_setting<

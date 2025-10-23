@@ -4,11 +4,11 @@ use super::Content;
 use crate::notify::*;
 use crate::utils::{ComBuilder, assert_send_sync};
 use crate::{bindings::*, utils::map_array};
-use windows_core::{Event, IInspectable, IUnknownImpl as _, Result, implement};
 use windows_core::ComObject;
+use windows_core::{Event, IInspectable, IUnknownImpl as _, Result, implement};
 
 /// Tree content that can be used to display nested content.
-/// 
+///
 /// See [`TreeContent_Impl`] for field accessors.
 ///
 #[doc = include_str!("../bindings_docs/ITreeContent.md")]
@@ -76,16 +76,16 @@ impl TreeContent_Impl {
     }
 
     /// Readonly access to [`ITreeContent::RootContent`].
-    /// 
+    ///
     #[doc = include_str!("../bindings_docs/ITreeContent/RootContent.md")]
     pub fn root(&self) -> Result<NotifyLockReadGuard<'_, Content>> {
         self.root.read()
     }
 
     /// Mutable access to [`ITreeContent::RootContent`].
-    /// 
+    ///
     #[doc = include_str!("../bindings_docs/ITreeContent/RootContent.md")]
-    /// 
+    ///
     /// Notifies the host about the property change when dropping the guard.
     pub fn root_mut(&self) -> Result<NotifyLockWriteGuard<'_, Content>> {
         self.root

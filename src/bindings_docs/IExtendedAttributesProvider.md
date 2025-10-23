@@ -1,0 +1,1 @@
+`IExtendAttributesProvider` allows an object to provider arbitrary extended attributes. This can be used to attach metadata or additional information to objects that implement this interface.

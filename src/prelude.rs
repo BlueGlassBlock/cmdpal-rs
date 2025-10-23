@@ -29,8 +29,8 @@ pub use crate::{
         list::{ListItem, ListItemBuilder, ListPage, ListPageBuilder},
     },
     settings::{
-        SettingBasePropModifier, Choice, ChoiceSetSetting, CommandSettings, JsonCommandSettings,
-        NumberSetting, TextSetting, ToggleSetting,
+        Choice, ChoiceSetSetting, CommandSettings, JsonCommandSettings, NumberSetting,
+        SettingBasePropModifier, TextSetting, ToggleSetting,
     },
     utils::{ComBuilder, GridProperties},
 };

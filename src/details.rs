@@ -1,13 +1,13 @@
 //! Types for displaying the details tab.
-//! 
+//!
 //! `Details` is displayed in a tab occupying the right side of UI,
 //! displaying additional information about the selected item.
 
 use crate::icon::IconInfo;
 use crate::utils::{OkOrEmpty, assert_send_sync, map_array};
 use crate::{bindings::*, utils::ComBuilder};
-use windows_core::{ComObject, Result, implement};
 use windows_core::{AgileReference, HSTRING};
+use windows_core::{ComObject, Result, implement};
 
 /// Represents a tag for classification.
 ///
@@ -253,46 +253,51 @@ impl IDetailsLink_Impl for DetailsLink_Impl {
     }
 }
 
-// TODO: Microsoft has changed from `IDetailsCommand` to `IDetailsCommands`, yet unreleased.
-
 /// Represents a command that can be executed from details tab.
 ///
-/// See: [`IDetailsCommand`]
+/// See: [`IDetailsCommands`]
 ///
-#[doc = include_str!("./bindings_docs/IDetailsCommand.md")]
-#[implement(IDetailsCommand, IDetailsData)]
-pub struct DetailsCommand {
-    command: AgileReference<ICommand>,
+#[doc = include_str!("./bindings_docs/IDetailsCommands.md")]
+#[implement(IDetailsCommands, IDetailsData)]
+pub struct DetailsCommands {
+    commands: Vec<AgileReference<ICommand>>,
 }
 
-impl DetailsCommand {
-    /// Creates a new unmanaged instance of `DetailsCommand` with the specified command.
-    pub fn try_new_unmanaged(command: ICommand) -> Result<Self> {
-        let command = AgileReference::new(&command)?;
-        Ok(DetailsCommand { command })
+impl DetailsCommands {
+    /// Creates a new unmanaged instance of `DetailsCommand` with the specified commands.
+    pub fn try_new_unmanaged(commands: &[ICommand]) -> Result<Self> {
+        let agile_commands = commands
+            .iter()
+            .map(|cmd| AgileReference::new(cmd))
+            .collect::<Result<Vec<_>>>()?;
+        Ok(Self {
+            commands: agile_commands,
+        })
     }
 
-    /// Creates a new reference-counted COM object for `DetailsCommand` with the specified command.
-    pub fn try_new(command: ICommand) -> Result<ComObject<Self>> {
-        Self::try_new_unmanaged(command).map(Into::into)
+    /// Creates a new reference-counted COM object for `DetailsCommand` with the specified commands.
+    pub fn try_new(commands: &[ICommand]) -> Result<ComObject<Self>> {
+        Ok(ComObject::new(Self::try_new_unmanaged(commands)?))
     }
 
-    /// Creates a new unmanaged instance of `DetailsCommand` with the specified command.
-    pub fn new_unmanaged(command: AgileReference<ICommand>) -> Self {
-        DetailsCommand { command }
+    /// Creates a new unmanaged instance of `DetailsCommand` with the specified commands.
+    pub fn new_unmanaged(commands: &[AgileReference<ICommand>]) -> Self {
+        Self {
+            commands: Vec::from(commands),
+        }
     }
 
-    /// Creates a new reference-counted COM object for `DetailsCommand` with the specified command.
-    pub fn new(command: AgileReference<ICommand>) -> ComObject<Self> {
-        Self::new_unmanaged(command).into()
+    /// Creates a new reference-counted COM object for `DetailsCommand` with the specified commands.
+    pub fn new(commands: &[AgileReference<ICommand>]) -> ComObject<Self> {
+        ComObject::new(Self::new_unmanaged(commands))
     }
 }
 
-impl IDetailsData_Impl for DetailsCommand_Impl {}
+impl IDetailsData_Impl for DetailsCommands_Impl {}
 
-impl IDetailsCommand_Impl for DetailsCommand_Impl {
-    fn Command(&self) -> Result<ICommand> {
-        self.command.resolve()
+impl IDetailsCommands_Impl for DetailsCommands_Impl {
+    fn Commands(&self) -> windows_core::Result<windows_core::Array<ICommand>> {
+        Ok(map_array(&self.commands, |cmd| cmd.resolve().ok()))
     }
 }
 
@@ -321,7 +326,7 @@ impl IDetailsSeparator_Impl for DetailsSeparator_Impl {}
 pub enum DetailsData {
     Tags(ComObject<DetailsTags>),
     Link(ComObject<DetailsLink>),
-    Command(ComObject<DetailsCommand>),
+    Commands(ComObject<DetailsCommands>),
     Separator(ComObject<DetailsSeparator>),
 }
 
@@ -330,7 +335,7 @@ impl From<&DetailsData> for IDetailsData {
         match data {
             DetailsData::Tags(tags) => tags.to_interface(),
             DetailsData::Link(link) => link.to_interface(),
-            DetailsData::Command(command) => command.to_interface(),
+            DetailsData::Commands(commands) => commands.to_interface(),
             DetailsData::Separator(separator) => separator.to_interface(),
         }
     }

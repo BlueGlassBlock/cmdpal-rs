@@ -14,7 +14,7 @@ pub(crate) static EXTENSION_HOST: RwLock<Option<AgileReference<IExtensionHost>>>
     RwLock::new(None);
 
 /// Struct which represents the progress state of an operation.
-/// 
+///
 /// See [`ProgressState_Impl`] for field accessors.
 ///
 #[doc = include_str!("./bindings_docs/IProgressState.md")]
@@ -84,9 +84,7 @@ impl ProgressState_Impl {
     #[doc = include_str!("./bindings_docs/IProgressState/IsIndeterminate.md")]
     ///
     /// Notifies the host about the change when dropping the guard.
-    pub fn indeterminate_mut(
-        &self,
-    ) -> windows_core::Result<NotifyLockWriteGuard<'_, bool>> {
+    pub fn indeterminate_mut(&self) -> windows_core::Result<NotifyLockWriteGuard<'_, bool>> {
         self.indeterminate
             .write(|| self.emit_self_prop_changed("IsIndeterminate"))
     }
@@ -210,7 +208,7 @@ impl From<StatusContext> for crate::bindings::StatusContext {
 }
 
 /// Struct which represents a status message.
-/// 
+///
 /// See [`StatusMessage_Impl`] for field accessors.
 ///
 #[doc = include_str!("./bindings_docs/IStatusMessage.md")]
@@ -287,9 +285,7 @@ impl StatusMessage_Impl {
     #[doc = include_str!("./bindings_docs/IStatusMessage/State.md")]
     ///
     /// Notifies the host about the change when dropping the guard.
-    pub fn state_mut(
-        &self,
-    ) -> windows_core::Result<NotifyLockWriteGuard<'_, MessageState>> {
+    pub fn state_mut(&self) -> windows_core::Result<NotifyLockWriteGuard<'_, MessageState>> {
         self.state.write(|| self.emit_self_prop_changed("State"))
     }
 
@@ -409,7 +405,7 @@ impl LogMessage {
     /// Logs the message to the host.
     ///
     /// The message will be logged into the log file, yet not shown to the user.
-    /// 
+    ///
     /// This method is a convenient wrapper around the [`log_message`] function,
     /// it consumes `self`, so clone the struct if you want to log it multiple times.
     ///

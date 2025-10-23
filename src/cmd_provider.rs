@@ -8,9 +8,9 @@ use windows_core::{ComObject, implement};
 use windows_core::{Event, HSTRING, IInspectable};
 
 /// Command Provider that provides extension information and commands.
-/// 
+///
 #[doc = include_str!("./bindings_docs/ICommandProvider.md")]
-#[implement(ICommandProvider, IClosable, INotifyItemsChanged)]
+#[implement(ICommandProvider2, ICommandProvider, IClosable, INotifyItemsChanged)]
 pub struct CommandProvider {
     id: windows_core::HSTRING,
     display_name: windows_core::HSTRING,
@@ -54,7 +54,7 @@ impl CommandProviderBuilder {
     }
 
     /// Sets the display name of the command provider.
-    /// 
+    ///
     /// The name will be displayed at the settings page of the extension.
     pub fn display_name(mut self, display_name: impl Into<windows_core::HSTRING>) -> Self {
         self.display_name = display_name.into();
@@ -74,7 +74,7 @@ impl CommandProviderBuilder {
     }
 
     /// Sets whether the command provider is frozen.
-    /// 
+    ///
     /// If frozen, Command Palette will try to cache the commands and call `GetCommand` to accelerate command retrieval process.
     pub fn frozen(mut self, frozen: bool) -> Self {
         self.frozen = frozen;
@@ -94,7 +94,7 @@ impl CommandProviderBuilder {
     }
 
     /// Sets the fallback commands of the command provider.
-    /// 
+    ///
     /// Fallback commands are dynamic commands that can respond to dynamic queries.
     pub fn fallbacks(mut self, fallbacks: Vec<IFallbackCommandItem>) -> Self {
         self.fallbacks = fallbacks;
@@ -172,6 +172,16 @@ impl ICommandProvider_Impl for CommandProvider_Impl {
     ) -> windows_core::Result<()> {
         crate::host::set_ext_host(host.ok()?);
         Ok(())
+    }
+}
+
+impl ICommandProvider2_Impl for CommandProvider_Impl {
+    fn GetApiExtensionStubs(
+        &self,
+    ) -> windows_core::Result<windows_core::Array<windows_core::IInspectable>> {
+        use crate::ext_api_stubs::*;
+        let objects: [windows_core::IInspectable; _] = [ExtendedAttributesProviderStub.into()];
+        Ok(map_array(&objects, |obj| Some(obj.clone())))
     }
 }
 
