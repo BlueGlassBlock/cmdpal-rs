@@ -2,10 +2,13 @@
 
 use crate::bindings::*;
 use std::ops::DerefMut;
-use windows::Storage::Streams::{IBuffer, IBuffer_Impl};
 use windows::Win32::Foundation::E_NOTIMPL;
 use windows::Win32::System::WinRT::{IBufferByteAccess, IBufferByteAccess_Impl};
-use windows_core::{Array, implement};
+use windows::{
+    Foundation::TypedEventHandler,
+    Storage::Streams::{IBuffer, IBuffer_Impl},
+};
+use windows_core::{Array, IInspectable, implement};
 
 #[implement(IBuffer, IBufferByteAccess)]
 pub(crate) struct FrozenBuffer {
@@ -55,10 +58,26 @@ impl From<(f32, f32)> for GridProperties {
     }
 }
 
-impl IGridProperties_Impl for GridProperties_Impl {
-    fn TileSize(&self) -> windows_core::Result<windows::Foundation::Size> {
-        Ok(self.0)
+impl INotifyPropChanged_Impl for GridProperties_Impl {
+    fn PropChanged(
+        &self,
+        _handler: windows_core::Ref<TypedEventHandler<IInspectable, IPropChangedEventArgs>>,
+    ) -> windows_core::Result<i64> {
+        // TODO
+        Err(E_NOTIMPL.into())
     }
+
+    fn RemovePropChanged(&self, _token: i64) -> windows_core::Result<()> {
+        // TODO
+        Err(E_NOTIMPL.into())
+    }
+}
+
+impl IGridProperties_Impl for GridProperties_Impl {
+    // TODO
+    // fn TileSize(&self) -> windows_core::Result<windows::Foundation::Size> {
+    //     Ok(self.0)
+    // }
 }
 
 /// Create an windows [`Array`] from a slice, mapping each element using the provided function.
