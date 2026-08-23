@@ -90,10 +90,10 @@ impl ComBuilder for TagBuilder {
     fn build_unmanaged(self) -> Tag {
         Tag {
             icon: self.icon,
-            text: self.text.unwrap_or_else(|| HSTRING::new()),
+            text: self.text.unwrap_or_else(HSTRING::new),
             foreground: self.foreground,
             background: self.background,
-            tooltip: self.tooltip.unwrap_or_else(|| HSTRING::new()),
+            tooltip: self.tooltip.unwrap_or_else(HSTRING::new),
         }
     }
 }
@@ -235,7 +235,7 @@ impl ComBuilder for DetailsLinkBuilder {
     type Output = DetailsLink;
     fn build_unmanaged(self) -> DetailsLink {
         DetailsLink {
-            text: self.text.unwrap_or_else(|| HSTRING::new()),
+            text: self.text.unwrap_or_else(HSTRING::new),
             link: self.link,
         }
     }
@@ -268,7 +268,7 @@ impl DetailsCommands {
     pub fn try_new_unmanaged(commands: &[ICommand]) -> Result<Self> {
         let agile_commands = commands
             .iter()
-            .map(|cmd| AgileReference::new(cmd))
+            .map(AgileReference::new)
             .collect::<Result<Vec<_>>>()?;
         Ok(Self {
             commands: agile_commands,
@@ -452,8 +452,8 @@ impl ComBuilder for DetailsBuilder {
     fn build_unmanaged(self) -> Details {
         Details {
             hero_image: self.hero_image,
-            title: self.title.unwrap_or_else(|| HSTRING::new()),
-            body: self.body.unwrap_or_else(|| HSTRING::new()),
+            title: self.title.unwrap_or_else(HSTRING::new),
+            body: self.body.unwrap_or_else(HSTRING::new),
             metadata: self.metadata,
         }
     }

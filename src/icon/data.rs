@@ -51,7 +51,7 @@ impl IExtendedAttributesProvider_Impl for IconData_Impl {
                 &windows::Foundation::PropertyValue::CreateString(&self.font_family)?,
             )?;
         }
-        Ok(Interface::cast(&map)?)
+        Interface::cast(&map)
     }
 }
 

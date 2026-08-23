@@ -97,7 +97,7 @@ mod clipboard_helper {
                 }
                 retries += 1;
             }
-            return result;
+            result
         })
         .join()
         .map_err(|_| windows_core::Error::from(E_FAIL))??;
@@ -113,7 +113,7 @@ mod clipboard_helper {
                 return E_POINTER.ok();
             }
             ptr.copy_from((*text).as_ptr(), text.len());
-            ptr.offset(text.len() as isize).write(0);
+            ptr.add(text.len()).write(0);
 
             let result = (|| -> Result<()> {
                 match GlobalUnlock(mem) {

@@ -431,7 +431,7 @@ impl SettingItem for NumberSetting {
         self.value
             .lock()
             .ok()
-            .and_then(|v| v.clone())
+            .and_then(|v| *v)
             .map(|v| json!(v.to_string()))
     }
 }
@@ -470,7 +470,7 @@ impl SettingItem for ToggleSetting {
         self.value
             .lock()
             .ok()
-            .and_then(|v| v.clone())
+            .and_then(|v| *v)
             .map(|v| json!(v))
     }
 }
@@ -511,14 +511,12 @@ impl<T: Choice> SettingItem for ChoiceSetSetting<T> {
         if let Some(value) = data
             .get(self.id())
             .and_then(|v| v.as_str().map(|s| s.to_string()))
-        {
-            if let Some(choice) = self.choices.iter().find(|c| c.value() == value) {
+            && let Some(choice) = self.choices.iter().find(|c| c.value() == value) {
                 self.value
                     .lock()
                     .ok()
                     .map(|mut v| v.replace(choice.clone()));
             }
-        }
     }
 
     fn serialize_value(&self) -> Option<serde_json::Value> {

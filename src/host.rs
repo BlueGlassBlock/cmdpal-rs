@@ -440,20 +440,18 @@ pub fn set_ext_host(host: &IExtensionHost) {
 ///
 /// The status message will appear as a "pop-up" in the Command Palette.
 pub fn show_status(message: ComObject<StatusMessage>, context: StatusContext) {
-    if let Ok(lock) = EXTENSION_HOST.read() {
-        if let Some(host) = lock.as_ref().and_then(|x| x.resolve().ok()) {
+    if let Ok(lock) = EXTENSION_HOST.read()
+        && let Some(host) = lock.as_ref().and_then(|x| x.resolve().ok()) {
             let _ = host.ShowStatus(message.as_interface(), context.into());
         }
-    }
 }
 
 /// Hides a status message.
 pub fn hide_status(message: ComObject<StatusMessage>) {
-    if let Ok(lock) = EXTENSION_HOST.read() {
-        if let Some(host) = lock.as_ref().and_then(|x| x.resolve().ok()) {
+    if let Ok(lock) = EXTENSION_HOST.read()
+        && let Some(host) = lock.as_ref().and_then(|x| x.resolve().ok()) {
             let _ = host.HideStatus(message.as_interface());
         }
-    }
 }
 
 /// Logs a message to the host.
@@ -462,9 +460,8 @@ pub fn hide_status(message: ComObject<StatusMessage>) {
 ///
 /// Consider [`LogMessage::log`] method for a more idiomatic way to log messages.
 pub fn log_message(message: impl std::borrow::Borrow<ILogMessage>) {
-    if let Ok(lock) = EXTENSION_HOST.read() {
-        if let Some(host) = lock.as_ref().and_then(|x| x.resolve().ok()) {
+    if let Ok(lock) = EXTENSION_HOST.read()
+        && let Some(host) = lock.as_ref().and_then(|x| x.resolve().ok()) {
             let _ = host.LogMessage(message.borrow());
         }
-    }
 }

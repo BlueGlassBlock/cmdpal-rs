@@ -96,8 +96,8 @@ impl CommandItemBuilder {
 impl ComBuilder for CommandItemBuilder {
     type Output = CommandItem;
     fn build_unmanaged(self) -> CommandItem {
-        let title = self.title.unwrap_or_else(|| HSTRING::new());
-        let subtitle = self.subtitle.unwrap_or_else(|| HSTRING::new());
+        let title = self.title.unwrap_or_else(HSTRING::new);
+        let subtitle = self.subtitle.unwrap_or_else(HSTRING::new);
 
         CommandItem {
             command: NotifyLock::new(self.command),

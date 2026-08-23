@@ -225,7 +225,7 @@ impl ICommandResultArgs_Impl for ToastArgs_Impl {}
 
 impl IToastArgs_Impl for ToastArgs_Impl {
     fn Message(&self) -> Result<HSTRING> {
-        self.message.clone().ok_or_else(|| Error::empty())
+        self.message.clone().ok_or_else(Error::empty)
     }
     fn Result(&self) -> Result<ICommandResult> {
         Ok(CommandResultStruct(self.result.clone()).into())
@@ -238,7 +238,7 @@ impl IToastArgs2_Impl for ToastArgs_Impl {
     }
 
     fn Icon(&self) -> windows_core::Result<IIconInfo> {
-        self.icon.as_ref().map(|i| i.to_interface::<IIconInfo>()).ok_or_else(|| Error::empty())
+        self.icon.as_ref().map(|i| i.to_interface::<IIconInfo>()).ok_or_else(Error::empty)
     }
 }
 

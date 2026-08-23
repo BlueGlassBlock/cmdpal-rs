@@ -50,11 +50,11 @@ impl IExtension_Impl for Extension_Impl {
         &self,
         provider_type: ProviderType,
     ) -> windows_core::Result<windows_core::IInspectable> {
-        let res = match provider_type {
+        
+        match provider_type {
             ProviderType::Commands => Ok(self.cmd_provider.to_interface()),
             _ => Err(E_NOTIMPL.into()),
-        };
-        res
+        }
     }
 
     fn Dispose(&self) -> windows_core::Result<()> {

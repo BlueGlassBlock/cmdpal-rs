@@ -83,8 +83,8 @@ impl ComBuilder for ListItemBuilder {
             base: self.base,
             details: NotifyLock::new(self.details),
             tags: NotifyLock::new(self.tags),
-            section: NotifyLock::new(self.section.unwrap_or_else(|| HSTRING::new())),
-            suggestion: NotifyLock::new(self.suggestion.unwrap_or_else(|| HSTRING::new())),
+            section: NotifyLock::new(self.section.unwrap_or_else(HSTRING::new)),
+            suggestion: NotifyLock::new(self.suggestion.unwrap_or_else(HSTRING::new)),
         }
     }
 }
@@ -346,8 +346,8 @@ impl ComBuilder for ListPageBuilder {
             filters: NotifyLock::new(self.filters),
             items: NotifyLock::new(self.items),
             grid_properties: NotifyLock::new(self.grid_properties),
-            placeholder: NotifyLock::new(self.placeholder.unwrap_or_else(|| HSTRING::new())),
-            search_text: NotifyLock::new(self.search_text.unwrap_or_else(|| HSTRING::new())),
+            placeholder: NotifyLock::new(self.placeholder.unwrap_or_else(HSTRING::new)),
+            search_text: NotifyLock::new(self.search_text.unwrap_or_else(HSTRING::new)),
             has_more: NotifyLock::new(self.more_fn.is_some()),
             more_fn: self.more_fn.unwrap_or_else(|| {
                 Box::new(|page| {
