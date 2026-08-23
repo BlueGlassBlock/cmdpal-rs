@@ -17,6 +17,7 @@ pub use crate::{
     ext_registry::ExtRegistry,
     fallback::FallbackCommandItem,
     filter::{Filter, FilterItem, FilterSeparator, Filters},
+    grid::{SmallGridLayout, MediumGridLayout, GalleryGridLayout, GridLayout},
     host::{
         LogMessage, MessageState, ProgressState, ProgressStateBuilder, StatusContext,
         StatusMessage, StatusMessageBuilder, hide_status, log_message, show_status,
@@ -32,7 +33,7 @@ pub use crate::{
         Choice, ChoiceSetSetting, CommandSettings, JsonCommandSettings, NumberSetting,
         SettingBasePropModifier, TextSetting, ToggleSetting,
     },
-    utils::{ComBuilder, GridProperties},
+    utils::{ComBuilder},
 };
 
 pub use windows_core::{

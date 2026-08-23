@@ -3,12 +3,7 @@
 use std::ops::Deref;
 
 use crate::{
-    bindings::*,
-    cmd_item::{CommandItem, CommandItem_Impl},
-    details::{Details, Tag},
-    filter::Filters,
-    notify::*,
-    utils::{ComBuilder, GridProperties, OkOrEmpty, assert_send_sync, map_array},
+    bindings::*, cmd_item::{CommandItem, CommandItem_Impl}, details::{Details, Tag}, filter::Filters, grid::GridLayout, notify::*, utils::{ComBuilder, OkOrEmpty, assert_send_sync, map_array},
 };
 use windows_core::HSTRING;
 use windows_core::{ComObject, IInspectable, IUnknownImpl as _, Result, implement};
@@ -244,7 +239,7 @@ pub struct ListPage {
     empty_content: NotifyLock<Option<ComObject<CommandItem>>>,
     filters: NotifyLock<Option<ComObject<Filters>>>,
     items: NotifyLock<Vec<ComObject<ListItem>>>,
-    grid_properties: NotifyLock<Option<ComObject<GridProperties>>>,
+    grid_properties: NotifyLock<Option<GridLayout>>,
     placeholder: NotifyLock<HSTRING>,
     search_text: NotifyLock<HSTRING>,
     has_more: NotifyLock<bool>,
@@ -258,7 +253,7 @@ pub struct ListPageBuilder {
     base: ComObject<BasePage>,
     empty_content: Option<ComObject<CommandItem>>,
     filters: Option<ComObject<Filters>>,
-    grid_properties: Option<ComObject<GridProperties>>,
+    grid_properties: Option<GridLayout>,
     items: Vec<ComObject<ListItem>>,
     placeholder: Option<HSTRING>,
     search_text: Option<HSTRING>,
@@ -309,7 +304,7 @@ impl ListPageBuilder {
     /// Sets the grid properties for the list page.
     ///
     /// The grid properties define how much space each item should take in the grid layout.
-    pub fn grid_properties(mut self, grid_properties: ComObject<GridProperties>) -> Self {
+    pub fn grid_properties(mut self, grid_properties: GridLayout) -> Self {
         self.grid_properties = Some(grid_properties);
         self
     }
@@ -472,7 +467,7 @@ impl ListPage_Impl {
     #[doc = include_str!("../bindings_docs/IListPage/GridProperties.md")]
     pub fn grid_properties(
         &self,
-    ) -> Result<NotifyLockReadGuard<'_, Option<ComObject<GridProperties>>>> {
+    ) -> Result<NotifyLockReadGuard<'_, Option<GridLayout>>> {
         self.grid_properties.read()
     }
 
@@ -483,7 +478,7 @@ impl ListPage_Impl {
     /// Notifies the host about the change when dropping the guard.
     pub fn grid_properties_mut(
         &self,
-    ) -> Result<NotifyLockWriteGuard<'_, Option<ComObject<GridProperties>>>> {
+    ) -> Result<NotifyLockWriteGuard<'_, Option<GridLayout>>> {
         self.grid_properties.write(|| {
             self.base
                 .base
@@ -576,7 +571,7 @@ impl IListPage_Impl for ListPage_Impl {
         self.grid_properties
             .read()?
             .as_ref()
-            .map(|g| g.to_interface())
+            .map(|g| g.into())
             .ok_or_empty()
     }
 

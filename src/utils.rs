@@ -36,31 +36,6 @@ impl IBufferByteAccess_Impl for FrozenBuffer_Impl {
     }
 }
 
-/// A wrapper around a [`windows::Foundation::Size`](https://microsoft.github.io/windows-docs-rs/doc/windows/Foundation/struct.Size.html) that implements the [`IGridProperties`] interface.
-#[implement(IGridProperties)]
-pub struct GridProperties(pub windows::Foundation::Size);
-
-impl From<windows::Foundation::Size> for GridProperties {
-    fn from(size: windows::Foundation::Size) -> Self {
-        GridProperties(size)
-    }
-}
-
-impl From<(f32, f32)> for GridProperties {
-    fn from(size: (f32, f32)) -> Self {
-        GridProperties(windows::Foundation::Size {
-            Width: size.0,
-            Height: size.1,
-        })
-    }
-}
-
-impl IGridProperties_Impl for GridProperties_Impl {
-    fn TileSize(&self) -> windows_core::Result<windows::Foundation::Size> {
-        Ok(self.0)
-    }
-}
-
 /// Create an windows [`Array`] from a slice, mapping each element using the provided function.
 /// This is useful for making a Windows array from a Rust slice.
 /// (Most of the time, T::Default is `Option<T>`).

@@ -1,22 +1,24 @@
-//! ```cargo
-//! [package]
-//! name = "update_winmd"
-//! version = "0.1.0"
-//! edition = "2024"
-//! [dependencies]
-//! reqwest = { version = "0.12", features = ["blocking", "json"] }
-//! regex = "1.11"
-//! zip = "4.2"
-//! windows-bindgen = "0.61"
-//! ```
-//! This script downloads the Microsoft.CommandPalette.Extensions.winmd from NuGet, and generates bindings for it.
+---
+[package]
+name = "winmd_bindgen"
+version = "0.1.0"
+edition = "2024"
+[dependencies]
+reqwest = { version = "0.13", features = ["blocking", "json"] }
+regex = "1"
+zip = "8"
+windows-bindgen = "0.66"
+---
 
+//! This script downloads the Microsoft.CommandPalette.Extensions.winmd from NuGet, and generates bindings for it.
+//! 
+//! Run with `cargo +nightly -Zscript winmd_bindgen.rs`
+
+use regex::Regex;
 use reqwest::blocking::Client;
 use std::collections::HashMap;
 use std::collections::HashSet;
 use std::io::{Read, Write};
-use regex::Regex;
-use windows_bindgen;
 use zip::ZipArchive;
 
 const PACKAGE_NAME: &str = "Microsoft.CommandPalette.Extensions";
@@ -250,8 +252,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         "--implement",
     ]);
     let mut bindings = std::fs::read_to_string("src/bindings.rs")?;
-    bindings = String::from("//! Raw bindings for `Microsoft.CommandPalette.Extensions`\n") + &bindings;
-    bindings = bindings.replace("windows_core::imp::define_interface!", "crate::_define_windows_core_interface_with_bindings_docs!");
+    bindings =
+        String::from("//! Raw bindings for `Microsoft.CommandPalette.Extensions`\n") + &bindings;
+    bindings = bindings.replace(
+        "windows_core::imp::define_interface!",
+        "crate::_define_windows_core_interface_with_bindings_docs!",
+    );
     bindings = document_bindings(&bindings)?;
     std::fs::write("src/bindings.rs", bindings)?;
     Ok(())

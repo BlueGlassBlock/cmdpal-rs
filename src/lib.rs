@@ -15,6 +15,7 @@ pub mod ext_factory;
 pub mod ext_registry;
 pub mod fallback;
 pub mod filter;
+pub mod grid;
 pub mod host;
 pub mod icon;
 pub mod notify;
