@@ -1,0 +1,1 @@
+The `GetApiExtensionStubs` method returns a set of stub objects that implement future extension interfaces. These objects are used by the Command Palette to preload WinRT type information, ensuring new interfaces can be recognized across processes without requiring changes to existing extensions.

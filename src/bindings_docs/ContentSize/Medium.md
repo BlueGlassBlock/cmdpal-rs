@@ -1,0 +1,1 @@
+Medium content size.

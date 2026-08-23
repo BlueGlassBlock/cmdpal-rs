@@ -1,0 +1,1 @@
+The result of the command associated with the toast notification. This property is used to provide additional information about the command's execution.

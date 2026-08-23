@@ -1,0 +1,1 @@
+The ISmallGridLayout interface is a marker interface for small grid layouts in the Command Palette. It does not define any additional properties or methods beyond those inherited from IGridProperties.

@@ -1,0 +1,1 @@
+The fallback handler associated with the command item. This property is used to define the behavior of the command item when it is selected.

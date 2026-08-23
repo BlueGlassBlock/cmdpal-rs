@@ -1,0 +1,1 @@
+Indicates whether the page is currently loading.

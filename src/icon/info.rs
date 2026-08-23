@@ -8,6 +8,7 @@ use windows_core::{ComObject, implement};
 ///
 #[doc = include_str!("../bindings_docs/IIconInfo.md")]
 #[implement(IIconInfo)]
+#[derive(Debug, Clone)]
 pub struct IconInfo {
     #[doc = include_str!("../bindings_docs/IIconInfo/Light.md")]
     pub light: ComObject<IconData>,

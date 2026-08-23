@@ -1,12 +1,7 @@
 //! Execution result representation of [`InvokableCommand`][`crate::cmd::InvokableCommand`]
 
 use crate::{
-    bindings::{
-        CommandResultKind, ICommand, ICommandResult, ICommandResult_Impl, ICommandResultArgs,
-        ICommandResultArgs_Impl, IConfirmationArgs, IConfirmationArgs_Impl, IGoToPageArgs,
-        IGoToPageArgs_Impl, IToastArgs, IToastArgs_Impl,
-    },
-    utils::ComBuilder,
+    bindings::*, icon::IconInfo, utils::ComBuilder,
 };
 use windows::Win32::Foundation::ERROR_BAD_ARGUMENTS;
 use windows_core::{AgileReference, ComObject, Error, HSTRING, Result, implement};
@@ -152,34 +147,76 @@ impl From<NavigationMode> for crate::bindings::NavigationMode {
 ///
 #[doc = include_str!("./bindings_docs/IToastArgs.md")]
 #[derive(Debug, Clone)]
-#[implement(IToastArgs, ICommandResultArgs)]
+#[implement(IToastArgs2, IToastArgs, ICommandResultArgs)]
 pub struct ToastArgs {
     #[doc = include_str!("./bindings_docs/IToastArgs/Message.md")]
-    pub message: HSTRING,
+    pub message: Option<HSTRING>,
     #[doc = include_str!("./bindings_docs/IToastArgs/Result.md")]
     pub result: CommandResult,
+    #[doc = include_str!("./bindings_docs/IToastArgs2/Command.md")]
+    pub command: Option<AgileReference<ICommand>>,
+    #[doc = include_str!("./bindings_docs/IToastArgs2/Icon.md")]
+    pub icon: Option<ComObject<IconInfo>>,
 }
 
-impl ToastArgs {
-    /// Creates a new unmanaged `ToastArgs` with the specified message and result.
-    pub fn new_unmanaged(message: impl Into<HSTRING>, result: CommandResult) -> Self {
+/// Builder for [`ToastArgs`]
+pub struct ToastArgsBuilder {
+    message: Option<HSTRING>,
+    result: CommandResult,
+    command: Option<AgileReference<ICommand>>,
+    icon: Option<ComObject<IconInfo>>,
+}
+
+impl ToastArgsBuilder {
+    /// Creates a new builder with the specified result.
+    pub fn new(result: CommandResult) -> Self {
         Self {
-            message: message.into(),
+            message: None,
             result,
+            command: None,
+            icon: None,
         }
     }
 
-    /// Creates a new reference-counted COM object for `ToastArgs`.
-    pub fn new(message: impl Into<HSTRING>, result: CommandResult) -> Result<ComObject<Self>> {
-        Ok(Self::new_unmanaged(message, result).into())
+    /// Sets the message of the toast.
+    pub fn message(mut self, message: impl Into<HSTRING>) -> Self {
+        self.message = Some(message.into());
+        self
+    }
+
+    /// Sets the command of the toast.
+    pub fn command(mut self, command: impl Into<AgileReference<ICommand>>) -> Self {
+        self.command = Some(command.into());
+        self
+    }
+
+    /// Sets the icon of the toast.
+    pub fn icon(mut self, icon: impl Into<ComObject<IconInfo>>) -> Self {
+        self.icon = Some(icon.into());
+        self
+    }
+
+    pub fn build_unmanaged(self) -> ToastArgs {
+        ToastArgs {
+            message: self.message,
+            result: self.result,
+            command: self.command,
+            icon: self.icon,
+        }
+    }
+
+    pub fn build(self) -> Result<ComObject<ToastArgs>> {
+        Ok(self.build_unmanaged().into())
     }
 }
 
 impl From<&HSTRING> for ToastArgs {
     fn from(value: &HSTRING) -> Self {
         Self {
-            message: value.clone(),
+            message: Some(value.clone()),
             result: CommandResult::Dismiss,
+            command: None,
+            icon: None,
         }
     }
 }
@@ -188,10 +225,20 @@ impl ICommandResultArgs_Impl for ToastArgs_Impl {}
 
 impl IToastArgs_Impl for ToastArgs_Impl {
     fn Message(&self) -> Result<HSTRING> {
-        Ok(self.message.clone())
+        self.message.clone().ok_or_else(|| Error::empty())
     }
     fn Result(&self) -> Result<ICommandResult> {
         Ok(CommandResultStruct(self.result.clone()).into())
+    }
+}
+
+impl IToastArgs2_Impl for ToastArgs_Impl {
+    fn Command(&self) -> windows_core::Result<ICommand> {
+        self.command.as_ref().map(|c| c.resolve()).unwrap_or_else(|| Err(Error::empty()))
+    }
+
+    fn Icon(&self) -> windows_core::Result<IIconInfo> {
+        self.icon.as_ref().map(|i| i.to_interface::<IIconInfo>()).ok_or_else(|| Error::empty())
     }
 }
 

@@ -1,0 +1,1 @@
+The accent color of the page.

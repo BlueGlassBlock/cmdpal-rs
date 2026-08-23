@@ -1,0 +1,1 @@
+The **InitializeWithHost** method is called when the extension is loaded. This method is used to initialize the extension with the host application. The host application provides the extension with a reference to the [`IExtensionHost`] interface, which allows the extension to interact with the host application.
