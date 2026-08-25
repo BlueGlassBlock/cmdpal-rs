@@ -1,20 +1,19 @@
 //! Types for building extension settings page.
 
-use crate::bindings::*;
-use crate::page::content::ContentPage;
-
-use crate::utils::ComBuilder;
-use serde_json::{Map, Value as JsonValue, json};
 use std::sync::{Arc, Mutex};
+
+use serde_json::{Map, Value as JsonValue, json};
 use windows::Win32::Foundation::{E_FAIL, ERROR_FILE_INVALID};
-use windows_core::{ComObject, Error, implement};
+use windows_core::{ComObject, Error, Result, implement};
+
+use crate::{bindings::*, cmd::BaseCommand, page::content::ContentPage, utils::ComBuilder};
 
 /// A raw implementation of the [`ICommandSettings`] interface.
 #[implement(ICommandSettings)]
 pub struct CommandSettings(pub ComObject<ContentPage>);
 
 impl ICommandSettings_Impl for CommandSettings_Impl {
-    fn SettingsPage(&self) -> windows_core::Result<IContentPage> {
+    fn SettingsPage(&self) -> Result<IContentPage> {
         Ok(self.0.to_interface())
     }
 }
@@ -61,7 +60,7 @@ trait SettingItem {
 /// Helper trait to modify base properties of a setting item.
 pub trait SettingBasePropModifier {
     /// Specify whether this setting is required.
-    fn is_required(self, is_required: bool) -> Self;
+    fn required(self, required: bool) -> Self;
     /// Specify an error message to show when the setting is invalid.
     fn error_message(self, error_message: impl ToString) -> Self;
     /// Caption which will be shown next to the input.
@@ -89,7 +88,7 @@ where
         self
     }
 
-    fn is_required(mut self, is_required: bool) -> Self {
+    fn required(mut self, is_required: bool) -> Self {
         self.base_prop_mut().is_required = is_required;
         self
     }
@@ -467,11 +466,7 @@ impl SettingItem for ToggleSetting {
     }
 
     fn serialize_value(&self) -> Option<serde_json::Value> {
-        self.value
-            .lock()
-            .ok()
-            .and_then(|v| *v)
-            .map(|v| json!(v))
+        self.value.lock().ok().and_then(|v| *v).map(|v| json!(v))
     }
 }
 
@@ -508,15 +503,13 @@ impl<T: Choice> SettingItem for ChoiceSetSetting<T> {
     }
 
     fn update(&self, data: &Map<String, JsonValue>) {
-        if let Some(value) = data
-            .get(self.id())
-            .and_then(|v| v.as_str().map(|s| s.to_string()))
-            && let Some(choice) = self.choices.iter().find(|c| c.value() == value) {
-                self.value
-                    .lock()
-                    .ok()
-                    .map(|mut v| v.replace(choice.clone()));
-            }
+        if let Some(value) = data.get(self.id())
+            && let Some(value) = value.as_str()
+            && let Some(choice) = self.choices.iter().find(|c| c.value() == value)
+            && let Ok(mut value) = self.value.lock()
+        {
+            value.replace(choice.clone());
+        }
     }
 
     fn serialize_value(&self) -> Option<serde_json::Value> {
@@ -582,20 +575,13 @@ impl JsonCommandSettings {
     /// It will also attempt to create parent directories when writing the config file,
     /// if they do not exist.
     pub fn new(path: std::path::PathBuf) -> Self {
-        use crate::cmd::BaseCommandBuilder;
-        use crate::icon::{IconData, IconInfo};
-        use crate::page::BasePageBuilder;
-        use crate::page::content::ContentPageBuilder;
-        let page = ContentPageBuilder::new(
-            BasePageBuilder::new(
-                BaseCommandBuilder::new()
-                    .name("Settings")
-                    .icon(IconInfo::new(IconData::from("\u{E713}")))
-                    .build(),
-            )
-            .build(),
-        )
-        .build();
+        use crate::icon;
+        let page = BaseCommand::builder()
+            .name("Settings")
+            .icon(icon::IconInfo::new(icon::IconData::from("\u{E713}")))
+            .page()
+            .content()
+            .build();
         Self {
             path,
             settings: Vec::new(),
@@ -677,12 +663,12 @@ impl JsonCommandSettings {
 }
 
 impl ICommandSettings_Impl for JsonCommandSettings_Impl {
-    fn SettingsPage(&self) -> windows_core::Result<IContentPage> {
+    fn SettingsPage(&self) -> Result<IContentPage> {
         use crate::cmd_result::CommandResult;
-        use crate::content::FormContentBuilder;
+        use crate::content::FormContent;
         let slf = self.this.clone();
         slf.read_settings();
-        let form = FormContentBuilder::new()
+        let form = FormContent::builder()
             .template_json(
                 serde_json::to_string(&slf.template_json())
                     .map_err(|e| Error::new(E_FAIL, e.to_string()))?,

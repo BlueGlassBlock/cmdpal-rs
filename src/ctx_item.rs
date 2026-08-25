@@ -1,11 +1,10 @@
 //! Context menu items.
 
-use std::ops::Deref;
+use windows_core::{ComObject, HSTRING, IUnknownImpl as _, Result, implement};
 
-use crate::cmd_item::{CommandItem, CommandItem_Impl};
+use crate::cmd_item::{CommandItem, CommandItem_Impl, CommandItemBuilder};
 use crate::utils::{ComBuilder, OkOrEmpty, assert_send_sync};
 use crate::{bindings::*, notify::*};
-use windows_core::{ComObject, IInspectable, IUnknownImpl as _, Result, implement};
 
 /// Represents a separator in the context menu.
 ///
@@ -41,16 +40,18 @@ pub struct CommandContextItemBuilder {
     shortcut: Option<KeyChord>,
 }
 
-impl CommandContextItemBuilder {
-    /// Creates a new builder.
-    pub fn new(base: ComObject<CommandItem>) -> Self {
+impl CommandItemBuilder {
+    /// Creates a new [`CommandContextItem`] builder.
+    pub fn context(self) -> CommandContextItemBuilder {
         CommandContextItemBuilder {
-            base,
+            base: self.build(),
             critical: false,
             shortcut: None,
         }
     }
+}
 
+impl CommandContextItemBuilder {
     /// Sets whether the command is critical.
     pub fn critical(mut self, critical: bool) -> Self {
         self.critical = critical;
@@ -75,7 +76,7 @@ impl ComBuilder for CommandContextItemBuilder {
     }
 }
 
-impl Deref for CommandContextItem {
+impl std::ops::Deref for CommandContextItem {
     type Target = CommandItem_Impl;
     fn deref(&self) -> &Self::Target {
         &self.base
@@ -84,8 +85,7 @@ impl Deref for CommandContextItem {
 
 impl CommandContextItem_Impl {
     pub(crate) fn emit_self_prop_changed(&self, prop: &str) {
-        let sender: IInspectable = self.to_interface();
-        self.base.emit_prop_changed(&sender, prop);
+        self.base.emit_prop_changed(&self.to_interface(), prop);
     }
 
     /// Readonly access to [`ICommandContextItem::IsCritical`].
@@ -124,32 +124,32 @@ impl CommandContextItem_Impl {
 }
 
 impl ICommandContextItem_Impl for CommandContextItem_Impl {
-    fn IsCritical(&self) -> windows_core::Result<bool> {
+    fn IsCritical(&self) -> Result<bool> {
         self.critical.read().map(|x| *x)
     }
-    fn RequestedShortcut(&self) -> windows_core::Result<KeyChord> {
+    fn RequestedShortcut(&self) -> Result<KeyChord> {
         self.shortcut.read()?.map(|x| x).ok_or_empty()
     }
 }
 
 impl ICommandItem_Impl for CommandContextItem_Impl {
-    fn Command(&self) -> windows_core::Result<ICommand> {
+    fn Command(&self) -> Result<ICommand> {
         self.base.Command()
     }
 
-    fn Icon(&self) -> windows_core::Result<IIconInfo> {
+    fn Icon(&self) -> Result<IIconInfo> {
         self.base.Icon()
     }
 
-    fn MoreCommands(&self) -> windows_core::Result<windows_core::Array<IContextItem>> {
+    fn MoreCommands(&self) -> Result<windows_core::Array<IContextItem>> {
         self.base.MoreCommands()
     }
 
-    fn Subtitle(&self) -> windows_core::Result<windows_core::HSTRING> {
+    fn Subtitle(&self) -> Result<HSTRING> {
         self.base.Subtitle()
     }
 
-    fn Title(&self) -> windows_core::Result<windows_core::HSTRING> {
+    fn Title(&self) -> Result<HSTRING> {
         self.base.Title()
     }
 }
@@ -157,20 +157,11 @@ impl ICommandItem_Impl for CommandContextItem_Impl {
 impl IContextItem_Impl for CommandContextItem_Impl {}
 
 impl INotifyPropChanged_Impl for CommandContextItem_Impl {
-    fn PropChanged(
-        &self,
-        handler: windows_core::Ref<
-            '_,
-            windows::Foundation::TypedEventHandler<
-                windows_core::IInspectable,
-                IPropChangedEventArgs,
-            >,
-        >,
-    ) -> windows_core::Result<i64> {
+    fn PropChanged(&self, handler: RefPropChangedEventHandler<'_>) -> Result<i64> {
         self.base.PropChanged(handler)
     }
 
-    fn RemovePropChanged(&self, token: i64) -> windows_core::Result<()> {
+    fn RemovePropChanged(&self, token: i64) -> Result<()> {
         self.base.RemovePropChanged(token)
     }
 }
@@ -194,6 +185,12 @@ impl From<SeparatorContextItem> for ContextItem {
 impl From<CommandContextItem> for ContextItem {
     fn from(item: CommandContextItem) -> Self {
         ContextItem::Command(ComObject::new(item))
+    }
+}
+
+impl From<CommandContextItemBuilder> for ContextItem {
+    fn from(item: CommandContextItemBuilder) -> Self {
+        ContextItem::Command(item.build())
     }
 }
 

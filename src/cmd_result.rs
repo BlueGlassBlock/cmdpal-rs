@@ -1,8 +1,6 @@
 //! Execution result representation of [`InvokableCommand`][`crate::cmd::InvokableCommand`]
 
-use crate::{
-    bindings::*, icon::IconInfo, utils::ComBuilder,
-};
+use crate::{bindings::*, icon::IconInfo, utils::ComBuilder};
 use windows::Win32::Foundation::ERROR_BAD_ARGUMENTS;
 use windows_core::{AgileReference, ComObject, Error, HSTRING, Result, implement};
 
@@ -233,12 +231,18 @@ impl IToastArgs_Impl for ToastArgs_Impl {
 }
 
 impl IToastArgs2_Impl for ToastArgs_Impl {
-    fn Command(&self) -> windows_core::Result<ICommand> {
-        self.command.as_ref().map(|c| c.resolve()).unwrap_or_else(|| Err(Error::empty()))
+    fn Command(&self) -> Result<ICommand> {
+        self.command
+            .as_ref()
+            .ok_or_else(Error::empty)
+            .and_then(AgileReference::resolve)
     }
 
-    fn Icon(&self) -> windows_core::Result<IIconInfo> {
-        self.icon.as_ref().map(|i| i.to_interface::<IIconInfo>()).ok_or_else(Error::empty)
+    fn Icon(&self) -> Result<IIconInfo> {
+        self.icon
+            .as_ref()
+            .map(ComObject::to_interface)
+            .ok_or_else(Error::empty)
     }
 }
 

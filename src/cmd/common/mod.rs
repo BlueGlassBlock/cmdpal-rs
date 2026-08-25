@@ -5,10 +5,10 @@ pub mod open_url;
 pub mod reveal_file;
 
 #[doc(inline)]
-pub use copy_text::CopyTextCommandBuilder;
+pub use copy_text::CopyTextCommand;
 
 #[doc(inline)]
-pub use open_url::OpenUrlCommandBuilder;
+pub use open_url::OpenUrlCommand;
 
 #[doc(inline)]
-pub use reveal_file::RevealFileCommandBuilder;
+pub use reveal_file::RevealFileCommand;

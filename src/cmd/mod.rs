@@ -1,15 +1,13 @@
 //! Commands - the foundation of Command Palette.
 
-pub mod common;
+use windows_core::{ComObject, Event, HSTRING, IInspectable, IUnknownImpl, Result, implement};
 
-use std::ops::Deref;
-
-use crate::bindings::*;
-pub use crate::cmd_result::CommandResult;
-use crate::icon::IconInfo;
-use crate::notify::*;
 use crate::utils::{ComBuilder, OkOrEmpty};
-use windows_core::{ComObject, Event, HSTRING, IInspectable, IUnknownImpl as _, implement};
+use crate::{bindings::*, icon::IconInfo, notify::*};
+
+pub use crate::cmd_result::CommandResult;
+
+pub mod common;
 
 /// Represents basic properties of a command.
 ///
@@ -31,16 +29,18 @@ pub struct BaseCommandBuilder {
     icon: Option<ComObject<IconInfo>>,
 }
 
-impl BaseCommandBuilder {
+impl BaseCommand {
     /// Creates a new builder.
-    pub fn new() -> Self {
-        Self {
+    pub fn builder() -> BaseCommandBuilder {
+        BaseCommandBuilder {
             name: HSTRING::new(),
             id: HSTRING::new(),
             icon: None,
         }
     }
+}
 
+impl BaseCommandBuilder {
     /// Sets the name of the command.
     pub fn name(mut self, name: impl Into<HSTRING>) -> Self {
         self.name = name.into();
@@ -72,22 +72,16 @@ impl ComBuilder for BaseCommandBuilder {
     }
 }
 
-impl Default for BaseCommandBuilder {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
 impl ICommand_Impl for BaseCommand_Impl {
-    fn Name(&self) -> windows_core::Result<windows_core::HSTRING> {
+    fn Name(&self) -> Result<HSTRING> {
         self.name.read().map(|name| name.clone())
     }
 
-    fn Id(&self) -> windows_core::Result<windows_core::HSTRING> {
+    fn Id(&self) -> Result<HSTRING> {
         self.id.read().map(|id| id.clone())
     }
 
-    fn Icon(&self) -> windows_core::Result<crate::bindings::IIconInfo> {
+    fn Icon(&self) -> Result<crate::bindings::IIconInfo> {
         self.icon
             .read()?
             .as_ref()
@@ -97,20 +91,11 @@ impl ICommand_Impl for BaseCommand_Impl {
 }
 
 impl INotifyPropChanged_Impl for BaseCommand_Impl {
-    fn PropChanged(
-        &self,
-        handler: windows_core::Ref<
-            '_,
-            windows::Foundation::TypedEventHandler<
-                windows_core::IInspectable,
-                crate::bindings::IPropChangedEventArgs,
-            >,
-        >,
-    ) -> windows_core::Result<i64> {
+    fn PropChanged(&self, handler: RefPropChangedEventHandler<'_>) -> Result<i64> {
         self.event.add(handler.ok()?)
     }
 
-    fn RemovePropChanged(&self, token: i64) -> windows_core::Result<()> {
+    fn RemovePropChanged(&self, token: i64) -> Result<()> {
         self.event.remove(token);
         Ok(())
     }
@@ -130,7 +115,7 @@ impl BaseCommand_Impl {
     /// Readonly access to [`ICommand::Name`].
     ///
     #[doc = include_str!("../bindings_docs/ICommand/Name.md")]
-    pub fn name(&self) -> windows_core::Result<NotifyLockReadGuard<'_, windows_core::HSTRING>> {
+    pub fn name(&self) -> Result<NotifyLockReadGuard<'_, HSTRING>> {
         self.name.read()
     }
 
@@ -139,16 +124,14 @@ impl BaseCommand_Impl {
     #[doc = include_str!("../bindings_docs/ICommand/Name.md")]
     ///
     /// Notifies the host about the property change when dropping the guard.
-    pub fn name_mut(
-        &self,
-    ) -> windows_core::Result<NotifyLockWriteGuard<'_, windows_core::HSTRING>> {
+    pub fn name_mut(&self) -> Result<NotifyLockWriteGuard<'_, HSTRING>> {
         self.name.write(|| self.emit_self_prop_changed("Name"))
     }
 
     /// Readonly access to [`ICommand::Id`].
     ///
     #[doc = include_str!("../bindings_docs/ICommand/Id.md")]
-    pub fn id(&self) -> windows_core::Result<NotifyLockReadGuard<'_, windows_core::HSTRING>> {
+    pub fn id(&self) -> Result<NotifyLockReadGuard<'_, HSTRING>> {
         self.id.read()
     }
 
@@ -157,16 +140,14 @@ impl BaseCommand_Impl {
     #[doc = include_str!("../bindings_docs/ICommand/Id.md")]
     ///
     /// Notifies the host about the property change when dropping the guard.
-    pub fn id_mut(&self) -> windows_core::Result<NotifyLockWriteGuard<'_, windows_core::HSTRING>> {
+    pub fn id_mut(&self) -> Result<NotifyLockWriteGuard<'_, HSTRING>> {
         self.id.write(|| self.emit_self_prop_changed("Id"))
     }
 
     /// Readonly access to [`ICommand::Icon`].
     ///
     #[doc = include_str!("../bindings_docs/ICommand/Icon.md")]
-    pub fn icon(
-        &self,
-    ) -> windows_core::Result<NotifyLockReadGuard<'_, Option<ComObject<IconInfo>>>> {
+    pub fn icon(&self) -> Result<NotifyLockReadGuard<'_, Option<ComObject<IconInfo>>>> {
         self.icon.read()
     }
 
@@ -175,14 +156,12 @@ impl BaseCommand_Impl {
     #[doc = include_str!("../bindings_docs/ICommand/Icon.md")]
     ///
     /// Notifies the host about the property change when dropping the guard.
-    pub fn icon_mut(
-        &self,
-    ) -> windows_core::Result<NotifyLockWriteGuard<'_, Option<ComObject<IconInfo>>>> {
+    pub fn icon_mut(&self) -> Result<NotifyLockWriteGuard<'_, Option<ComObject<IconInfo>>>> {
         self.icon.write(|| self.emit_self_prop_changed("Icon"))
     }
 }
 
-type InvokableBox = Box<dyn Send + Sync + Fn(&IInspectable) -> windows_core::Result<CommandResult>>;
+type InvokableBox = Box<dyn Send + Sync + Fn(&IInspectable) -> Result<CommandResult>>;
 
 /// Represents a command that can be invoked.
 ///
@@ -199,23 +178,25 @@ pub struct InvokableCommandBuilder {
     func: InvokableBox,
 }
 
-impl InvokableCommandBuilder {
-    /// Creates a new builder.
+impl BaseCommandBuilder {
+    /// Creates a new [`InvokableCommand`] builder.
     ///
     /// The invocation function is a no-op by default.
-    pub fn new(base: ComObject<BaseCommand>) -> Self {
-        Self {
-            base,
+    pub fn invokable(self) -> InvokableCommandBuilder {
+        InvokableCommandBuilder {
+            base: self.build(),
             func: Box::new(|_| Ok(CommandResult::KeepOpen)),
         }
     }
+}
 
+impl InvokableCommandBuilder {
     /// Sets the function to be invoked when the command is executed.
     ///
     /// See [`IInvokableCommand::Invoke`] for more details.
     pub fn func<F>(mut self, func: F) -> Self
     where
-        F: Send + Sync + Fn(&IInspectable) -> windows_core::Result<CommandResult> + 'static,
+        F: Send + Sync + Fn(&IInspectable) -> Result<CommandResult> + 'static,
     {
         self.func = Box::new(func);
         self
@@ -226,7 +207,7 @@ impl InvokableCommandBuilder {
     /// The function should return a `CommandResult`.
     pub fn anon_func<F>(mut self, func: F) -> Self
     where
-        F: Send + Sync + Fn() -> windows_core::Result<CommandResult> + 'static,
+        F: Send + Sync + Fn() -> Result<CommandResult> + 'static,
     {
         self.func = Box::new(move |_| func());
         self
@@ -243,7 +224,7 @@ impl ComBuilder for InvokableCommandBuilder {
     }
 }
 
-impl Deref for InvokableCommand {
+impl std::ops::Deref for InvokableCommand {
     type Target = BaseCommand_Impl;
     fn deref(&self) -> &Self::Target {
         &self.base
@@ -251,44 +232,32 @@ impl Deref for InvokableCommand {
 }
 
 impl IInvokableCommand_Impl for InvokableCommand_Impl {
-    fn Invoke(
-        &self,
-        sender: windows_core::Ref<'_, windows_core::IInspectable>,
-    ) -> windows_core::Result<ICommandResult> {
+    fn Invoke(&self, sender: windows_core::Ref<'_, IInspectable>) -> Result<ICommandResult> {
         let result = (self.func)(sender.ok()?);
         result.map(|r| r.into())
     }
 }
 
 impl ICommand_Impl for InvokableCommand_Impl {
-    fn Icon(&self) -> windows_core::Result<IIconInfo> {
+    fn Icon(&self) -> Result<IIconInfo> {
         self.base.Icon()
     }
 
-    fn Id(&self) -> windows_core::Result<windows_core::HSTRING> {
+    fn Id(&self) -> Result<HSTRING> {
         self.base.Id()
     }
 
-    fn Name(&self) -> windows_core::Result<windows_core::HSTRING> {
+    fn Name(&self) -> Result<HSTRING> {
         self.base.Name()
     }
 }
 
 impl INotifyPropChanged_Impl for InvokableCommand_Impl {
-    fn PropChanged(
-        &self,
-        handler: windows_core::Ref<
-            '_,
-            windows::Foundation::TypedEventHandler<
-                windows_core::IInspectable,
-                IPropChangedEventArgs,
-            >,
-        >,
-    ) -> windows_core::Result<i64> {
+    fn PropChanged(&self, handler: RefPropChangedEventHandler<'_>) -> Result<i64> {
         self.base.PropChanged(handler)
     }
 
-    fn RemovePropChanged(&self, token: i64) -> windows_core::Result<()> {
+    fn RemovePropChanged(&self, token: i64) -> Result<()> {
         self.base.RemovePropChanged(token)
     }
 }

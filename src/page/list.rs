@@ -2,11 +2,13 @@
 
 use std::ops::Deref;
 
-use crate::{
-    bindings::*, cmd_item::{CommandItem, CommandItem_Impl}, details::{Details, Tag}, filter::Filters, grid::GridLayout, notify::*, utils::{ComBuilder, OkOrEmpty, assert_send_sync, map_array},
-};
-use windows_core::HSTRING;
-use windows_core::{ComObject, IInspectable, IUnknownImpl as _, Result, implement};
+use windows_core::{Array, ComObject, HSTRING, IInspectable, IUnknownImpl, Result, implement};
+
+use crate::cmd_item::{CommandItem, CommandItem_Impl, CommandItemBuilder};
+use crate::details::{Details, Tag};
+use crate::filter::{Filters, FiltersBuilder};
+use crate::utils::{ComBuilder, OkOrEmpty, assert_send_sync, map_array};
+use crate::{bindings::*, grid::GridLayout, notify::*, page::BasePageBuilder};
 
 use super::{BasePage, BasePage_Impl};
 
@@ -33,18 +35,20 @@ pub struct ListItemBuilder {
     suggestion: Option<HSTRING>,
 }
 
-impl ListItemBuilder {
+impl CommandItemBuilder {
     /// Creates a new builder with base.
-    pub fn new(base: ComObject<CommandItem>) -> Self {
+    pub fn list(self) -> ListItemBuilder {
         ListItemBuilder {
-            base,
+            base: self.build(),
             details: None,
             tags: Vec::new(),
             section: None,
             suggestion: None,
         }
     }
+}
 
+impl ListItemBuilder {
     /// Sets the details for the list item.
     pub fn details(mut self, details: ComObject<Details>) -> Self {
         self.details = Some(details);
@@ -83,8 +87,8 @@ impl ComBuilder for ListItemBuilder {
             base: self.base,
             details: NotifyLock::new(self.details),
             tags: NotifyLock::new(self.tags),
-            section: NotifyLock::new(self.section.unwrap_or_else(HSTRING::new)),
-            suggestion: NotifyLock::new(self.suggestion.unwrap_or_else(HSTRING::new)),
+            section: NotifyLock::new(self.section.unwrap_or_default()),
+            suggestion: NotifyLock::new(self.suggestion.unwrap_or_default()),
         }
     }
 }
@@ -169,61 +173,52 @@ impl ListItem_Impl {
 }
 
 impl IListItem_Impl for ListItem_Impl {
-    fn Details(&self) -> windows_core::Result<IDetails> {
+    fn Details(&self) -> Result<IDetails> {
         self.details
             .read()?
             .as_ref()
             .map(|d| d.to_interface())
             .ok_or_empty()
     }
-    fn Tags(&self) -> windows_core::Result<windows_core::Array<ITag>> {
+    fn Tags(&self) -> Result<Array<ITag>> {
         Ok(map_array(&self.tags.read()?, |t| Some(t.to_interface())))
     }
-    fn Section(&self) -> windows_core::Result<windows_core::HSTRING> {
+    fn Section(&self) -> Result<HSTRING> {
         Ok(self.section.read()?.clone())
     }
-    fn TextToSuggest(&self) -> windows_core::Result<windows_core::HSTRING> {
+    fn TextToSuggest(&self) -> Result<HSTRING> {
         Ok(self.suggestion.read()?.clone())
     }
 }
 
 impl ICommandItem_Impl for ListItem_Impl {
-    fn Command(&self) -> windows_core::Result<ICommand> {
+    fn Command(&self) -> Result<ICommand> {
         self.base.Command()
     }
 
-    fn Icon(&self) -> windows_core::Result<IIconInfo> {
+    fn Icon(&self) -> Result<IIconInfo> {
         self.base.Icon()
     }
 
-    fn MoreCommands(&self) -> windows_core::Result<windows_core::Array<IContextItem>> {
+    fn MoreCommands(&self) -> Result<Array<IContextItem>> {
         self.base.MoreCommands()
     }
 
-    fn Subtitle(&self) -> windows_core::Result<windows_core::HSTRING> {
+    fn Subtitle(&self) -> Result<HSTRING> {
         self.base.Subtitle()
     }
 
-    fn Title(&self) -> windows_core::Result<windows_core::HSTRING> {
+    fn Title(&self) -> Result<HSTRING> {
         self.base.Title()
     }
 }
 
 impl INotifyPropChanged_Impl for ListItem_Impl {
-    fn PropChanged(
-        &self,
-        handler: windows_core::Ref<
-            '_,
-            windows::Foundation::TypedEventHandler<
-                windows_core::IInspectable,
-                IPropChangedEventArgs,
-            >,
-        >,
-    ) -> windows_core::Result<i64> {
+    fn PropChanged(&self, handler: RefPropChangedEventHandler<'_>) -> Result<i64> {
         self.base.PropChanged(handler)
     }
 
-    fn RemovePropChanged(&self, token: i64) -> windows_core::Result<()> {
+    fn RemovePropChanged(&self, token: i64) -> Result<()> {
         self.base.RemovePropChanged(token)
     }
 }
@@ -239,73 +234,77 @@ pub struct ListPage {
     empty_content: NotifyLock<Option<ComObject<CommandItem>>>,
     filters: NotifyLock<Option<ComObject<Filters>>>,
     items: NotifyLock<Vec<ComObject<ListItem>>>,
-    grid_properties: NotifyLock<Option<GridLayout>>,
+    grid_layout: NotifyLock<Option<GridLayout>>,
     placeholder: NotifyLock<HSTRING>,
     search_text: NotifyLock<HSTRING>,
     has_more: NotifyLock<bool>,
-    more_fn: Box<dyn Send + Sync + Fn(&ListPage_Impl) -> Result<()>>,
+    more_fn: ListPageMoreFn,
     show_details: NotifyLock<bool>,
     item_event: ItemsChangedEventHandler,
 }
+
+type ListPageMoreFn = Box<dyn Send + Sync + Fn(&ListPage_Impl) -> Result<()>>;
 
 /// Builder for [`ListPage`].
 pub struct ListPageBuilder {
     base: ComObject<BasePage>,
     empty_content: Option<ComObject<CommandItem>>,
     filters: Option<ComObject<Filters>>,
-    grid_properties: Option<GridLayout>,
+    grid_layout: Option<GridLayout>,
     items: Vec<ComObject<ListItem>>,
     placeholder: Option<HSTRING>,
     search_text: Option<HSTRING>,
-    more_fn: Option<Box<dyn Send + Sync + Fn(&ListPage_Impl) -> Result<()>>>,
+    more_fn: Option<ListPageMoreFn>,
     show_details: Option<bool>,
 }
 
-impl ListPageBuilder {
-    /// Creates a new builder.
-    pub fn new(base: ComObject<BasePage>) -> Self {
+impl BasePageBuilder {
+    /// Creates a [`ListPageBuilder`] builder.
+    pub fn list(self) -> ListPageBuilder {
         ListPageBuilder {
-            base,
+            base: self.build(),
             empty_content: None,
             filters: None,
             items: Vec::new(),
-            grid_properties: None,
+            grid_layout: None,
             placeholder: None,
             search_text: None,
             more_fn: None,
             show_details: None,
         }
     }
+}
 
+impl ListPageBuilder {
     /// Sets the empty content for the list page.
-    pub fn empty_content(mut self, empty_content: ComObject<CommandItem>) -> Self {
-        self.empty_content = Some(empty_content);
+    pub fn empty_content(mut self, empty_content: CommandItemBuilder) -> Self {
+        self.empty_content = Some(empty_content.build());
         self
     }
 
     /// Sets the filters for the list page.
-    pub fn filters(mut self, filters: ComObject<Filters>) -> Self {
-        self.filters = Some(filters);
+    pub fn filters(mut self, filters: FiltersBuilder) -> Self {
+        self.filters = Some(filters.build());
         self
     }
 
     /// Sets the items for the list page.
-    pub fn items(mut self, items: Vec<ComObject<ListItem>>) -> Self {
-        self.items = items;
+    pub fn items(mut self, items: Vec<ListItemBuilder>) -> Self {
+        self.items = items.into_iter().map(ListItemBuilder::build).collect();
         self
     }
 
     /// Adds an item to the list page.
-    pub fn add_item(mut self, item: ComObject<ListItem>) -> Self {
-        self.items.push(item);
+    pub fn add_item(mut self, item: ListItemBuilder) -> Self {
+        self.items.push(item.build());
         self
     }
 
     /// Sets the grid properties for the list page.
     ///
     /// The grid properties define how much space each item should take in the grid layout.
-    pub fn grid_properties(mut self, grid_properties: GridLayout) -> Self {
-        self.grid_properties = Some(grid_properties);
+    pub fn grid_layout(mut self, grid_layout: impl Into<GridLayout>) -> Self {
+        self.grid_layout = Some(grid_layout.into());
         self
     }
 
@@ -345,9 +344,9 @@ impl ComBuilder for ListPageBuilder {
             empty_content: NotifyLock::new(self.empty_content),
             filters: NotifyLock::new(self.filters),
             items: NotifyLock::new(self.items),
-            grid_properties: NotifyLock::new(self.grid_properties),
-            placeholder: NotifyLock::new(self.placeholder.unwrap_or_else(HSTRING::new)),
-            search_text: NotifyLock::new(self.search_text.unwrap_or_else(HSTRING::new)),
+            grid_layout: NotifyLock::new(self.grid_layout),
+            placeholder: NotifyLock::new(self.placeholder.unwrap_or_default()),
+            search_text: NotifyLock::new(self.search_text.unwrap_or_default()),
             has_more: NotifyLock::new(self.more_fn.is_some()),
             more_fn: self.more_fn.unwrap_or_else(|| {
                 Box::new(|page| {
@@ -465,10 +464,8 @@ impl ListPage_Impl {
     /// Readonly access to [`IListPage::GridProperties`].
     ///
     #[doc = include_str!("../bindings_docs/IListPage/GridProperties.md")]
-    pub fn grid_properties(
-        &self,
-    ) -> Result<NotifyLockReadGuard<'_, Option<GridLayout>>> {
-        self.grid_properties.read()
+    pub fn grid_layout(&self) -> Result<NotifyLockReadGuard<'_, Option<GridLayout>>> {
+        self.grid_layout.read()
     }
 
     /// Mutable access to [`IListPage::GridProperties`].
@@ -476,10 +473,8 @@ impl ListPage_Impl {
     #[doc = include_str!("../bindings_docs/IListPage/GridProperties.md")]
     ///
     /// Notifies the host about the change when dropping the guard.
-    pub fn grid_properties_mut(
-        &self,
-    ) -> Result<NotifyLockWriteGuard<'_, Option<GridLayout>>> {
-        self.grid_properties.write(|| {
+    pub fn grid_layout_mut(&self) -> Result<NotifyLockWriteGuard<'_, Option<GridLayout>>> {
+        self.grid_layout.write(|| {
             self.base
                 .base
                 .emit_prop_changed(self.to_interface(), "GridProperties")
@@ -547,7 +542,7 @@ impl ListPage_Impl {
 }
 
 impl IListPage_Impl for ListPage_Impl {
-    fn EmptyContent(&self) -> windows_core::Result<ICommandItem> {
+    fn EmptyContent(&self) -> Result<ICommandItem> {
         self.empty_content
             .read()?
             .as_ref()
@@ -555,7 +550,7 @@ impl IListPage_Impl for ListPage_Impl {
             .ok_or_empty()
     }
 
-    fn Filters(&self) -> windows_core::Result<IFilters> {
+    fn Filters(&self) -> Result<IFilters> {
         self.filters
             .read()?
             .as_ref()
@@ -563,82 +558,73 @@ impl IListPage_Impl for ListPage_Impl {
             .ok_or_empty()
     }
 
-    fn GetItems(&self) -> windows_core::Result<windows_core::Array<IListItem>> {
+    fn GetItems(&self) -> Result<Array<IListItem>> {
         Ok(map_array(&self.items.read()?, |x| Some(x.to_interface())))
     }
 
-    fn GridProperties(&self) -> windows_core::Result<IGridProperties> {
-        self.grid_properties
+    fn GridProperties(&self) -> Result<IGridProperties> {
+        self.grid_layout
             .read()?
             .as_ref()
-            .map(|g| g.into())
+            .map(Into::into)
             .ok_or_empty()
     }
 
-    fn HasMoreItems(&self) -> windows_core::Result<bool> {
+    fn HasMoreItems(&self) -> Result<bool> {
         Ok(*self.has_more.read()?)
     }
 
-    fn LoadMore(&self) -> windows_core::Result<()> {
+    fn LoadMore(&self) -> Result<()> {
         (self.more_fn)(self)
     }
 
-    fn PlaceholderText(&self) -> windows_core::Result<windows_core::HSTRING> {
+    fn PlaceholderText(&self) -> Result<HSTRING> {
         Ok(self.placeholder.read()?.clone())
     }
 
-    fn SearchText(&self) -> windows_core::Result<windows_core::HSTRING> {
+    fn SearchText(&self) -> Result<HSTRING> {
         Ok(self.search_text.read()?.clone())
     }
 
-    fn ShowDetails(&self) -> windows_core::Result<bool> {
+    fn ShowDetails(&self) -> Result<bool> {
         Ok(*self.show_details.read()?)
     }
 }
 
 impl IPage_Impl for ListPage_Impl {
-    fn AccentColor(&self) -> windows_core::Result<OptionalColor> {
+    fn AccentColor(&self) -> Result<OptionalColor> {
         self.base.AccentColor()
     }
 
-    fn IsLoading(&self) -> windows_core::Result<bool> {
+    fn IsLoading(&self) -> Result<bool> {
         self.base.IsLoading()
     }
 
-    fn Title(&self) -> windows_core::Result<windows_core::HSTRING> {
+    fn Title(&self) -> Result<HSTRING> {
         self.base.Title()
     }
 }
 
 impl ICommand_Impl for ListPage_Impl {
-    fn Icon(&self) -> windows_core::Result<IIconInfo> {
+    fn Icon(&self) -> Result<IIconInfo> {
         self.base.Icon()
     }
 
-    fn Id(&self) -> windows_core::Result<windows_core::HSTRING> {
+    fn Id(&self) -> Result<HSTRING> {
         self.base.Id()
     }
 
-    fn Name(&self) -> windows_core::Result<windows_core::HSTRING> {
+    fn Name(&self) -> Result<HSTRING> {
         self.base.Name()
     }
 }
 
 impl INotifyPropChanged_Impl for ListPage_Impl {
-    fn PropChanged(
-        &self,
-        handler: windows_core::Ref<
-            '_,
-            windows::Foundation::TypedEventHandler<
-                windows_core::IInspectable,
-                IPropChangedEventArgs,
-            >,
-        >,
-    ) -> windows_core::Result<i64> {
+    fn PropChanged(&self, handler: RefPropChangedEventHandler<'_>) -> Result<i64> {
         self.base.PropChanged(handler)
     }
 
-    fn RemovePropChanged(&self, token: i64) -> windows_core::Result<()> {
+    fn RemovePropChanged(&self, token: i64) -> Result<()> {
         self.base.RemovePropChanged(token)
     }
 }
@@ -653,11 +639,11 @@ impl INotifyItemsChanged_Impl for ListPage_Impl {
                 IItemsChangedEventArgs,
             >,
         >,
-    ) -> windows_core::Result<i64> {
+    ) -> Result<i64> {
         self.item_event.add(handler.ok()?)
     }
 
-    fn RemoveItemsChanged(&self, token: i64) -> windows_core::Result<()> {
+    fn RemoveItemsChanged(&self, token: i64) -> Result<()> {
         self.item_event.remove(token);
         Ok(())
     }

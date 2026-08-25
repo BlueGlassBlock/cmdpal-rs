@@ -2,25 +2,22 @@
 //!
 //! When selecting a command item that contains a page, the page will be displayed.
 
+use windows_core::{ComObject, HSTRING, IUnknownImpl, Result};
+
+use crate::cmd::{BaseCommand, BaseCommand_Impl, BaseCommandBuilder};
+use crate::utils::{ComBuilder, assert_send_sync};
+use crate::{bindings::*, notify::*};
+
 pub mod content;
 pub mod dyn_list;
 pub mod list;
-
-use std::ops::Deref;
-
-use crate::cmd::{BaseCommand, BaseCommand_Impl};
-use crate::notify::*;
-use crate::utils::assert_send_sync;
-use crate::{bindings::*, utils::ComBuilder};
-use windows_core::{ComObject, implement};
-use windows_core::{HSTRING, IUnknownImpl as _, Result};
 
 /// Represents basic properties of a page.
 ///
 /// See [`BasePage_Impl`] for field accessors.
 ///
 #[doc = include_str!("../bindings_docs/IPage.md")]
-#[implement(IPage)]
+#[windows_core::implement(IPage)]
 pub struct BasePage {
     pub base: ComObject<BaseCommand>,
     title: NotifyLock<HSTRING>,
@@ -36,17 +33,19 @@ pub struct BasePageBuilder {
     accent_color: Option<Color>,
 }
 
-impl BasePageBuilder {
-    /// Creates a new builder.
-    pub fn new(base: ComObject<BaseCommand>) -> Self {
+impl BaseCommandBuilder {
+    /// Creates a new [`BasePage`] builder.
+    pub fn page(self) -> BasePageBuilder {
         BasePageBuilder {
+            base: self.build(),
             title: HSTRING::new(),
             loading: true,
             accent_color: None,
-            base,
         }
     }
+}
 
+impl BasePageBuilder {
     /// Sets the title of the page.
     pub fn title(mut self, title: impl Into<HSTRING>) -> Self {
         self.title = title.into();
@@ -70,15 +69,15 @@ impl ComBuilder for BasePageBuilder {
     type Output = BasePage;
     fn build_unmanaged(self) -> BasePage {
         BasePage {
+            base: self.base,
             title: NotifyLock::new(self.title),
             loading: NotifyLock::new(self.loading),
             accent_color: NotifyLock::new(self.accent_color),
-            base: self.base,
         }
     }
 }
 
-impl Deref for BasePage {
+impl std::ops::Deref for BasePage {
     type Target = BaseCommand_Impl;
 
     fn deref(&self) -> &Self::Target {
@@ -142,46 +141,37 @@ impl BasePage_Impl {
 }
 
 impl IPage_Impl for BasePage_Impl {
-    fn Title(&self) -> windows_core::Result<windows_core::HSTRING> {
+    fn Title(&self) -> Result<HSTRING> {
         Ok(self.title.read()?.clone())
     }
 
-    fn IsLoading(&self) -> windows_core::Result<bool> {
+    fn IsLoading(&self) -> Result<bool> {
         Ok(*self.loading.read()?)
     }
 
-    fn AccentColor(&self) -> windows_core::Result<OptionalColor> {
+    fn AccentColor(&self) -> Result<OptionalColor> {
         Ok((*self.accent_color.read()?).into())
     }
 }
 
 impl ICommand_Impl for BasePage_Impl {
-    fn Icon(&self) -> windows_core::Result<IIconInfo> {
+    fn Icon(&self) -> Result<IIconInfo> {
         self.base.Icon()
     }
-    fn Id(&self) -> windows_core::Result<windows_core::HSTRING> {
+    fn Id(&self) -> Result<HSTRING> {
         self.base.Id()
     }
-    fn Name(&self) -> windows_core::Result<windows_core::HSTRING> {
+    fn Name(&self) -> Result<HSTRING> {
         self.base.Name()
     }
 }
 
 impl INotifyPropChanged_Impl for BasePage_Impl {
-    fn PropChanged(
-        &self,
-        handler: windows_core::Ref<
-            '_,
-            windows::Foundation::TypedEventHandler<
-                windows_core::IInspectable,
-                IPropChangedEventArgs,
-            >,
-        >,
-    ) -> windows_core::Result<i64> {
+    fn PropChanged(&self, handler: RefPropChangedEventHandler<'_>) -> Result<i64> {
         self.base.PropChanged(handler)
     }
 
-    fn RemovePropChanged(&self, token: i64) -> windows_core::Result<()> {
+    fn RemovePropChanged(&self, token: i64) -> Result<()> {
         self.base.RemovePropChanged(token)
     }
 }

@@ -2,22 +2,22 @@
 //!
 //! See [`Content`] for supported content types.
 
-use super::{BasePage, BasePage_Impl};
-use crate::bindings::*;
-use crate::content::Content;
-use crate::ctx_item::ContextItem;
-use crate::details::Details;
-use crate::notify::*;
+use windows_core::{Array, ComObject, Event, HSTRING, IInspectable, IUnknownImpl, Result};
+
+use crate::details::{Details, DetailsBuilder};
 use crate::utils::{ComBuilder, OkOrEmpty, assert_send_sync, map_array};
-use std::ops::Deref;
-use windows_core::{ComObject, Event, IInspectable, IUnknownImpl as _, Result, implement};
+use crate::{
+    bindings::*, content::Content, ctx_item::ContextItem, notify::*, page::BasePageBuilder,
+};
+
+use super::{BasePage, BasePage_Impl};
 
 /// Represents a content page that can display various types of content.
 ///
 /// See [`ContentPage_Impl`] for field accessors.
 ///
 #[doc = include_str!("../bindings_docs/IContentPage.md")]
-#[implement(IContentPage, IPage, ICommand, INotifyPropChanged, INotifyItemsChanged)]
+#[windows_core::implement(IContentPage, IPage, ICommand, INotifyPropChanged, INotifyItemsChanged)]
 pub struct ContentPage {
     pub base: ComObject<BasePage>,
     context_menu: NotifyLock<Vec<ContextItem>>,
@@ -34,17 +34,19 @@ pub struct ContentPageBuilder {
     details: Option<ComObject<Details>>,
 }
 
-impl ContentPageBuilder {
-    /// Creates a new builder.
-    pub fn new(base: ComObject<BasePage>) -> Self {
+impl BasePageBuilder {
+    /// Creates a new [`ContentPage`] builder.
+    pub fn content(self) -> ContentPageBuilder {
         ContentPageBuilder {
-            base,
+            base: self.build(),
             context_menu: Vec::new(),
             contents: Vec::new(),
             details: None,
         }
     }
+}
 
+impl ContentPageBuilder {
     /// Sets the context menu items.
     ///
     /// First two of context menu items will become "shortcut commands" and
@@ -76,8 +78,8 @@ impl ContentPageBuilder {
     }
 
     /// Sets the details for the page.
-    pub fn details(mut self, details: ComObject<Details>) -> Self {
-        self.details = Some(details);
+    pub fn details(mut self, details: DetailsBuilder) -> Self {
+        self.details = Some(details.build());
         self
     }
 }
@@ -95,7 +97,7 @@ impl ComBuilder for ContentPageBuilder {
     }
 }
 
-impl Deref for ContentPage {
+impl std::ops::Deref for ContentPage {
     type Target = BasePage_Impl;
     fn deref(&self) -> &Self::Target {
         &self.base
@@ -169,15 +171,15 @@ impl ContentPage_Impl {
 }
 
 impl IContentPage_Impl for ContentPage_Impl {
-    fn Commands(&self) -> windows_core::Result<windows_core::Array<IContextItem>> {
+    fn Commands(&self) -> Result<Array<IContextItem>> {
         Ok(map_array(&self.context_menu.read()?, |x| Some(x.into())))
     }
 
-    fn GetContent(&self) -> windows_core::Result<windows_core::Array<IContent>> {
+    fn GetContent(&self) -> Result<Array<IContent>> {
         Ok(map_array(&self.contents.read()?, |x| Some(x.into())))
     }
 
-    fn Details(&self) -> windows_core::Result<IDetails> {
+    fn Details(&self) -> Result<IDetails> {
         self.details
             .read()?
             .clone()
@@ -196,59 +198,50 @@ impl INotifyItemsChanged_Impl for ContentPage_Impl {
                 IItemsChangedEventArgs,
             >,
         >,
-    ) -> windows_core::Result<i64> {
+    ) -> Result<i64> {
         self.item_event.add(handler.ok()?)
     }
 
-    fn RemoveItemsChanged(&self, token: i64) -> windows_core::Result<()> {
+    fn RemoveItemsChanged(&self, token: i64) -> Result<()> {
         self.item_event.remove(token);
         Ok(())
     }
 }
 
 impl IPage_Impl for ContentPage_Impl {
-    fn AccentColor(&self) -> windows_core::Result<OptionalColor> {
+    fn AccentColor(&self) -> Result<OptionalColor> {
         self.base.AccentColor()
     }
 
-    fn IsLoading(&self) -> windows_core::Result<bool> {
+    fn IsLoading(&self) -> Result<bool> {
         self.base.IsLoading()
     }
 
-    fn Title(&self) -> windows_core::Result<windows_core::HSTRING> {
+    fn Title(&self) -> Result<HSTRING> {
         self.base.Title()
     }
 }
 
 impl ICommand_Impl for ContentPage_Impl {
-    fn Icon(&self) -> windows_core::Result<IIconInfo> {
+    fn Icon(&self) -> Result<IIconInfo> {
         self.base.Icon()
     }
 
-    fn Id(&self) -> windows_core::Result<windows_core::HSTRING> {
+    fn Id(&self) -> Result<HSTRING> {
         self.base.Id()
     }
 
-    fn Name(&self) -> windows_core::Result<windows_core::HSTRING> {
+    fn Name(&self) -> Result<HSTRING> {
         self.base.Name()
     }
 }
 
 impl INotifyPropChanged_Impl for ContentPage_Impl {
-    fn PropChanged(
-        &self,
-        handler: windows_core::Ref<
-            '_,
-            windows::Foundation::TypedEventHandler<
-                windows_core::IInspectable,
-                IPropChangedEventArgs,
-            >,
-        >,
-    ) -> windows_core::Result<i64> {
+    fn PropChanged(&self, handler: RefPropChangedEventHandler<'_>) -> Result<i64> {
         self.base.PropChanged(handler)
     }
 
-    fn RemovePropChanged(&self, token: i64) -> windows_core::Result<()> {
+    fn RemovePropChanged(&self, token: i64) -> Result<()> {
         self.base.RemovePropChanged(token)
     }
 }

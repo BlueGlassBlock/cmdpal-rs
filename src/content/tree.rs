@@ -1,18 +1,19 @@
 //! Tree content that can be used to display nested content.
 
-use super::Content;
-use crate::notify::*;
+use windows::Foundation::TypedEventHandler;
+use windows_core::{ComObject, Event, IInspectable, IUnknownImpl, Ref, Result};
+
 use crate::utils::{ComBuilder, assert_send_sync};
-use crate::{bindings::*, utils::map_array};
-use windows_core::ComObject;
-use windows_core::{Event, IInspectable, IUnknownImpl as _, Result, implement};
+use crate::{bindings::*, notify::*, utils::map_array};
+
+use super::Content;
 
 /// Tree content that can be used to display nested content.
 ///
 /// See [`TreeContent_Impl`] for field accessors.
 ///
 #[doc = include_str!("../bindings_docs/ITreeContent.md")]
-#[implement(ITreeContent, IContent, INotifyPropChanged, INotifyItemsChanged)]
+#[windows_core::implement(ITreeContent, IContent, INotifyPropChanged, INotifyItemsChanged)]
 pub struct TreeContent {
     root: NotifyLock<Content>,
     children: NotifyLock<Vec<Content>>,
@@ -111,11 +112,11 @@ impl TreeContent_Impl {
 }
 
 impl ITreeContent_Impl for TreeContent_Impl {
-    fn RootContent(&self) -> windows_core::Result<IContent> {
+    fn RootContent(&self) -> Result<IContent> {
         self.root.read().map(|x| IContent::from(&*x))
     }
 
-    fn GetChildren(&self) -> windows_core::Result<windows_core::Array<IContent>> {
+    fn GetChildren(&self) -> Result<windows_core::Array<IContent>> {
         let children = self.children.read()?;
         Ok(map_array(&children, |x| Some(x.into())))
     }
@@ -124,20 +125,11 @@ impl ITreeContent_Impl for TreeContent_Impl {
 impl IContent_Impl for TreeContent_Impl {}
 
 impl INotifyPropChanged_Impl for TreeContent_Impl {
-    fn PropChanged(
-        &self,
-        handler: windows_core::Ref<
-            '_,
-            windows::Foundation::TypedEventHandler<
-                windows_core::IInspectable,
-                IPropChangedEventArgs,
-            >,
-        >,
-    ) -> windows_core::Result<i64> {
+    fn PropChanged(&self, handler: RefPropChangedEventHandler<'_>) -> Result<i64> {
         self.prop_event.add(handler.ok()?)
     }
 
-    fn RemovePropChanged(&self, token: i64) -> windows_core::Result<()> {
+    fn RemovePropChanged(&self, token: i64) -> Result<()> {
         self.prop_event.remove(token);
         Ok(())
     }
@@ -146,18 +138,12 @@ impl INotifyPropChanged_Impl for TreeContent_Impl {
 impl INotifyItemsChanged_Impl for TreeContent_Impl {
     fn ItemsChanged(
         &self,
-        handler: windows_core::Ref<
-            '_,
-            windows::Foundation::TypedEventHandler<
-                windows_core::IInspectable,
-                IItemsChangedEventArgs,
-            >,
-        >,
-    ) -> windows_core::Result<i64> {
+        handler: Ref<'_, TypedEventHandler<IInspectable, IItemsChangedEventArgs>>,
+    ) -> Result<i64> {
         self.item_event.add(handler.ok()?)
     }
 
-    fn RemoveItemsChanged(&self, token: i64) -> windows_core::Result<()> {
+    fn RemoveItemsChanged(&self, token: i64) -> Result<()> {
         self.item_event.remove(token);
         Ok(())
     }

@@ -1,4 +1,8 @@
-//! Contents that can be displayed in [`ContentPage`][`crate::page::content::ContentPage`].
+//! Contents that can be displayed in [`ContentPage`](crate::page::content::ContentPage).
+
+use windows_core::ComObject;
+
+use crate::utils::ComBuilder;
 
 pub mod form;
 pub mod markdown;
@@ -7,7 +11,6 @@ pub mod tree;
 pub use form::{FormContent, FormContentBuilder};
 pub use markdown::MarkdownContent;
 pub use tree::{TreeContent, TreeContentBuilder};
-use windows_core::ComObject;
 
 /// Represents all kinds of content that can be displayed in a [`ContentPage`][`crate::page::content::ContentPage`].
 pub enum Content {
@@ -34,6 +37,18 @@ impl From<MarkdownContent> for Content {
 impl From<TreeContent> for Content {
     fn from(value: TreeContent) -> Self {
         Content::Tree(ComObject::new(value))
+    }
+}
+
+impl From<FormContentBuilder> for Content {
+    fn from(value: FormContentBuilder) -> Self {
+        Content::Form(value.build())
+    }
+}
+
+impl From<TreeContentBuilder> for Content {
+    fn from(value: TreeContentBuilder) -> Self {
+        Content::Tree(value.build())
     }
 }
 

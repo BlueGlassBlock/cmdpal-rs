@@ -1,20 +1,19 @@
 //! CommandItem represents commands in menus and lists
 
-use crate::ctx_item::ContextItem;
-use crate::icon::IconInfo;
-use crate::notify::*;
-use crate::utils::{ComBuilder, OkOrEmpty, assert_send_sync};
-use crate::{bindings::*, utils::map_array};
 use windows_core::{
-    AgileReference, ComObject, Event, HSTRING, IInspectable, IUnknownImpl as _, implement,
+    AgileReference, ComObject, ComObjectInner, ComObjectInterface, HSTRING, IInspectable,
+    IUnknownImpl, Result,
 };
+
+use crate::utils::{ComBuilder, OkOrEmpty, assert_send_sync};
+use crate::{bindings::*, ctx_item::ContextItem, icon::IconInfo, notify::*, utils::map_array};
 
 /// Represents a command item that can be used in menus and lists.
 ///
 /// See [`CommandItem_Impl`] for field accessors.
 ///
 #[doc = include_str!("./bindings_docs/ICommandItem.md")]
-#[implement(ICommandItem, INotifyPropChanged)]
+#[windows_core::implement(ICommandItem, INotifyPropChanged)]
 pub struct CommandItem {
     command: NotifyLock<AgileReference<ICommand>>,
     icon: NotifyLock<Option<ComObject<IconInfo>>>,
@@ -37,9 +36,22 @@ pub struct CommandItemBuilder {
     more: Vec<ContextItem>,
 }
 
-impl CommandItemBuilder {
+pub trait CmdBuilder:
+    ComBuilder<Output: ComObjectInner<Outer: ComObjectInterface<ICommand>>>
+{
     /// Creates a new builder with the specified command as selection target.
-    pub fn new(command: AgileReference<ICommand>) -> Self {
+    fn item(self) -> Result<CommandItemBuilder>;
+}
+impl<C: ComBuilder<Output: ComObjectInner<Outer: ComObjectInterface<ICommand>>>> CmdBuilder for C {
+    fn item(self) -> Result<CommandItemBuilder> {
+        let agile_command = AgileReference::new(&self.build().into_interface())?;
+        Ok(CommandItem::builder(agile_command))
+    }
+}
+
+impl CommandItem {
+    /// Creates a new builder with the specified command as selection target.
+    pub fn builder(command: AgileReference<ICommand>) -> CommandItemBuilder {
         CommandItemBuilder {
             icon: None,
             title: None,
@@ -50,11 +62,13 @@ impl CommandItemBuilder {
     }
 
     /// Creates a new builder with the specified command as selection target.
-    pub fn try_new(command: ICommand) -> windows_core::Result<Self> {
+    pub fn try_builder(command: ICommand) -> Result<CommandItemBuilder> {
         let agile_command = AgileReference::new(&command)?;
-        Ok(Self::new(agile_command))
+        Ok(Self::builder(agile_command))
     }
+}
 
+impl CommandItemBuilder {
     /// Sets the icon for the command item.
     ///
     /// If unset, the command item will fallback to [`ICommand::Icon`].
@@ -96,16 +110,13 @@ impl CommandItemBuilder {
 impl ComBuilder for CommandItemBuilder {
     type Output = CommandItem;
     fn build_unmanaged(self) -> CommandItem {
-        let title = self.title.unwrap_or_else(HSTRING::new);
-        let subtitle = self.subtitle.unwrap_or_else(HSTRING::new);
-
         CommandItem {
             command: NotifyLock::new(self.command),
             icon: NotifyLock::new(self.icon),
-            title: NotifyLock::new(title),
-            subtitle: NotifyLock::new(subtitle),
+            title: NotifyLock::new(self.title.unwrap_or_default()),
+            subtitle: NotifyLock::new(self.subtitle.unwrap_or_default()),
             more: NotifyLock::new(self.more),
-            event: Event::new(),
+            event: windows_core::Event::new(),
         }
     }
 }
@@ -124,9 +135,7 @@ impl CommandItem_Impl {
     /// Readonly access to [`ICommandItem::Command`].
     ///
     #[doc = include_str!("./bindings_docs/ICommandItem/Command.md")]
-    pub fn command(
-        &self,
-    ) -> windows_core::Result<NotifyLockReadGuard<'_, AgileReference<ICommand>>> {
+    pub fn command(&self) -> Result<NotifyLockReadGuard<'_, AgileReference<ICommand>>> {
         self.command.read()
     }
 
@@ -135,9 +144,7 @@ impl CommandItem_Impl {
     #[doc = include_str!("./bindings_docs/ICommandItem/Command.md")]
     ///
     /// Notifies the host about the property change when dropping the guard.
-    pub fn command_mut(
-        &self,
-    ) -> windows_core::Result<NotifyLockWriteGuard<'_, AgileReference<ICommand>>> {
+    pub fn command_mut(&self) -> Result<NotifyLockWriteGuard<'_, AgileReference<ICommand>>> {
         self.command
             .write(|| self.emit_self_prop_changed("Command"))
     }
@@ -147,9 +154,7 @@ impl CommandItem_Impl {
     /// Preferred over [`ICommand::Icon`] of `self.command` when displaying the icon.
     ///
     #[doc = include_str!("./bindings_docs/ICommandItem/Icon.md")]
-    pub fn icon(
-        &self,
-    ) -> windows_core::Result<NotifyLockReadGuard<'_, Option<ComObject<IconInfo>>>> {
+    pub fn icon(&self) -> Result<NotifyLockReadGuard<'_, Option<ComObject<IconInfo>>>> {
         self.icon.read()
     }
 
@@ -160,9 +165,7 @@ impl CommandItem_Impl {
     #[doc = include_str!("./bindings_docs/ICommandItem/Icon.md")]
     ///
     /// Notifies the host about the property change when dropping the guard.
-    pub fn icon_mut(
-        &self,
-    ) -> windows_core::Result<NotifyLockWriteGuard<'_, Option<ComObject<IconInfo>>>> {
+    pub fn icon_mut(&self) -> Result<NotifyLockWriteGuard<'_, Option<ComObject<IconInfo>>>> {
         self.icon.write(|| self.emit_self_prop_changed("Icon"))
     }
 
@@ -174,7 +177,7 @@ impl CommandItem_Impl {
     /// [`ICommand::Name`] of `self.command`, not this title.
     ///
     #[doc = include_str!("./bindings_docs/ICommandItem/Title.md")]
-    pub fn title(&self) -> windows_core::Result<NotifyLockReadGuard<'_, HSTRING>> {
+    pub fn title(&self) -> Result<NotifyLockReadGuard<'_, HSTRING>> {
         self.title.read()
     }
 
@@ -188,14 +191,14 @@ impl CommandItem_Impl {
     #[doc = include_str!("./bindings_docs/ICommandItem/Title.md")]
     ///
     /// Notifies the host about the property change when dropping the guard.
-    pub fn title_mut(&self) -> windows_core::Result<NotifyLockWriteGuard<'_, HSTRING>> {
+    pub fn title_mut(&self) -> Result<NotifyLockWriteGuard<'_, HSTRING>> {
         self.title.write(|| self.emit_self_prop_changed("Title"))
     }
 
     /// Readonly access to [`ICommandItem::Subtitle`].
     ///
     #[doc = include_str!("./bindings_docs/ICommandItem/Subtitle.md")]
-    pub fn subtitle(&self) -> windows_core::Result<NotifyLockReadGuard<'_, HSTRING>> {
+    pub fn subtitle(&self) -> Result<NotifyLockReadGuard<'_, HSTRING>> {
         self.subtitle.read()
     }
 
@@ -204,7 +207,7 @@ impl CommandItem_Impl {
     #[doc = include_str!("./bindings_docs/ICommandItem/Subtitle.md")]
     ///
     /// Notifies the host about the property change when dropping the guard.
-    pub fn subtitle_mut(&self) -> windows_core::Result<NotifyLockWriteGuard<'_, HSTRING>> {
+    pub fn subtitle_mut(&self) -> Result<NotifyLockWriteGuard<'_, HSTRING>> {
         self.subtitle
             .write(|| self.emit_self_prop_changed("Subtitle"))
     }
@@ -212,7 +215,7 @@ impl CommandItem_Impl {
     /// Readonly access to [`ICommandItem::MoreCommands`].
     ///
     #[doc = include_str!("./bindings_docs/ICommandItem/MoreCommands.md")]
-    pub fn more(&self) -> windows_core::Result<NotifyLockReadGuard<'_, Vec<ContextItem>>> {
+    pub fn more(&self) -> Result<NotifyLockReadGuard<'_, Vec<ContextItem>>> {
         self.more.read()
     }
 
@@ -221,18 +224,18 @@ impl CommandItem_Impl {
     #[doc = include_str!("./bindings_docs/ICommandItem/MoreCommands.md")]
     ///
     /// Notifies the host about the property change when dropping the guard.
-    pub fn more_mut(&self) -> windows_core::Result<NotifyLockWriteGuard<'_, Vec<ContextItem>>> {
+    pub fn more_mut(&self) -> Result<NotifyLockWriteGuard<'_, Vec<ContextItem>>> {
         self.more
             .write(|| self.emit_self_prop_changed("MoreCommands"))
     }
 }
 
 impl ICommandItem_Impl for CommandItem_Impl {
-    fn Command(&self) -> windows_core::Result<ICommand> {
+    fn Command(&self) -> Result<ICommand> {
         self.command.read()?.resolve()
     }
 
-    fn Icon(&self) -> windows_core::Result<IIconInfo> {
+    fn Icon(&self) -> Result<IIconInfo> {
         self.icon
             .read()?
             .as_ref()
@@ -240,15 +243,15 @@ impl ICommandItem_Impl for CommandItem_Impl {
             .ok_or_empty()
     }
 
-    fn Title(&self) -> windows_core::Result<windows_core::HSTRING> {
+    fn Title(&self) -> Result<HSTRING> {
         Ok(self.title.read()?.clone())
     }
 
-    fn Subtitle(&self) -> windows_core::Result<windows_core::HSTRING> {
+    fn Subtitle(&self) -> Result<HSTRING> {
         Ok(self.subtitle.read()?.clone())
     }
 
-    fn MoreCommands(&self) -> windows_core::Result<windows_core::Array<IContextItem>> {
+    fn MoreCommands(&self) -> Result<windows_core::Array<IContextItem>> {
         let more = self.more.read()?;
         Ok(map_array(&more, |x| {
             Some(match x {
@@ -260,20 +263,11 @@ impl ICommandItem_Impl for CommandItem_Impl {
 }
 
 impl INotifyPropChanged_Impl for CommandItem_Impl {
-    fn PropChanged(
-        &self,
-        handler: windows_core::Ref<
-            '_,
-            windows::Foundation::TypedEventHandler<
-                windows_core::IInspectable,
-                IPropChangedEventArgs,
-            >,
-        >,
-    ) -> windows_core::Result<i64> {
+    fn PropChanged(&self, handler: RefPropChangedEventHandler<'_>) -> Result<i64> {
         self.event.add(handler.ok()?)
     }
 
-    fn RemovePropChanged(&self, token: i64) -> windows_core::Result<()> {
+    fn RemovePropChanged(&self, token: i64) -> Result<()> {
         self.event.remove(token);
         Ok(())
     }

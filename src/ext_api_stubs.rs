@@ -4,12 +4,12 @@
 //!
 //! The [`crate::cmd_provider::CommandProvider`] provides them all by default.
 //!
+
 use crate::bindings::*;
-use windows_core::{Error, implement};
 
 /// Stub implementation of [`IExtendedAttributesProvider`].
 ///
-#[implement(IExtendedAttributesProvider)]
+#[windows_core::implement(IExtendedAttributesProvider)]
 pub struct ExtendedAttributesProviderStub;
 
 impl IExtendedAttributesProvider_Impl for ExtendedAttributesProviderStub_Impl {
@@ -18,6 +18,6 @@ impl IExtendedAttributesProvider_Impl for ExtendedAttributesProviderStub_Impl {
     ) -> windows_core::Result<
         windows_collections::IMap<windows_core::HSTRING, windows_core::IInspectable>,
     > {
-        Err(Error::empty())
+        Err(windows_core::Error::empty())
     }
 }

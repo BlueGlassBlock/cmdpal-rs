@@ -2,13 +2,14 @@
 //!
 //! Useful for sending feedbacks to users.
 
-use crate::bindings::*;
-use crate::notify::*;
-use crate::utils::ComBuilder;
 use std::sync::RwLock;
+
 use windows::Win32::Foundation::E_INVALIDARG;
-use windows_core::AgileReference;
-use windows_core::{ComObject, IInspectable, IUnknownImpl as _, implement};
+use windows_core::{
+    AgileReference, ComObject, Error, HSTRING, IInspectable, IUnknownImpl, Result, implement,
+};
+
+use crate::{bindings::*, notify::*, utils::ComBuilder};
 
 pub(crate) static EXTENSION_HOST: RwLock<Option<AgileReference<IExtensionHost>>> =
     RwLock::new(None);
@@ -31,15 +32,17 @@ pub struct ProgressStateBuilder {
     percentage: u32,
 }
 
-impl ProgressStateBuilder {
-    /// Creates a new `ProgressStateBuilder`.
-    pub fn new() -> Self {
+impl ProgressState {
+    /// Creates a new [`ProgressState`] builder.
+    pub fn builder() -> ProgressStateBuilder {
         ProgressStateBuilder {
             indeterminate: true,
             percentage: 0,
         }
     }
+}
 
+impl ProgressStateBuilder {
     /// Sets the indeterminate state of the progress.
     pub fn indeterminate(mut self, indeterminate: bool) -> Self {
         self.indeterminate = indeterminate;
@@ -75,7 +78,7 @@ impl ProgressState_Impl {
     /// Readonly access to [`IProgressState::IsIndeterminate`]
     ///
     #[doc = include_str!("./bindings_docs/IProgressState/IsIndeterminate.md")]
-    pub fn indeterminate(&self) -> windows_core::Result<NotifyLockReadGuard<'_, bool>> {
+    pub fn indeterminate(&self) -> Result<NotifyLockReadGuard<'_, bool>> {
         self.indeterminate.read()
     }
 
@@ -84,7 +87,7 @@ impl ProgressState_Impl {
     #[doc = include_str!("./bindings_docs/IProgressState/IsIndeterminate.md")]
     ///
     /// Notifies the host about the change when dropping the guard.
-    pub fn indeterminate_mut(&self) -> windows_core::Result<NotifyLockWriteGuard<'_, bool>> {
+    pub fn indeterminate_mut(&self) -> Result<NotifyLockWriteGuard<'_, bool>> {
         self.indeterminate
             .write(|| self.emit_self_prop_changed("IsIndeterminate"))
     }
@@ -92,7 +95,7 @@ impl ProgressState_Impl {
     /// Readonly access to [`IProgressState::ProgressPercent`]
     ///
     #[doc = include_str!("./bindings_docs/IProgressState/ProgressPercent.md")]
-    pub fn percentage(&self) -> windows_core::Result<NotifyLockReadGuard<'_, u32>> {
+    pub fn percentage(&self) -> Result<NotifyLockReadGuard<'_, u32>> {
         self.percentage.read()
     }
 
@@ -101,38 +104,29 @@ impl ProgressState_Impl {
     #[doc = include_str!("./bindings_docs/IProgressState/ProgressPercent.md")]
     ///
     /// Notifies the host about the change when dropping the guard.
-    pub fn percentage_mut(&self) -> windows_core::Result<NotifyLockWriteGuard<'_, u32>> {
+    pub fn percentage_mut(&self) -> Result<NotifyLockWriteGuard<'_, u32>> {
         self.percentage
             .write(|| self.emit_self_prop_changed("ProgressPercent"))
     }
 }
 
 impl INotifyPropChanged_Impl for ProgressState_Impl {
-    fn PropChanged(
-        &self,
-        handler: windows_core::Ref<
-            '_,
-            windows::Foundation::TypedEventHandler<
-                windows_core::IInspectable,
-                IPropChangedEventArgs,
-            >,
-        >,
-    ) -> windows_core::Result<i64> {
+    fn PropChanged(&self, handler: RefPropChangedEventHandler<'_>) -> Result<i64> {
         self.event.add(handler.ok()?)
     }
 
-    fn RemovePropChanged(&self, token: i64) -> windows_core::Result<()> {
+    fn RemovePropChanged(&self, token: i64) -> Result<()> {
         self.event.remove(token);
         Ok(())
     }
 }
 
 impl IProgressState_Impl for ProgressState_Impl {
-    fn IsIndeterminate(&self) -> windows_core::Result<bool> {
+    fn IsIndeterminate(&self) -> Result<bool> {
         self.indeterminate.read().map(|x| *x)
     }
 
-    fn ProgressPercent(&self) -> windows_core::Result<u32> {
+    fn ProgressPercent(&self) -> Result<u32> {
         self.percentage.read().map(|x| *x)
     }
 }
@@ -153,8 +147,8 @@ pub enum MessageState {
 }
 
 impl TryFrom<crate::bindings::MessageState> for MessageState {
-    type Error = windows_core::Error;
-    fn try_from(value: crate::bindings::MessageState) -> Result<Self, windows_core::Error> {
+    type Error = Error;
+    fn try_from(value: crate::bindings::MessageState) -> Result<Self> {
         match value {
             crate::bindings::MessageState::Error => Ok(MessageState::Error),
             crate::bindings::MessageState::Warning => Ok(MessageState::Warning),
@@ -188,8 +182,8 @@ pub enum StatusContext {
 }
 
 impl TryFrom<crate::bindings::StatusContext> for StatusContext {
-    type Error = windows_core::Error;
-    fn try_from(value: crate::bindings::StatusContext) -> Result<Self, windows_core::Error> {
+    type Error = Error;
+    fn try_from(value: crate::bindings::StatusContext) -> Result<Self> {
         match value {
             crate::bindings::StatusContext::Page => Ok(StatusContext::Page),
             crate::bindings::StatusContext::Extension => Ok(StatusContext::Extension),
@@ -216,27 +210,29 @@ impl From<StatusContext> for crate::bindings::StatusContext {
 pub struct StatusMessage {
     state: NotifyLock<MessageState>,
     progress: NotifyLock<ComObject<ProgressState>>,
-    message: NotifyLock<windows_core::HSTRING>,
+    message: NotifyLock<HSTRING>,
     event: PropChangedEventHandler,
 }
 
 /// Builder for [`StatusMessage`].
 pub struct StatusMessageBuilder {
     state: MessageState,
-    progress: ComObject<ProgressState>,
-    message: windows_core::HSTRING,
+    progress: ProgressStateBuilder,
+    message: HSTRING,
+}
+
+impl StatusMessage {
+    /// Creates a new [`StatusMessage`] builder.
+    pub fn builder() -> StatusMessageBuilder {
+        StatusMessageBuilder {
+            state: MessageState::Info,
+            progress: ProgressState::builder(),
+            message: HSTRING::default(),
+        }
+    }
 }
 
 impl StatusMessageBuilder {
-    /// Creates a new `StatusMessageBuilder`.
-    pub fn new() -> Self {
-        StatusMessageBuilder {
-            state: MessageState::Info,
-            progress: ProgressStateBuilder::new().build(),
-            message: windows_core::HSTRING::default(),
-        }
-    }
-
     /// Sets the state of the status message.
     pub fn state(mut self, state: MessageState) -> Self {
         self.state = state;
@@ -244,13 +240,13 @@ impl StatusMessageBuilder {
     }
 
     /// Sets the progress of the status message.
-    pub fn progress(mut self, progress: ComObject<ProgressState>) -> Self {
+    pub fn progress(mut self, progress: ProgressStateBuilder) -> Self {
         self.progress = progress;
         self
     }
 
     /// Sets the message of the status message.
-    pub fn message(mut self, message: windows_core::HSTRING) -> Self {
+    pub fn message(mut self, message: HSTRING) -> Self {
         self.message = message;
         self
     }
@@ -259,7 +255,7 @@ impl StatusMessageBuilder {
     pub fn build(self) -> StatusMessage {
         StatusMessage {
             state: NotifyLock::new(self.state),
-            progress: NotifyLock::new(self.progress),
+            progress: NotifyLock::new(self.progress.build()),
             message: NotifyLock::new(self.message),
             event: PropChangedEventHandler::new(),
         }
@@ -276,7 +272,7 @@ impl StatusMessage_Impl {
     /// Readonly access to [`IStatusMessage::State`]
     ///
     #[doc = include_str!("./bindings_docs/IStatusMessage/State.md")]
-    pub fn state(&self) -> windows_core::Result<NotifyLockReadGuard<'_, MessageState>> {
+    pub fn state(&self) -> Result<NotifyLockReadGuard<'_, MessageState>> {
         self.state.read()
     }
 
@@ -285,16 +281,14 @@ impl StatusMessage_Impl {
     #[doc = include_str!("./bindings_docs/IStatusMessage/State.md")]
     ///
     /// Notifies the host about the change when dropping the guard.
-    pub fn state_mut(&self) -> windows_core::Result<NotifyLockWriteGuard<'_, MessageState>> {
+    pub fn state_mut(&self) -> Result<NotifyLockWriteGuard<'_, MessageState>> {
         self.state.write(|| self.emit_self_prop_changed("State"))
     }
 
     /// Readonly access to [`IStatusMessage::Progress`]
     ///
     #[doc = include_str!("./bindings_docs/IStatusMessage/Progress.md")]
-    pub fn progress(
-        &self,
-    ) -> windows_core::Result<NotifyLockReadGuard<'_, ComObject<ProgressState>>> {
+    pub fn progress(&self) -> Result<NotifyLockReadGuard<'_, ComObject<ProgressState>>> {
         self.progress.read()
     }
 
@@ -303,9 +297,7 @@ impl StatusMessage_Impl {
     #[doc = include_str!("./bindings_docs/IStatusMessage/Progress.md")]
     ///
     /// Notifies the host about the change when dropping the guard.
-    pub fn progress_mut(
-        &self,
-    ) -> windows_core::Result<NotifyLockWriteGuard<'_, ComObject<ProgressState>>> {
+    pub fn progress_mut(&self) -> Result<NotifyLockWriteGuard<'_, ComObject<ProgressState>>> {
         self.progress
             .write(|| self.emit_self_prop_changed("Progress"))
     }
@@ -313,7 +305,7 @@ impl StatusMessage_Impl {
     /// Readonly access to [`IStatusMessage::Message`]
     ///
     #[doc = include_str!("./bindings_docs/IStatusMessage/Message.md")]
-    pub fn message(&self) -> windows_core::Result<NotifyLockReadGuard<'_, windows_core::HSTRING>> {
+    pub fn message(&self) -> Result<NotifyLockReadGuard<'_, HSTRING>> {
         self.message.read()
     }
 
@@ -322,43 +314,32 @@ impl StatusMessage_Impl {
     #[doc = include_str!("./bindings_docs/IStatusMessage/Message.md")]
     ///
     /// Notifies the host about the change when dropping the guard.
-    pub fn message_mut(
-        &self,
-    ) -> windows_core::Result<NotifyLockWriteGuard<'_, windows_core::HSTRING>> {
+    pub fn message_mut(&self) -> Result<NotifyLockWriteGuard<'_, HSTRING>> {
         self.message
             .write(|| self.emit_self_prop_changed("Message"))
     }
 }
 
 impl IStatusMessage_Impl for StatusMessage_Impl {
-    fn State(&self) -> windows_core::Result<crate::bindings::MessageState> {
+    fn State(&self) -> Result<crate::bindings::MessageState> {
         self.state.read().map(|x| x.clone().into())
     }
 
-    fn Progress(&self) -> windows_core::Result<IProgressState> {
+    fn Progress(&self) -> Result<IProgressState> {
         self.progress.read().map(|x| x.to_interface())
     }
 
-    fn Message(&self) -> windows_core::Result<windows_core::HSTRING> {
+    fn Message(&self) -> Result<HSTRING> {
         self.message.read().map(|x| x.clone())
     }
 }
 
 impl INotifyPropChanged_Impl for StatusMessage_Impl {
-    fn PropChanged(
-        &self,
-        handler: windows_core::Ref<
-            '_,
-            windows::Foundation::TypedEventHandler<
-                windows_core::IInspectable,
-                IPropChangedEventArgs,
-            >,
-        >,
-    ) -> windows_core::Result<i64> {
+    fn PropChanged(&self, handler: RefPropChangedEventHandler<'_>) -> Result<i64> {
         self.event.add(handler.ok()?)
     }
 
-    fn RemovePropChanged(&self, token: i64) -> windows_core::Result<()> {
+    fn RemovePropChanged(&self, token: i64) -> Result<()> {
         self.event.remove(token);
         Ok(())
     }
@@ -373,32 +354,32 @@ pub struct LogMessage {
     #[doc = include_str!("./bindings_docs/ILogMessage/State.md")]
     pub state: MessageState,
     #[doc = include_str!("./bindings_docs/ILogMessage/Message.md")]
-    pub message: windows_core::HSTRING,
+    pub message: HSTRING,
 }
 
 impl LogMessage {
     /// Creates a new `LogMessage`.
-    pub fn new(state: MessageState, message: windows_core::HSTRING) -> Self {
+    pub fn new(state: MessageState, message: HSTRING) -> Self {
         LogMessage { state, message }
     }
 
     /// Creates a new `LogMessage` that represents an informational message.
-    pub fn info(message: windows_core::HSTRING) -> Self {
+    pub fn info(message: HSTRING) -> Self {
         LogMessage::new(MessageState::Info, message)
     }
 
     /// Creates a new `LogMessage` that represents a success message.
-    pub fn success(message: windows_core::HSTRING) -> Self {
+    pub fn success(message: HSTRING) -> Self {
         LogMessage::new(MessageState::Success, message)
     }
 
     /// Creates a new `LogMessage` that represents a warning message.
-    pub fn warning(message: windows_core::HSTRING) -> Self {
+    pub fn warning(message: HSTRING) -> Self {
         LogMessage::new(MessageState::Warning, message)
     }
 
     /// Creates a new `LogMessage` that represents an error message.
-    pub fn error(message: windows_core::HSTRING) -> Self {
+    pub fn error(message: HSTRING) -> Self {
         LogMessage::new(MessageState::Error, message)
     }
 
@@ -416,11 +397,11 @@ impl LogMessage {
 }
 
 impl ILogMessage_Impl for LogMessage_Impl {
-    fn State(&self) -> windows_core::Result<crate::bindings::MessageState> {
+    fn State(&self) -> Result<crate::bindings::MessageState> {
         Ok(self.state.clone().into())
     }
 
-    fn Message(&self) -> windows_core::Result<windows_core::HSTRING> {
+    fn Message(&self) -> Result<HSTRING> {
         Ok(self.message.clone())
     }
 }
@@ -441,17 +422,21 @@ pub fn set_ext_host(host: &IExtensionHost) {
 /// The status message will appear as a "pop-up" in the Command Palette.
 pub fn show_status(message: ComObject<StatusMessage>, context: StatusContext) {
     if let Ok(lock) = EXTENSION_HOST.read()
-        && let Some(host) = lock.as_ref().and_then(|x| x.resolve().ok()) {
-            let _ = host.ShowStatus(message.as_interface(), context.into());
-        }
+        && let Some(host) = lock.as_ref()
+        && let Ok(host) = host.resolve()
+    {
+        let _ = host.ShowStatus(message.as_interface(), context.into());
+    }
 }
 
 /// Hides a status message.
 pub fn hide_status(message: ComObject<StatusMessage>) {
     if let Ok(lock) = EXTENSION_HOST.read()
-        && let Some(host) = lock.as_ref().and_then(|x| x.resolve().ok()) {
-            let _ = host.HideStatus(message.as_interface());
-        }
+        && let Some(host) = lock.as_ref()
+        && let Ok(host) = host.resolve()
+    {
+        let _ = host.HideStatus(message.as_interface());
+    }
 }
 
 /// Logs a message to the host.
@@ -461,7 +446,9 @@ pub fn hide_status(message: ComObject<StatusMessage>) {
 /// Consider [`LogMessage::log`] method for a more idiomatic way to log messages.
 pub fn log_message(message: impl std::borrow::Borrow<ILogMessage>) {
     if let Ok(lock) = EXTENSION_HOST.read()
-        && let Some(host) = lock.as_ref().and_then(|x| x.resolve().ok()) {
-            let _ = host.LogMessage(message.borrow());
-        }
+        && let Some(host) = lock.as_ref()
+        && let Ok(host) = host.resolve()
+    {
+        let _ = host.LogMessage(message.borrow());
+    }
 }

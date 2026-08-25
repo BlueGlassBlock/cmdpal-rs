@@ -2,12 +2,11 @@
 
 use std::ops::Deref;
 
-use super::cmd_item::CommandItem;
-use crate::bindings::*;
-use crate::cmd_item::CommandItem_Impl;
-use crate::notify::*;
+use windows_core::{ComObject, HSTRING, IUnknownImpl, Result, implement};
+
+use crate::cmd_item::{CommandItem, CommandItem_Impl, CommandItemBuilder};
 use crate::utils::{ComBuilder, assert_send_sync};
-use windows_core::{ComObject, HSTRING, IUnknownImpl as _, Result, implement};
+use crate::{bindings::*, notify::*};
 
 /// Fallback handler for command items with query-based content.
 ///
@@ -38,7 +37,7 @@ impl FallbackHandler {
 }
 
 impl IFallbackHandler_Impl for FallbackHandler_Impl {
-    fn UpdateQuery(&self, query: &windows_core::HSTRING) -> windows_core::Result<()> {
+    fn UpdateQuery(&self, query: &HSTRING) -> Result<()> {
         (self.querier)(query.clone())
     }
 }
@@ -50,16 +49,18 @@ pub struct FallbackCommandItemBuilder {
     title: HSTRING,
 }
 
-impl FallbackCommandItemBuilder {
+impl CommandItemBuilder {
     /// Creates a new builder.
-    pub fn new(base: ComObject<CommandItem>) -> Self {
-        Self {
-            base,
+    pub fn fallback(self) -> FallbackCommandItemBuilder {
+        FallbackCommandItemBuilder {
+            base: self.build(),
             handler: FallbackHandler::new(Box::new(|_| Ok(()))),
             title: HSTRING::new(),
         }
     }
+}
 
+impl FallbackCommandItemBuilder {
     /// Sets the handler for the fallback command item.
     pub fn handler(mut self, handler: ComObject<FallbackHandler>) -> Self {
         self.handler = handler;
@@ -125,51 +126,42 @@ impl FallbackCommandItem_Impl {
 }
 
 impl IFallbackCommandItem_Impl for FallbackCommandItem_Impl {
-    fn FallbackHandler(&self) -> windows_core::Result<IFallbackHandler> {
+    fn FallbackHandler(&self) -> Result<IFallbackHandler> {
         Ok(self.handler.to_interface())
     }
-    fn DisplayTitle(&self) -> windows_core::Result<windows_core::HSTRING> {
+    fn DisplayTitle(&self) -> Result<HSTRING> {
         self.title.read().map(|s| s.clone())
     }
 }
 
 impl ICommandItem_Impl for FallbackCommandItem_Impl {
-    fn Command(&self) -> windows_core::Result<ICommand> {
+    fn Command(&self) -> Result<ICommand> {
         self.base.Command()
     }
 
-    fn Icon(&self) -> windows_core::Result<IIconInfo> {
+    fn Icon(&self) -> Result<IIconInfo> {
         self.base.Icon()
     }
 
-    fn MoreCommands(&self) -> windows_core::Result<windows_core::Array<IContextItem>> {
+    fn MoreCommands(&self) -> Result<windows_core::Array<IContextItem>> {
         self.base.MoreCommands()
     }
 
-    fn Subtitle(&self) -> windows_core::Result<windows_core::HSTRING> {
+    fn Subtitle(&self) -> Result<HSTRING> {
         self.base.Subtitle()
     }
 
-    fn Title(&self) -> windows_core::Result<windows_core::HSTRING> {
+    fn Title(&self) -> Result<HSTRING> {
         self.base.Title()
     }
 }
 
 impl INotifyPropChanged_Impl for FallbackCommandItem_Impl {
-    fn PropChanged(
-        &self,
-        handler: windows_core::Ref<
-            '_,
-            windows::Foundation::TypedEventHandler<
-                windows_core::IInspectable,
-                IPropChangedEventArgs,
-            >,
-        >,
-    ) -> windows_core::Result<i64> {
+    fn PropChanged(&self, handler: RefPropChangedEventHandler<'_>) -> Result<i64> {
         self.base.PropChanged(handler)
     }
 
-    fn RemovePropChanged(&self, token: i64) -> windows_core::Result<()> {
+    fn RemovePropChanged(&self, token: i64) -> Result<()> {
         self.base.RemovePropChanged(token)
     }
 }

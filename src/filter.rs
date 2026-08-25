@@ -2,15 +2,15 @@
 //!
 //! This module currently doesn't work: <https://github.com/microsoft/PowerToys/issues/38318>
 
-use crate::bindings::*;
-use crate::icon::IconInfo;
-use crate::notify::*;
-use crate::utils::{ComBuilder, OkOrEmpty, assert_send_sync, map_array};
 use std::sync::RwLock;
+
 use windows::Win32::Foundation::ERROR_LOCK_VIOLATION;
 use windows_core::{
-    ComObject, Error, Event, HSTRING, IInspectable, IUnknownImpl as _, Result, implement,
+    ComObject, Error, Event, HSTRING, IInspectable, IUnknownImpl, Result, implement,
 };
+
+use crate::utils::{ComBuilder, OkOrEmpty, assert_send_sync, map_array};
+use crate::{bindings::*, icon::IconInfo, notify::*};
 
 /// Represents a separator in the filter list.
 ///
@@ -33,22 +33,25 @@ pub struct Filter {
 }
 
 /// Builder for [`Filter`].
+#[derive(Default)]
 pub struct FilterBuilder {
     name: HSTRING,
     id: HSTRING,
     icon: Option<ComObject<IconInfo>>,
 }
 
-impl FilterBuilder {
-    /// Creates a new builder.
-    pub fn new() -> Self {
-        Self {
+impl Filter {
+    /// Creates a new [`Filter`] builder.
+    pub fn builder() -> FilterBuilder {
+        FilterBuilder {
             name: HSTRING::new(),
             id: HSTRING::new(),
             icon: None,
         }
     }
+}
 
+impl FilterBuilder {
     /// Sets the name of the filter.
     pub fn name(mut self, name: impl Into<HSTRING>) -> Self {
         self.name = name.into();
@@ -80,14 +83,8 @@ impl ComBuilder for FilterBuilder {
     }
 }
 
-impl Default for FilterBuilder {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
 impl IFilter_Impl for Filter_Impl {
-    fn Icon(&self) -> windows_core::Result<IIconInfo> {
+    fn Icon(&self) -> Result<IIconInfo> {
         self.icon
             .read()?
             .as_ref()
@@ -95,30 +92,21 @@ impl IFilter_Impl for Filter_Impl {
             .ok_or_empty()
     }
 
-    fn Id(&self) -> windows_core::Result<windows_core::HSTRING> {
+    fn Id(&self) -> Result<HSTRING> {
         self.id.read().map(|id| id.clone())
     }
 
-    fn Name(&self) -> windows_core::Result<windows_core::HSTRING> {
+    fn Name(&self) -> Result<HSTRING> {
         self.name.read().map(|name| name.clone())
     }
 }
 
 impl INotifyPropChanged_Impl for Filter_Impl {
-    fn PropChanged(
-        &self,
-        handler: windows_core::Ref<
-            '_,
-            windows::Foundation::TypedEventHandler<
-                windows_core::IInspectable,
-                IPropChangedEventArgs,
-            >,
-        >,
-    ) -> windows_core::Result<i64> {
+    fn PropChanged(&self, handler: RefPropChangedEventHandler<'_>) -> Result<i64> {
         self.event.add(handler.ok()?)
     }
 
-    fn RemovePropChanged(&self, token: i64) -> windows_core::Result<()> {
+    fn RemovePropChanged(&self, token: i64) -> Result<()> {
         self.event.remove(token);
         Ok(())
     }
@@ -138,7 +126,7 @@ impl Filter_Impl {
     /// Readonly access to [`IFilter::Name`].
     ///
     #[doc = include_str!("./bindings_docs/IFilter/Name.md")]
-    pub fn name(&self) -> windows_core::Result<NotifyLockReadGuard<'_, windows_core::HSTRING>> {
+    pub fn name(&self) -> Result<NotifyLockReadGuard<'_, HSTRING>> {
         self.name.read()
     }
 
@@ -147,16 +135,14 @@ impl Filter_Impl {
     #[doc = include_str!("./bindings_docs/IFilter/Name.md")]
     ///
     /// Notifies the host about the property change when dropping the guard.
-    pub fn name_mut(
-        &self,
-    ) -> windows_core::Result<NotifyLockWriteGuard<'_, windows_core::HSTRING>> {
+    pub fn name_mut(&self) -> Result<NotifyLockWriteGuard<'_, HSTRING>> {
         self.name.write(|| self.emit_self_prop_changed("Name"))
     }
 
     /// Readonly access to [`IFilter::Id`].
     ///
     #[doc = include_str!("./bindings_docs/IFilter/Id.md")]
-    pub fn id(&self) -> windows_core::Result<NotifyLockReadGuard<'_, windows_core::HSTRING>> {
+    pub fn id(&self) -> Result<NotifyLockReadGuard<'_, HSTRING>> {
         self.id.read()
     }
 
@@ -165,16 +151,14 @@ impl Filter_Impl {
     #[doc = include_str!("./bindings_docs/IFilter/Id.md")]
     ///
     /// Notifies the host about the property change when dropping the guard.
-    pub fn id_mut(&self) -> windows_core::Result<NotifyLockWriteGuard<'_, windows_core::HSTRING>> {
+    pub fn id_mut(&self) -> Result<NotifyLockWriteGuard<'_, HSTRING>> {
         self.id.write(|| self.emit_self_prop_changed("Id"))
     }
 
     /// Readonly access to [`IFilter::Icon`].
     ///
     #[doc = include_str!("./bindings_docs/IFilter/Icon.md")]
-    pub fn icon(
-        &self,
-    ) -> windows_core::Result<NotifyLockReadGuard<'_, Option<ComObject<IconInfo>>>> {
+    pub fn icon(&self) -> Result<NotifyLockReadGuard<'_, Option<ComObject<IconInfo>>>> {
         self.icon.read()
     }
 
@@ -183,9 +167,7 @@ impl Filter_Impl {
     #[doc = include_str!("./bindings_docs/IFilter/Icon.md")]
     ///
     /// Notifies the host about the property change when dropping the guard.
-    pub fn icon_mut(
-        &self,
-    ) -> windows_core::Result<NotifyLockWriteGuard<'_, Option<ComObject<IconInfo>>>> {
+    pub fn icon_mut(&self) -> Result<NotifyLockWriteGuard<'_, Option<ComObject<IconInfo>>>> {
         self.icon.write(|| self.emit_self_prop_changed("Icon"))
     }
 }
@@ -214,17 +196,16 @@ impl From<&FilterItem> for IFilterItem {
 pub struct Filters {
     items: Vec<FilterItem>,
     current: RwLock<Option<ComObject<Filter>>>,
-    on_update: Box<
-        dyn Send + Sync + Fn(Option<ComObject<Filter>>, Option<ComObject<Filter>>) -> Result<()>,
-    >,
+    on_update: FilterUpdateHandler,
 }
+
+type FilterUpdateHandler =
+    Box<dyn Send + Sync + Fn(Option<ComObject<Filter>>, Option<ComObject<Filter>>) -> Result<()>>;
 
 /// Builder for [`Filters`].
 pub struct FiltersBuilder {
     items: Vec<FilterItem>,
-    on_update: Box<
-        dyn Send + Sync + Fn(Option<ComObject<Filter>>, Option<ComObject<Filter>>) -> Result<()>,
-    >,
+    on_update: FilterUpdateHandler,
 }
 
 impl FiltersBuilder {
@@ -237,14 +218,14 @@ impl FiltersBuilder {
     }
 
     /// Add a [`FilterItem`].
-    pub fn add(mut self, item: FilterItem) -> Self {
+    pub fn push(mut self, item: FilterItem) -> Self {
         self.items.push(item);
         self
     }
 
     /// Add a [`Filter`].
-    pub fn add_filter(mut self, item: ComObject<Filter>) -> Self {
-        self.items.push(FilterItem::Filter(item));
+    pub fn add_filter(mut self, item: FilterBuilder) -> Self {
+        self.items.push(FilterItem::Filter(item.build()));
         self
     }
 
@@ -272,6 +253,12 @@ impl FiltersBuilder {
     }
 }
 
+impl Default for FiltersBuilder {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl ComBuilder for FiltersBuilder {
     type Output = Filters;
     fn build_unmanaged(self) -> Self::Output {
@@ -284,7 +271,7 @@ impl ComBuilder for FiltersBuilder {
 }
 
 impl IFilters_Impl for Filters_Impl {
-    fn CurrentFilterId(&self) -> windows_core::Result<windows_core::HSTRING> {
+    fn CurrentFilterId(&self) -> Result<HSTRING> {
         self.current
             .read()
             .map_err(|_| Error::from(ERROR_LOCK_VIOLATION))?
@@ -294,13 +281,13 @@ impl IFilters_Impl for Filters_Impl {
             .map(|id| id.clone())
     }
 
-    fn GetFilters(&self) -> windows_core::Result<windows_core::Array<IFilterItem>> {
+    fn GetFilters(&self) -> Result<windows_core::Array<IFilterItem>> {
         Ok(map_array(&self.items, |filter| {
             Some(IFilterItem::from(filter))
         }))
     }
 
-    fn SetCurrentFilterId(&self, value: &windows_core::HSTRING) -> windows_core::Result<()> {
+    fn SetCurrentFilterId(&self, value: &HSTRING) -> Result<()> {
         let mut guard = self
             .current
             .write()
