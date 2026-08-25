@@ -2,6 +2,8 @@
 //! You should invoke these functions in `build.rs` to generate the necessary files for your extension.
 //! The generated files will be placed in the cargo artifacts directory, alongside the final binary.
 
+use std::{env::var, path::PathBuf};
+
 const WINMD_NAME: &str = "Microsoft.CommandPalette.Extensions.winmd";
 const WINMD_DATA: &[u8] = include_bytes!("Microsoft.CommandPalette.Extensions.winmd");
 
@@ -10,17 +12,17 @@ const WINMD_DATA: &[u8] = include_bytes!("Microsoft.CommandPalette.Extensions.wi
 /// Taken and modified from https://github.com/rust-lang/cargo/issues/9661#issuecomment-1812847609.
 ///
 /// Should get replaced when https://github.com/rust-lang/cargo/issues/13663 lands.
-fn get_cargo_artifact_dir() -> Result<std::path::PathBuf, Box<dyn std::error::Error>> {
-    let skip_triple = std::env::var("TARGET")? == std::env::var("HOST")?;
+fn get_cargo_artifact_dir() -> Result<PathBuf, Box<dyn std::error::Error>> {
+    let skip_triple = var("TARGET")? == var("HOST")?;
     let skip_parent_dirs = if skip_triple { 3 } else { 4 };
 
-    let out_dir = std::path::PathBuf::from(std::env::var("OUT_DIR")?);
+    let out_dir = PathBuf::from(var("OUT_DIR")?);
     let mut current = out_dir.as_path();
     for _ in 0..skip_parent_dirs {
         current = current.parent().ok_or("not found")?;
     }
 
-    Ok(std::path::PathBuf::from(current))
+    Ok(PathBuf::from(current))
 }
 
 /// Generates the `Microsoft.CommandPalette.Extensions.winmd` file alongside the final binary.
@@ -280,28 +282,20 @@ impl AppxManifestBuilder {
     }
 
     fn infer_executable() -> String {
-        let inferred_name = std::env::var("CARGO_PKG_NAME")
-            .ok()
-            .or_else(|| std::env::var("CARGO_BIN_NAME").ok())
+        let inferred_name = var("CARGO_PKG_NAME")
+            .or_else(|_| var("CARGO_BIN_NAME"))
             .unwrap_or("cmdpal-extension".into());
-        println!("cargo::warning=executable is not set, inferred '{}' as default", inferred_name);
-        format!("{}.exe", inferred_name)
+        println!("cargo::warning=executable is not set, inferred '{inferred_name}' as default");
+        format!("{inferred_name}.exe")
     }
 
     fn infer_version() -> String {
-        let version = std::env::var("CARGO_PKG_VERSION").unwrap_or_else(|_| {
+        let Ok(version) = var("CARGO_PKG_VERSION") else {
             println!("cargo::warning=CARGO_PKG_VERSION is not set, using '0.1.0' as base");
-            "0.1.0".into()
-        });
+            return "0.1.0.0".into();
+        };
 
-        version
-            .split_once('-')
-            .map_or_else(|| version.as_str(), |(v, _)| v)
-            .split('.')
-            .map(|s| s.to_string()) // handle cases like "0.1.0-alpha" or "1.2.3-beta"
-            .collect::<Vec<String>>()
-            .join(".")
-            + ".0" // Convert x.x.x  to x.x.x.0
+        format!("{}.0", version.split('-').next().unwrap()) // Convert x.x.x  to x.x.x.0
     }
 
     /// Builds the AppxManifest with the provided values.

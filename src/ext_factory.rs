@@ -1,16 +1,15 @@
 //! Convenient implementation of [`IClassFactory`](https://microsoft.github.io/windows-docs-rs/doc/windows/Win32/System/Com/struct.IClassFactory.html) for extensions.
 
-use crate::bindings::IExtension;
-use crate::ext::Extension;
 use windows::Win32::Foundation::E_POINTER;
 use windows::Win32::System::Com::{IClassFactory, IClassFactory_Impl};
-use windows_core::Interface;
-use windows_core::{ComObject, implement};
+use windows_core::{ComObject, Interface, Result};
+
+use crate::{bindings::IExtension, ext::Extension};
 
 /// A class factory for Command Palette extensions.
 ///
 /// Automatically used by [`ExtRegistry::register`][`crate::ext_registry::ExtRegistry::register`] to register extensions.
-#[implement(IClassFactory)]
+#[windows_core::implement(IClassFactory)]
 pub struct ExtensionClassFactory(pub ComObject<Extension>);
 
 impl IClassFactory_Impl for ExtensionClassFactory_Impl {
@@ -25,7 +24,7 @@ impl IClassFactory_Impl for ExtensionClassFactory_Impl {
         _: windows_core::Ref<'_, windows_core::IUnknown>,
         iid: *const windows_core::GUID,
         interface: *mut *mut core::ffi::c_void,
-    ) -> windows_core::Result<()> {
+    ) -> Result<()> {
         // Validate the interface pointer for minimal safety.
         if iid.is_null() || interface.is_null() {
             return Err(E_POINTER.into());
@@ -37,7 +36,7 @@ impl IClassFactory_Impl for ExtensionClassFactory_Impl {
         }
     }
 
-    fn LockServer(&self, _: windows_core::BOOL) -> windows_core::Result<()> {
+    fn LockServer(&self, _: windows_core::BOOL) -> Result<()> {
         Ok(())
     }
 }

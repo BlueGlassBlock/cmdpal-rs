@@ -1,22 +1,18 @@
 //! Form content that can be used to accept user input.
-use crate::bindings::*;
-use crate::cmd::CommandResult;
-use crate::notify::*;
-use crate::utils::{ComBuilder, assert_send_sync};
-use windows_core::{ComObject, Event, HSTRING, IInspectable, IUnknownImpl as _, implement};
+use windows_core::{ComObject, Event, HSTRING, IInspectable, IUnknownImpl, Result};
 
-pub type SubmitBox = Box<
-    dyn Send
-        + Sync
-        + Fn(&FormContent_Impl, &HSTRING, &HSTRING) -> windows_core::Result<CommandResult>,
->;
+use crate::utils::{ComBuilder, assert_send_sync};
+use crate::{bindings::*, cmd::CommandResult, notify::*};
+
+pub type SubmitBox =
+    Box<dyn Send + Sync + Fn(&FormContent_Impl, &HSTRING, &HSTRING) -> Result<CommandResult>>;
 
 /// Form content that can be used to accept user input.
 ///
 /// See [`FormContent_Impl`] for field accessors.
 ///
 #[doc = include_str!("../bindings_docs/IFormContent.md")]
-#[implement(IFormContent, IContent, INotifyPropChanged)]
+#[windows_core::implement(IFormContent, IContent, INotifyPropChanged)]
 pub struct FormContent {
     template_json: NotifyLock<HSTRING>,
     data_json: NotifyLock<HSTRING>,
@@ -33,9 +29,9 @@ pub struct FormContentBuilder {
     submit: SubmitBox,
 }
 
-impl FormContentBuilder {
-    /// Creates a new builder.
-    pub fn new() -> Self {
+impl FormContent {
+    /// Creates a new [`FormContent`] builder.
+    pub fn builder() -> FormContentBuilder {
         FormContentBuilder {
             template_json: HSTRING::default(),
             data_json: HSTRING::default(),
@@ -43,7 +39,9 @@ impl FormContentBuilder {
             submit: Box::new(|_, _, _| Ok(CommandResult::KeepOpen)),
         }
     }
+}
 
+impl FormContentBuilder {
     /// Sets the template JSON for the form.
     pub fn template_json(mut self, template_json: impl Into<HSTRING>) -> Self {
         self.template_json = template_json.into();
@@ -84,7 +82,7 @@ impl FormContentBuilder {
     where
         F: Send
             + Sync
-            + Fn(&FormContent_Impl, &HSTRING, &HSTRING) -> windows_core::Result<CommandResult>
+            + Fn(&FormContent_Impl, &HSTRING, &HSTRING) -> Result<CommandResult>
             + 'static,
     {
         self.submit = Box::new(submit);
@@ -112,72 +110,59 @@ impl FormContent_Impl {
         self.event.call(|handler| handler.Invoke(&sender, &arg));
     }
 
-    pub fn template_json(&self) -> windows_core::Result<NotifyLockReadGuard<'_, HSTRING>> {
+    pub fn template_json(&self) -> Result<NotifyLockReadGuard<'_, HSTRING>> {
         self.template_json.read()
     }
 
-    pub fn template_json_mut(&self) -> windows_core::Result<NotifyLockWriteGuard<'_, HSTRING>> {
+    pub fn template_json_mut(&self) -> Result<NotifyLockWriteGuard<'_, HSTRING>> {
         self.template_json
             .write(|| self.emit_self_prop_changed("TemplateJson"))
     }
 
-    pub fn data_json(&self) -> windows_core::Result<NotifyLockReadGuard<'_, HSTRING>> {
+    pub fn data_json(&self) -> Result<NotifyLockReadGuard<'_, HSTRING>> {
         self.data_json.read()
     }
 
-    pub fn data_json_mut(&self) -> windows_core::Result<NotifyLockWriteGuard<'_, HSTRING>> {
+    pub fn data_json_mut(&self) -> Result<NotifyLockWriteGuard<'_, HSTRING>> {
         self.data_json
             .write(|| self.emit_self_prop_changed("DataJson"))
     }
 
-    pub fn state_json(&self) -> windows_core::Result<NotifyLockReadGuard<'_, HSTRING>> {
+    pub fn state_json(&self) -> Result<NotifyLockReadGuard<'_, HSTRING>> {
         self.state_json.read()
     }
 
-    pub fn state_json_mut(&self) -> windows_core::Result<NotifyLockWriteGuard<'_, HSTRING>> {
+    pub fn state_json_mut(&self) -> Result<NotifyLockWriteGuard<'_, HSTRING>> {
         self.state_json
             .write(|| self.emit_self_prop_changed("StateJson"))
     }
 }
 
 impl IFormContent_Impl for FormContent_Impl {
-    fn TemplateJson(&self) -> windows_core::Result<windows_core::HSTRING> {
+    fn TemplateJson(&self) -> Result<HSTRING> {
         Ok(self.template_json.read()?.clone())
     }
 
-    fn DataJson(&self) -> windows_core::Result<windows_core::HSTRING> {
+    fn DataJson(&self) -> Result<HSTRING> {
         Ok(self.data_json.read()?.clone())
     }
 
-    fn StateJson(&self) -> windows_core::Result<windows_core::HSTRING> {
+    fn StateJson(&self) -> Result<HSTRING> {
         Ok(self.state_json.read()?.clone())
     }
 
-    fn SubmitForm(
-        &self,
-        inputs: &windows_core::HSTRING,
-        data: &windows_core::HSTRING,
-    ) -> windows_core::Result<ICommandResult> {
+    fn SubmitForm(&self, inputs: &HSTRING, data: &HSTRING) -> Result<ICommandResult> {
         (self.submit)(self, inputs, data).map(|x| x.into())
     }
 }
 
 impl IContent_Impl for FormContent_Impl {}
 impl INotifyPropChanged_Impl for FormContent_Impl {
-    fn PropChanged(
-        &self,
-        handler: windows_core::Ref<
-            '_,
-            windows::Foundation::TypedEventHandler<
-                windows_core::IInspectable,
-                IPropChangedEventArgs,
-            >,
-        >,
-    ) -> windows_core::Result<i64> {
+    fn PropChanged(&self, handler: RefPropChangedEventHandler<'_>) -> Result<i64> {
         self.event.add(handler.ok()?)
     }
 
-    fn RemovePropChanged(&self, token: i64) -> windows_core::Result<()> {
+    fn RemovePropChanged(&self, token: i64) -> Result<()> {
         self.event.remove(token);
         Ok(())
     }

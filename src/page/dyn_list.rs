@@ -1,12 +1,10 @@
 //! Dynamic list page that can customize items based on search text.
-use std::ops::Deref;
 
-use crate::{
-    bindings::*,
-    page::list::ListPage_Impl,
-    utils::{ComBuilder, assert_send_sync},
-};
-use windows_core::{ComObject, HSTRING, Result, implement};
+use windows_core::{ComObject, HSTRING, Result};
+
+use crate::bindings::*;
+use crate::page::list::{ListPage_Impl, ListPageBuilder};
+use crate::utils::{ComBuilder, assert_send_sync};
 
 use super::list::ListPage;
 
@@ -16,7 +14,7 @@ pub type SearchTextUpdateBox =
 /// Dynamic list page that can customize items based on search text.
 ///
 #[doc = include_str!("../bindings_docs/IDynamicListPage.md")]
-#[implement(
+#[windows_core::implement(
     IDynamicListPage,
     IListPage,
     IPage,
@@ -35,15 +33,17 @@ pub struct DynamicListPageBuilder {
     update_fn: SearchTextUpdateBox,
 }
 
-impl DynamicListPageBuilder {
+impl ListPageBuilder {
     /// Creates a new builder.
-    pub fn new(base: ComObject<ListPage>) -> Self {
+    pub fn dynamic(self) -> DynamicListPageBuilder {
         DynamicListPageBuilder {
-            base,
+            base: self.build(),
             update_fn: Box::new(|_, _, _| Ok(())),
         }
     }
+}
 
+impl DynamicListPageBuilder {
     /// Sets the update function for search text changes.
     ///
     /// The update function takes (self, old_search_text, new_search_text) as parameters.
@@ -75,7 +75,7 @@ impl ComBuilder for DynamicListPageBuilder {
     }
 }
 
-impl Deref for DynamicListPage {
+impl std::ops::Deref for DynamicListPage {
     type Target = ListPage_Impl;
 
     fn deref(&self) -> &Self::Target {
@@ -84,7 +84,7 @@ impl Deref for DynamicListPage {
 }
 
 impl IDynamicListPage_Impl for DynamicListPage_Impl {
-    fn SetSearchText(&self, value: &windows_core::HSTRING) -> windows_core::Result<()> {
+    fn SetSearchText(&self, value: &HSTRING) -> Result<()> {
         let old = self.base.search_text()?.clone();
         let mut guard = self.base.search_text_mut_no_notify()?;
         *guard = value.clone();
@@ -95,53 +95,53 @@ impl IDynamicListPage_Impl for DynamicListPage_Impl {
 }
 
 impl IListPage_Impl for DynamicListPage_Impl {
-    fn EmptyContent(&self) -> windows_core::Result<ICommandItem> {
+    fn EmptyContent(&self) -> Result<ICommandItem> {
         self.base.EmptyContent()
     }
 
-    fn Filters(&self) -> windows_core::Result<IFilters> {
+    fn Filters(&self) -> Result<IFilters> {
         self.base.Filters()
     }
 
-    fn GetItems(&self) -> windows_core::Result<windows_core::Array<IListItem>> {
+    fn GetItems(&self) -> Result<windows_core::Array<IListItem>> {
         self.base.GetItems()
     }
 
-    fn GridProperties(&self) -> windows_core::Result<IGridProperties> {
+    fn GridProperties(&self) -> Result<IGridProperties> {
         self.base.GridProperties()
     }
 
-    fn HasMoreItems(&self) -> windows_core::Result<bool> {
+    fn HasMoreItems(&self) -> Result<bool> {
         self.base.HasMoreItems()
     }
 
-    fn LoadMore(&self) -> windows_core::Result<()> {
+    fn LoadMore(&self) -> Result<()> {
         self.base.LoadMore()
     }
 
-    fn PlaceholderText(&self) -> windows_core::Result<windows_core::HSTRING> {
+    fn PlaceholderText(&self) -> Result<HSTRING> {
         self.base.PlaceholderText()
     }
 
-    fn SearchText(&self) -> windows_core::Result<windows_core::HSTRING> {
+    fn SearchText(&self) -> Result<HSTRING> {
         self.base.SearchText()
     }
 
-    fn ShowDetails(&self) -> windows_core::Result<bool> {
+    fn ShowDetails(&self) -> Result<bool> {
         self.base.ShowDetails()
     }
 }
 
 impl IPage_Impl for DynamicListPage_Impl {
-    fn AccentColor(&self) -> windows_core::Result<OptionalColor> {
+    fn AccentColor(&self) -> Result<OptionalColor> {
         self.base.AccentColor()
     }
 
-    fn IsLoading(&self) -> windows_core::Result<bool> {
+    fn IsLoading(&self) -> Result<bool> {
         self.base.IsLoading()
     }
 
-    fn Title(&self) -> windows_core::Result<windows_core::HSTRING> {
+    fn Title(&self) -> Result<HSTRING> {
         self.base.Title()
     }
 }
@@ -156,44 +156,35 @@ impl INotifyItemsChanged_Impl for DynamicListPage_Impl {
                 IItemsChangedEventArgs,
             >,
         >,
-    ) -> windows_core::Result<i64> {
+    ) -> Result<i64> {
         self.base.ItemsChanged(handler)
     }
 
-    fn RemoveItemsChanged(&self, token: i64) -> windows_core::Result<()> {
+    fn RemoveItemsChanged(&self, token: i64) -> Result<()> {
         self.base.RemoveItemsChanged(token)
     }
 }
 
 impl ICommand_Impl for DynamicListPage_Impl {
-    fn Icon(&self) -> windows_core::Result<IIconInfo> {
+    fn Icon(&self) -> Result<IIconInfo> {
         self.base.Icon()
     }
 
-    fn Id(&self) -> windows_core::Result<windows_core::HSTRING> {
+    fn Id(&self) -> Result<HSTRING> {
         self.base.Id()
     }
 
-    fn Name(&self) -> windows_core::Result<windows_core::HSTRING> {
+    fn Name(&self) -> Result<HSTRING> {
         self.base.Name()
     }
 }
 
 impl INotifyPropChanged_Impl for DynamicListPage_Impl {
-    fn PropChanged(
-        &self,
-        handler: windows_core::Ref<
-            '_,
-            windows::Foundation::TypedEventHandler<
-                windows_core::IInspectable,
-                IPropChangedEventArgs,
-            >,
-        >,
-    ) -> windows_core::Result<i64> {
+    fn PropChanged(&self, handler: crate::notify::RefPropChangedEventHandler<'_>) -> Result<i64> {
         self.base.PropChanged(handler)
     }
 
-    fn RemovePropChanged(&self, token: i64) -> windows_core::Result<()> {
+    fn RemovePropChanged(&self, token: i64) -> Result<()> {
         self.base.RemovePropChanged(token)
     }
 }

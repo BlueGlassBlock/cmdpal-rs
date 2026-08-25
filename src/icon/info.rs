@@ -1,13 +1,15 @@
 //! Light and dark icon information representation
 
-use super::data::IconData;
+use windows_core::{ComObject, Result};
+
 use crate::bindings::*;
-use windows_core::{ComObject, implement};
+
+use super::data::IconData;
 
 /// Representation of light and dark icon bundle.
 ///
 #[doc = include_str!("../bindings_docs/IIconInfo.md")]
-#[implement(IIconInfo)]
+#[windows_core::implement(IIconInfo)]
 #[derive(Debug, Clone)]
 pub struct IconInfo {
     #[doc = include_str!("../bindings_docs/IIconInfo/Light.md")]
@@ -52,11 +54,11 @@ impl IconInfo {
 }
 
 impl IIconInfo_Impl for IconInfo_Impl {
-    fn Dark(&self) -> windows_core::Result<IIconData> {
+    fn Dark(&self) -> Result<IIconData> {
         Ok(self.dark.to_interface())
     }
 
-    fn Light(&self) -> windows_core::Result<IIconData> {
+    fn Light(&self) -> Result<IIconData> {
         Ok(self.light.to_interface())
     }
 }

@@ -1,15 +1,15 @@
 //! The [`Extension`] struct.
 
+use windows::Foundation::{IClosable, IClosable_Impl};
+use windows_core::{ComObject, IUnknownImpl, Result};
+
 use crate::bindings::*;
 use crate::cmd_provider::{CommandProvider, CommandProvider_Impl};
-use windows::Foundation::{IClosable, IClosable_Impl};
-use windows::Win32::Foundation::E_NOTIMPL;
-use windows_core::{ComObject, IUnknownImpl as _, implement};
 
 /// Representation of a Command Palette extension.
 ///
 #[doc = include_str!("./bindings_docs/IExtension.md")]
-#[implement(IExtension, IClosable)]
+#[windows_core::implement(IExtension, IClosable)]
 pub struct Extension {
     /// The command provider for this extension.
     pub cmd_provider: ComObject<CommandProvider>,
@@ -40,24 +40,20 @@ impl From<&CommandProvider_Impl> for Extension {
 }
 
 impl IClosable_Impl for Extension_Impl {
-    fn Close(&self) -> windows_core::Result<()> {
+    fn Close(&self) -> Result<()> {
         Ok(())
     }
 }
 
 impl IExtension_Impl for Extension_Impl {
-    fn GetProvider(
-        &self,
-        provider_type: ProviderType,
-    ) -> windows_core::Result<windows_core::IInspectable> {
-        
+    fn GetProvider(&self, provider_type: ProviderType) -> Result<windows_core::IInspectable> {
         match provider_type {
             ProviderType::Commands => Ok(self.cmd_provider.to_interface()),
-            _ => Err(E_NOTIMPL.into()),
+            _ => Err(windows::Win32::Foundation::E_NOTIMPL.into()),
         }
     }
 
-    fn Dispose(&self) -> windows_core::Result<()> {
+    fn Dispose(&self) -> Result<()> {
         Ok(())
     }
 }

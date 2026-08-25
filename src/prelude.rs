@@ -3,9 +3,9 @@
 pub use crate::{
     cmd::{
         BaseCommand, BaseCommandBuilder, CommandResult, InvokableCommand,
-        common::{CopyTextCommandBuilder, OpenUrlCommandBuilder, RevealFileCommandBuilder},
+        common::{CopyTextCommand, OpenUrlCommand, RevealFileCommand},
     },
-    cmd_item::{CommandItem, CommandItemBuilder},
+    cmd_item::{CmdBuilder, CommandItem, CommandItemBuilder},
     cmd_provider::{CommandProvider, CommandProviderBuilder},
     content::{FormContent, FormContentBuilder, MarkdownContent, TreeContent, TreeContentBuilder},
     ctx_item::{CommandContextItem, CommandContextItemBuilder, ContextItem, SeparatorContextItem},
@@ -17,7 +17,7 @@ pub use crate::{
     ext_registry::ExtRegistry,
     fallback::FallbackCommandItem,
     filter::{Filter, FilterItem, FilterSeparator, Filters},
-    grid::{SmallGridLayout, MediumGridLayout, GalleryGridLayout, GridLayout},
+    grid::{GalleryGridLayout, GridLayout, MediumGridLayout, SmallGridLayout},
     host::{
         LogMessage, MessageState, ProgressState, ProgressStateBuilder, StatusContext,
         StatusMessage, StatusMessageBuilder, hide_status, log_message, show_status,
@@ -33,10 +33,9 @@ pub use crate::{
         Choice, ChoiceSetSetting, CommandSettings, JsonCommandSettings, NumberSetting,
         SettingBasePropModifier, TextSetting, ToggleSetting,
     },
-    utils::{ComBuilder},
+    utils::ComBuilder,
 };
 
-pub use windows_core::{
-    ComObject, Error as WinError, GUID, HSTRING, IUnknownImpl as IUnknown_Impl,
-    Result as WinResult, h,
-};
+pub use windows_core::{ComObject, Error, GUID, HSTRING, IUnknownImpl, h};
+
+pub type Result<T, E = Error> = std::result::Result<T, E>;

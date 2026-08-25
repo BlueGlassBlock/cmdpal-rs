@@ -1,11 +1,13 @@
 //! [`NotifyLock`] struct and event handling utilities
-use crate::bindings::*;
 use std::mem::ManuallyDrop;
 use std::ops::{Deref, DerefMut};
 use std::sync::{RwLock, RwLockWriteGuard};
+
 use windows::Foundation::TypedEventHandler;
 use windows::Win32::Foundation::ERROR_LOCK_VIOLATION;
-use windows_core::{Event, IInspectable, Result, implement};
+use windows_core::{Event, HSTRING, IInspectable, Result, implement};
+
+use crate::bindings::*;
 
 /// `NotifyLock` struct is a wrapper around [`RwLock`] that allows for notification callbacks.
 /// When exposing the interface, `NotifyLock` references shouldn't be returned directly.
@@ -103,19 +105,22 @@ impl<T> NotifyLock<T> {
 
 pub type PropChangedEventHandler = Event<TypedEventHandler<IInspectable, IPropChangedEventArgs>>;
 
+pub type RefPropChangedEventHandler<'a> =
+    windows_core::Ref<'a, TypedEventHandler<IInspectable, IPropChangedEventArgs>>;
+
 /// `PropChangedEventArgs` is used to notify about property changes in COM interfaces.
 /// It implements the `IPropChangedEventArgs` interface and contains the name of the property that changed.
 #[implement(IPropChangedEventArgs)]
-pub struct PropChangedEventArgs(pub windows_core::HSTRING);
+pub struct PropChangedEventArgs(pub HSTRING);
 
 impl IPropChangedEventArgs_Impl for PropChangedEventArgs_Impl {
-    fn PropertyName(&self) -> windows_core::Result<windows_core::HSTRING> {
+    fn PropertyName(&self) -> Result<HSTRING> {
         Ok(self.0.clone())
     }
 }
 
-impl From<windows_core::HSTRING> for PropChangedEventArgs {
-    fn from(value: windows_core::HSTRING) -> Self {
+impl From<HSTRING> for PropChangedEventArgs {
+    fn from(value: HSTRING) -> Self {
         PropChangedEventArgs(value)
     }
 }
@@ -128,7 +133,7 @@ pub type ItemsChangedEventHandler = Event<TypedEventHandler<IInspectable, IItems
 pub struct ItemsChangedEventArgs(pub i32);
 
 impl IItemsChangedEventArgs_Impl for ItemsChangedEventArgs_Impl {
-    fn TotalItems(&self) -> windows_core::Result<i32> {
+    fn TotalItems(&self) -> Result<i32> {
         Ok(self.0)
     }
 }

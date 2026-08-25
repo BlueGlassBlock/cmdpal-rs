@@ -3,11 +3,10 @@
 //! `Details` is displayed in a tab occupying the right side of UI,
 //! displaying additional information about the selected item.
 
-use crate::icon::IconInfo;
-use crate::utils::{OkOrEmpty, assert_send_sync, map_array};
-use crate::{bindings::*, utils::ComBuilder};
-use windows_core::{AgileReference, HSTRING};
-use windows_core::{ComObject, Result, implement};
+use windows_core::{AgileReference, Array, ComObject, HSTRING, Result, implement};
+
+use crate::utils::{ComBuilder, OkOrEmpty, assert_send_sync, map_array};
+use crate::{bindings::*, icon::IconInfo};
 
 /// Represents a tag for classification.
 ///
@@ -24,6 +23,7 @@ pub struct Tag {
 }
 
 /// Builder for [`Tag`].
+#[derive(Default)]
 pub struct TagBuilder {
     icon: Option<ComObject<IconInfo>>,
     text: Option<HSTRING>,
@@ -32,9 +32,9 @@ pub struct TagBuilder {
     tooltip: Option<HSTRING>,
 }
 
-impl TagBuilder {
-    /// Creates a builder.
-    pub fn new() -> Self {
+impl Tag {
+    /// Creates a [`Tag`] builder.
+    pub fn builder() -> TagBuilder {
         TagBuilder {
             icon: None,
             text: None,
@@ -43,7 +43,9 @@ impl TagBuilder {
             tooltip: None,
         }
     }
+}
 
+impl TagBuilder {
     /// Sets the icon for the tag.
     ///
     #[doc = include_str!("./bindings_docs/ITag/Icon.md")]
@@ -90,17 +92,11 @@ impl ComBuilder for TagBuilder {
     fn build_unmanaged(self) -> Tag {
         Tag {
             icon: self.icon,
-            text: self.text.unwrap_or_else(HSTRING::new),
+            text: self.text.unwrap_or_default(),
             foreground: self.foreground,
             background: self.background,
-            tooltip: self.tooltip.unwrap_or_else(HSTRING::new),
+            tooltip: self.tooltip.unwrap_or_default(),
         }
-    }
-}
-
-impl Default for TagBuilder {
-    fn default() -> Self {
-        Self::new()
     }
 }
 
@@ -112,7 +108,7 @@ impl ITag_Impl for Tag_Impl {
             .ok_or_empty()
     }
 
-    fn Text(&self) -> Result<windows_core::HSTRING> {
+    fn Text(&self) -> Result<HSTRING> {
         Ok(self.text.clone())
     }
 
@@ -124,7 +120,7 @@ impl ITag_Impl for Tag_Impl {
         Ok(self.background.into())
     }
 
-    fn ToolTip(&self) -> Result<windows_core::HSTRING> {
+    fn ToolTip(&self) -> Result<HSTRING> {
         Ok(self.tooltip.clone())
     }
 }
@@ -179,7 +175,7 @@ impl Default for DetailsTagsBuilder {
 impl IDetailsData_Impl for DetailsTags_Impl {}
 
 impl IDetailsTags_Impl for DetailsTags_Impl {
-    fn Tags(&self) -> Result<windows_core::Array<ITag>> {
+    fn Tags(&self) -> Result<Array<ITag>> {
         Ok(map_array(&self.tags, |x| x.to_interface::<ITag>().into()))
     }
 }
@@ -235,7 +231,7 @@ impl ComBuilder for DetailsLinkBuilder {
     type Output = DetailsLink;
     fn build_unmanaged(self) -> DetailsLink {
         DetailsLink {
-            text: self.text.unwrap_or_else(HSTRING::new),
+            text: self.text.unwrap_or_default(),
             link: self.link,
         }
     }
@@ -244,7 +240,7 @@ impl ComBuilder for DetailsLinkBuilder {
 impl IDetailsData_Impl for DetailsLink_Impl {}
 
 impl IDetailsLink_Impl for DetailsLink_Impl {
-    fn Text(&self) -> Result<windows_core::HSTRING> {
+    fn Text(&self) -> Result<HSTRING> {
         Ok(self.text.clone())
     }
 
@@ -266,12 +262,11 @@ pub struct DetailsCommands {
 impl DetailsCommands {
     /// Creates a new unmanaged instance of `DetailsCommand` with the specified commands.
     pub fn try_new_unmanaged(commands: &[ICommand]) -> Result<Self> {
-        let agile_commands = commands
-            .iter()
-            .map(AgileReference::new)
-            .collect::<Result<Vec<_>>>()?;
         Ok(Self {
-            commands: agile_commands,
+            commands: commands
+                .iter()
+                .map(AgileReference::new)
+                .collect::<Result<_>>()?,
         })
     }
 
@@ -296,7 +291,7 @@ impl DetailsCommands {
 impl IDetailsData_Impl for DetailsCommands_Impl {}
 
 impl IDetailsCommands_Impl for DetailsCommands_Impl {
-    fn Commands(&self) -> windows_core::Result<windows_core::Array<ICommand>> {
+    fn Commands(&self) -> Result<Array<ICommand>> {
         Ok(map_array(&self.commands, |cmd| cmd.resolve().ok()))
     }
 }
@@ -368,7 +363,7 @@ impl DetailsElement {
 }
 
 impl IDetailsElement_Impl for DetailsElement_Impl {
-    fn Key(&self) -> Result<windows_core::HSTRING> {
+    fn Key(&self) -> Result<HSTRING> {
         Ok(self.key.clone())
     }
 
@@ -398,9 +393,9 @@ pub struct DetailsBuilder {
     metadata: Vec<ComObject<DetailsElement>>,
 }
 
-impl DetailsBuilder {
-    /// Creates a new builder.
-    pub fn new() -> Self {
+impl Details {
+    /// Creates a new [`Details`] builder.
+    pub fn builder() -> DetailsBuilder {
         DetailsBuilder {
             hero_image: None,
             title: None,
@@ -408,7 +403,9 @@ impl DetailsBuilder {
             metadata: Vec::new(),
         }
     }
+}
 
+impl DetailsBuilder {
     /// Sets the hero image for the details.
     pub fn hero_image(mut self, hero_image: ComObject<IconInfo>) -> Self {
         self.hero_image = Some(hero_image);
@@ -452,16 +449,10 @@ impl ComBuilder for DetailsBuilder {
     fn build_unmanaged(self) -> Details {
         Details {
             hero_image: self.hero_image,
-            title: self.title.unwrap_or_else(HSTRING::new),
-            body: self.body.unwrap_or_else(HSTRING::new),
+            title: self.title.unwrap_or_default(),
+            body: self.body.unwrap_or_default(),
             metadata: self.metadata,
         }
-    }
-}
-
-impl Default for DetailsBuilder {
-    fn default() -> Self {
-        Self::new()
     }
 }
 
@@ -473,15 +464,15 @@ impl IDetails_Impl for Details_Impl {
             .ok_or_empty()
     }
 
-    fn Title(&self) -> Result<windows_core::HSTRING> {
+    fn Title(&self) -> Result<HSTRING> {
         Ok(self.title.clone())
     }
 
-    fn Body(&self) -> Result<windows_core::HSTRING> {
+    fn Body(&self) -> Result<HSTRING> {
         Ok(self.body.clone())
     }
 
-    fn Metadata(&self) -> Result<windows_core::Array<IDetailsElement>> {
+    fn Metadata(&self) -> Result<Array<IDetailsElement>> {
         Ok(map_array(&self.metadata, |x| {
             x.to_interface::<IDetailsElement>().into()
         }))

@@ -1,27 +1,25 @@
 //! Builder for creating commands that copy text to the clipboard.
-use crate::{
-    cmd::{BaseCommand, BaseCommandBuilder, CommandResult, InvokableCommand},
-    cmd_result::ToastArgs,
-    icon::{IconData, IconInfo},
-    utils::ComBuilder,
-};
 use windows_core::{ComObject, HSTRING, h};
 
+use crate::cmd::{BaseCommand, CommandResult, InvokableCommand};
+use crate::icon::{IconData, IconInfo};
+use crate::{cmd_result::ToastArgs, utils::ComBuilder};
+
 /// Builder for a command that copies text to the clipboard.
-pub struct CopyTextCommandBuilder {
+pub struct CopyTextCommand {
     base: ComObject<BaseCommand>,
     text_fn: Box<dyn Send + Sync + Fn() -> HSTRING>,
     result: CommandResult,
 }
 
 fn copy_text_base_cmd() -> ComObject<BaseCommand> {
-    BaseCommandBuilder::new()
+    BaseCommand::builder()
         .name("Copy")
         .icon(IconInfo::new(IconData::from("\u{E8C8}")))
         .build()
 }
 
-impl CopyTextCommandBuilder {
+impl CopyTextCommand {
     /// Creates a new command builder that copies the specified text to the clipboard.
     pub fn new(text: impl Into<HSTRING>) -> Self {
         let text: HSTRING = text.into();
@@ -61,7 +59,7 @@ impl CopyTextCommandBuilder {
     }
 }
 
-impl ComBuilder for CopyTextCommandBuilder {
+impl ComBuilder for CopyTextCommand {
     type Output = InvokableCommand;
     fn build_unmanaged(self) -> InvokableCommand {
         InvokableCommand {

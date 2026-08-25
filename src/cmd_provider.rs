@@ -1,19 +1,20 @@
 //! Command Provider that provides extension information and commands.
-use crate::bindings::*;
-use crate::icon::IconInfo;
-use crate::notify::ItemsChangedEventHandler;
-use crate::utils::{ComBuilder, OkOrEmpty, map_array};
+//!
 use windows::Foundation::{IClosable, IClosable_Impl, TypedEventHandler};
-use windows_core::{ComObject, implement};
-use windows_core::{Event, HSTRING, IInspectable};
+use windows_core::{Array, ComObject, Event, HSTRING, IInspectable, Result};
+
+use crate::utils::{ComBuilder, OkOrEmpty, map_array};
+use crate::{
+    bindings::*, cmd_item::CommandItemBuilder, icon::IconInfo, notify::ItemsChangedEventHandler,
+};
 
 /// Command Provider that provides extension information and commands.
 ///
 #[doc = include_str!("./bindings_docs/ICommandProvider.md")]
-#[implement(ICommandProvider2, ICommandProvider, IClosable, INotifyItemsChanged)]
+#[windows_core::implement(ICommandProvider2, ICommandProvider, IClosable, INotifyItemsChanged)]
 pub struct CommandProvider {
-    id: windows_core::HSTRING,
-    display_name: windows_core::HSTRING,
+    id: HSTRING,
+    display_name: HSTRING,
     icon: Option<ComObject<IconInfo>>,
     settings: Option<ICommandSettings>,
     frozen: bool,
@@ -24,8 +25,8 @@ pub struct CommandProvider {
 
 /// Builder for [`CommandProvider`].
 pub struct CommandProviderBuilder {
-    id: windows_core::HSTRING,
-    display_name: windows_core::HSTRING,
+    id: HSTRING,
+    display_name: HSTRING,
     icon: Option<ComObject<IconInfo>>,
     settings: Option<ICommandSettings>,
     frozen: bool,
@@ -33,9 +34,9 @@ pub struct CommandProviderBuilder {
     fallbacks: Vec<IFallbackCommandItem>,
 }
 
-impl CommandProviderBuilder {
-    /// Creates a new builder.
-    pub fn new() -> Self {
+impl CommandProvider {
+    /// Creates a new [`CommandProvider`] builder.
+    pub fn builder() -> CommandProviderBuilder {
         CommandProviderBuilder {
             id: HSTRING::new(),
             display_name: HSTRING::new(),
@@ -46,9 +47,11 @@ impl CommandProviderBuilder {
             fallbacks: Vec::new(),
         }
     }
+}
 
+impl CommandProviderBuilder {
     /// Sets the ID of the command provider.
-    pub fn id(mut self, id: impl Into<windows_core::HSTRING>) -> Self {
+    pub fn id(mut self, id: impl Into<HSTRING>) -> Self {
         self.id = id.into();
         self
     }
@@ -56,7 +59,7 @@ impl CommandProviderBuilder {
     /// Sets the display name of the command provider.
     ///
     /// The name will be displayed at the settings page of the extension.
-    pub fn display_name(mut self, display_name: impl Into<windows_core::HSTRING>) -> Self {
+    pub fn display_name(mut self, display_name: impl Into<HSTRING>) -> Self {
         self.display_name = display_name.into();
         self
     }
@@ -88,8 +91,8 @@ impl CommandProviderBuilder {
     }
 
     /// Adds a top-level command to the command provider.
-    pub fn add_top_level(mut self, item: ICommandItem) -> Self {
-        self.top_level.push(item);
+    pub fn add_top_level(mut self, item: CommandItemBuilder) -> Self {
+        self.top_level.push(item.build().into_interface());
         self
     }
 
@@ -124,69 +127,61 @@ impl ComBuilder for CommandProviderBuilder {
     }
 }
 
-impl Default for CommandProviderBuilder {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
 impl ICommandProvider_Impl for CommandProvider_Impl {
-    fn Id(&self) -> windows_core::Result<windows_core::HSTRING> {
+    fn Id(&self) -> Result<HSTRING> {
         Ok(self.id.clone())
     }
 
-    fn DisplayName(&self) -> windows_core::Result<windows_core::HSTRING> {
+    fn DisplayName(&self) -> Result<HSTRING> {
         Ok(self.display_name.clone())
     }
 
-    fn Icon(&self) -> windows_core::Result<crate::bindings::IIconInfo> {
+    fn Icon(&self) -> Result<crate::bindings::IIconInfo> {
         self.icon
             .clone()
             .map(|icon| icon.to_interface())
             .ok_or_empty()
     }
 
-    fn Settings(&self) -> windows_core::Result<ICommandSettings> {
+    fn Settings(&self) -> Result<ICommandSettings> {
         self.settings.clone().ok_or_empty()
     }
 
-    fn Frozen(&self) -> windows_core::Result<bool> {
+    fn Frozen(&self) -> Result<bool> {
         Ok(self.frozen)
     }
 
-    fn TopLevelCommands(&self) -> windows_core::Result<windows_core::Array<ICommandItem>> {
+    fn TopLevelCommands(&self) -> Result<Array<ICommandItem>> {
         Ok(map_array(&self.top_level, |x| x.clone().into()))
     }
 
-    fn FallbackCommands(&self) -> windows_core::Result<windows_core::Array<IFallbackCommandItem>> {
+    fn FallbackCommands(&self) -> Result<Array<IFallbackCommandItem>> {
         Ok(map_array(&self.fallbacks, |x| x.clone().into()))
     }
 
-    fn GetCommand(&self, _: &windows_core::HSTRING) -> windows_core::Result<ICommand> {
+    fn GetCommand(&self, _: &HSTRING) -> Result<ICommand> {
         Err(windows_core::Error::empty())
     }
 
-    fn InitializeWithHost(
-        &self,
-        host: windows_core::Ref<'_, IExtensionHost>,
-    ) -> windows_core::Result<()> {
+    fn InitializeWithHost(&self, host: windows_core::Ref<'_, IExtensionHost>) -> Result<()> {
         crate::host::set_ext_host(host.ok()?);
         Ok(())
     }
 }
 
 impl ICommandProvider2_Impl for CommandProvider_Impl {
-    fn GetApiExtensionStubs(
-        &self,
-    ) -> windows_core::Result<windows_core::Array<windows_core::IInspectable>> {
-        use crate::ext_api_stubs::*;
-        let objects: [windows_core::IInspectable; _] = [ExtendedAttributesProviderStub.into()];
-        Ok(map_array(&objects, |obj| Some(obj.clone())))
+    fn GetApiExtensionStubs(&self) -> Result<Array<IInspectable>> {
+        Ok(map_array(
+            &[IInspectable::from(
+                crate::ext_api_stubs::ExtendedAttributesProviderStub,
+            )],
+            |obj| Some(obj.clone()),
+        ))
     }
 }
 
 impl IClosable_Impl for CommandProvider_Impl {
-    fn Close(&self) -> windows_core::Result<()> {
+    fn Close(&self) -> Result<()> {
         Ok(())
     }
 }
@@ -195,11 +190,11 @@ impl INotifyItemsChanged_Impl for CommandProvider_Impl {
     fn ItemsChanged(
         &self,
         handler: windows_core::Ref<'_, TypedEventHandler<IInspectable, IItemsChangedEventArgs>>,
-    ) -> windows_core::Result<i64> {
+    ) -> Result<i64> {
         self.event.add(handler.ok()?)
     }
 
-    fn RemoveItemsChanged(&self, token: i64) -> windows_core::Result<()> {
+    fn RemoveItemsChanged(&self, token: i64) -> Result<()> {
         self.event.remove(token);
         Ok(())
     }

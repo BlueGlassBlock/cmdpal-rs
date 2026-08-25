@@ -4,15 +4,15 @@ version = "0.3.0"
 edition = "2024"
 authors = ["Nyuan Zhang <blueglassblock@outlook.com>"]
 license = "MIT OR Apache-2.0"
-categories = ["os::windows-apis", "api-bindings"]
-keywords = ["powertoys", "command-palette"]
+categories = ["api-bindings", "os::windows-apis"]
+keywords = ["command-palette", "powertoys"]
 include = [
-    "src/**",
-    "Cargo.toml",
-    "README.md",
-    "LICENSE-APACHE",
-    "LICENSE-MIT",
-    "icon.svg",
+  "Cargo.toml",
+  "LICENSE-APACHE",
+  "LICENSE-MIT",
+  "README.md",
+  "icon.svg",
+  "src/**",
 ]
 description = "Rust SDK for PowerToys Command Palette"
 repository = "https://github.com/BlueGlassBlock/cmdpal-rs"
@@ -23,14 +23,67 @@ features = ["unstable-doc"]
 targets = []
 rustdoc-args = ["--cfg", "docsrs"]
 
+[workspace]
+members = ["cmdpal-packaging", "systest"]
+
+[workspace.lints]
+rust.unsafe_code = "deny"
+
+# LINEBENDER LINT SET - Cargo.toml - v8
+# See https://linebender.org/wiki/canonical-lints/
+rust.keyword_idents_2024 = "forbid"
+rust.non_ascii_idents = "forbid"
+rust.non_local_definitions = "forbid"
+rust.unsafe_op_in_unsafe_fn = "forbid"
+
+rust.elided_lifetimes_in_paths = "warn"
+rust.missing_debug_implementations = "warn"
+rust.missing_docs = "warn"
+rust.trivial_numeric_casts = "warn"
+rust.unnameable_types = "warn"
+rust.unreachable_pub = "warn"
+rust.unused_import_braces = "warn"
+rust.unused_lifetimes = "warn"
+rust.unused_macro_rules = "warn"
+rust.unused_qualifications = "warn"
+
+clippy.too_many_arguments = "allow"
+
+clippy.allow_attributes_without_reason = "warn"
+clippy.cast_possible_truncation = "warn"
+clippy.cast_possible_wrap = "warn"
+clippy.collection_is_never_read = "warn"
+clippy.dbg_macro = "warn"
+clippy.debug_assert_with_mut_call = "warn"
+clippy.default_trait_access = "warn"
+clippy.doc_markdown = "warn"
+clippy.fn_to_numeric_cast_any = "warn"
+clippy.infinite_loop = "warn"
+clippy.large_stack_arrays = "warn"
+clippy.mismatching_type_param_order = "warn"
+clippy.missing_assert_message = "warn"
+clippy.missing_fields_in_debug = "warn"
+clippy.same_functions_in_if_condition = "warn"
+clippy.semicolon_if_nothing_returned = "warn"
+clippy.should_panic_without_expect = "warn"
+clippy.todo = "warn"
+clippy.unseparated_literal_suffix = "warn"
+clippy.use_self = "warn"
+
+clippy.cargo_common_metadata = "warn"
+clippy.negative_feature_names = "warn"
+clippy.redundant_feature_names = "warn"
+clippy.wildcard_dependencies = "warn"
+# END LINEBENDER LINT SET
+
 [dependencies]
-schemars = "1.2.2"
-serde = { version = "1.0.229", features = ["derive"] }
 serde_json = "1.0.151"
-windows = { version = "0.62", features = [
+windows = {
+  version = "0.62.2",
+  features = [
+    "Foundation_Collections",
     "Storage_Streams",
     "System",
-    "Foundation_Collections",
     "Win32_System_Com",
     "Win32_System_DataExchange",
     "Win32_System_Memory",
@@ -39,13 +92,11 @@ windows = { version = "0.62", features = [
     "Win32_System_WinRT",
     "Win32_UI_Shell",
     "Win32_UI_WindowsAndMessaging",
-] }
-windows-core = "0.62"
-windows-future = "0.3"
-windows-collections = "0.3"
+  ]
+}
+windows-collections = "0.3.2"
+windows-core = "0.62.2"
+windows-future = "0.3.2"
 
 [features]
 unstable-doc = []
-
-[workspace]
-members = ["cmdpal-packaging", "systest"]

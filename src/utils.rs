@@ -1,13 +1,12 @@
 //! Utility types and traits for Command Palette
 
-use crate::bindings::*;
-use std::ops::DerefMut;
 use windows::Storage::Streams::{IBuffer, IBuffer_Impl};
-use windows::Win32::Foundation::E_NOTIMPL;
 use windows::Win32::System::WinRT::{IBufferByteAccess, IBufferByteAccess_Impl};
-use windows_core::{Array, implement};
+use windows_core::{Array, Result};
 
-#[implement(IBuffer, IBufferByteAccess)]
+use crate::bindings::*;
+
+#[windows_core::implement(IBuffer, IBufferByteAccess)]
 pub(crate) struct FrozenBuffer {
     data: Vec<u8>,
 }
@@ -19,19 +18,19 @@ impl From<Vec<u8>> for FrozenBuffer {
 }
 
 impl IBuffer_Impl for FrozenBuffer_Impl {
-    fn Capacity(&self) -> windows_core::Result<u32> {
+    fn Capacity(&self) -> Result<u32> {
         Ok(self.data.len() as u32)
     }
-    fn Length(&self) -> windows_core::Result<u32> {
+    fn Length(&self) -> Result<u32> {
         Ok(self.data.len() as u32)
     }
-    fn SetLength(&self, _: u32) -> windows_core::Result<()> {
-        Err(E_NOTIMPL.into())
+    fn SetLength(&self, _: u32) -> Result<()> {
+        Err(windows::Win32::Foundation::E_NOTIMPL.into())
     }
 }
 
 impl IBufferByteAccess_Impl for FrozenBuffer_Impl {
-    fn Buffer(&self) -> windows_core::Result<*mut u8> {
+    fn Buffer(&self) -> Result<*mut u8> {
         Ok(self.data.as_ptr() as *mut u8)
     }
 }
@@ -46,7 +45,7 @@ where
 {
     let mut arr = Array::with_len(slice.len());
     for (i, item) in slice.iter().enumerate() {
-        arr.deref_mut()[i] = map(item);
+        arr[i] = map(item);
     }
     arr
 }
@@ -66,20 +65,20 @@ impl From<Option<Color>> for OptionalColor {
     }
 }
 
-/// A small trait to convert an `Option<T>` into a `windows_core::Result<T>`.
+/// A small trait to convert an `Option<T>` into a `Result<T>`.
 /// Useful when you want to pass `NULL` to windows APIs.
 pub trait OkOrEmpty {
     type Output;
 
     /// Returns `Ok(T)` if `self` can be perceived as a non-null value,
     /// else `Err(windows_core::Error::empty())`.
-    fn ok_or_empty(self) -> windows_core::Result<Self::Output>;
+    fn ok_or_empty(self) -> Result<Self::Output>;
 }
 
 impl<T> OkOrEmpty for Option<T> {
     type Output = T;
-    fn ok_or_empty(self) -> windows_core::Result<Self::Output> {
-        self.ok_or(windows_core::Error::empty())
+    fn ok_or_empty(self) -> Result<Self::Output> {
+        self.ok_or_else(windows_core::Error::empty)
     }
 }
 

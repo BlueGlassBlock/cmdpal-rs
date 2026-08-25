@@ -1,27 +1,28 @@
 //! Builder for creating commands that reveals a path in the system's file explorer.
 
-use crate::{
-    cmd::{BaseCommand, BaseCommandBuilder, CommandResult, InvokableCommand},
-    icon::{IconData, IconInfo},
-    utils::ComBuilder,
-};
-use windows::{Win32::Foundation::ERROR_FILE_INVALID, core::ComObject};
+use windows::Win32::Foundation::ERROR_FILE_INVALID;
+use windows::Win32::UI::Shell::{SEE_MASK_NOCLOSEPROCESS, SHELLEXECUTEINFOW, ShellExecuteExW};
+use windows_core::ComObject;
+
+use crate::cmd::{BaseCommand, CommandResult, InvokableCommand};
+use crate::icon::{IconData, IconInfo};
+use crate::utils::ComBuilder;
 
 /// Builder for a command that reveals a file in the system's file explorer.
-pub struct RevealFileCommandBuilder {
+pub struct RevealFileCommand {
     base: ComObject<BaseCommand>,
     path_fn: Box<dyn Send + Sync + Fn() -> std::path::PathBuf>,
     result: CommandResult,
 }
 
 fn reveal_file_base_cmd() -> ComObject<BaseCommand> {
-    BaseCommandBuilder::new()
+    BaseCommand::builder()
         .name("Show in folder")
         .icon(IconInfo::new(IconData::from("\u{E838}")))
         .build()
 }
 
-impl RevealFileCommandBuilder {
+impl RevealFileCommand {
     /// Creates a new `RevealFileCommandBuilder` with a static path.
     pub fn new(path: std::path::PathBuf) -> Self {
         Self {
@@ -56,7 +57,7 @@ impl RevealFileCommandBuilder {
     }
 }
 
-impl ComBuilder for RevealFileCommandBuilder {
+impl ComBuilder for RevealFileCommand {
     type Output = InvokableCommand;
     fn build_unmanaged(self) -> InvokableCommand {
         InvokableCommand {
@@ -64,34 +65,30 @@ impl ComBuilder for RevealFileCommandBuilder {
             func: Box::new(move |_| {
                 let path = (self.path_fn)()
                     .canonicalize()
-                    .map_err(|_| windows_core::Error::from(ERROR_FILE_INVALID))?;
+                    .map_err(|_| ERROR_FILE_INVALID)?;
                 match path.try_exists() {
                     Ok(true) => {
-                        explorer_helper::reveal_file(&path.to_string_lossy().replace("/", r"\"))?;
+                        reveal_file(&path.to_string_lossy().replace("/", r"\"))?;
                         Ok(self.result.clone())
                     }
-                    _ => Err(windows_core::Error::from(ERROR_FILE_INVALID)),
+                    _ => Err(ERROR_FILE_INVALID.into()),
                 }
             }),
         }
     }
 }
 
-mod explorer_helper {
-    use windows::Win32::UI::Shell::{SHELLEXECUTEINFOW, ShellExecuteExW};
-    use windows::Win32::UI::{Shell::SEE_MASK_NOCLOSEPROCESS, WindowsAndMessaging::SW_SHOWNORMAL};
-    use windows_core::{HSTRING, PCWSTR, w};
+fn reveal_file(target: &str) -> windows_core::Result<()> {
+    let mut sei = SHELLEXECUTEINFOW {
+        cbSize: std::mem::size_of::<SHELLEXECUTEINFOW>() as u32,
+        fMask: SEE_MASK_NOCLOSEPROCESS,
+        lpFile: windows_core::w!("explorer.exe"),
+        lpParameters: windows_core::PCWSTR::from_raw(
+            windows_core::HSTRING::from(format!("/select,\"{target}\"")).as_ptr(),
+        ),
+        nShow: windows::Win32::UI::WindowsAndMessaging::SW_SHOWNORMAL.0,
+        ..Default::default()
+    };
 
-    pub(super) fn reveal_file(target: &str) -> windows_core::Result<()> {
-        let params = format!("/select,\"{}\"", target);
-        println!("Revealing file in explorer with params: {}", params);
-        let mut sei = SHELLEXECUTEINFOW::default();
-        sei.cbSize = std::mem::size_of::<SHELLEXECUTEINFOW>() as u32;
-        sei.fMask = SEE_MASK_NOCLOSEPROCESS;
-        sei.lpFile = w!("explorer.exe");
-        sei.lpParameters = PCWSTR::from_raw(HSTRING::from(params).as_ptr());
-        sei.nShow = SW_SHOWNORMAL.0;
-
-        unsafe { ShellExecuteExW(&mut sei) }
-    }
+    unsafe { ShellExecuteExW(&mut sei) }
 }

@@ -1,7 +1,5 @@
 //! Convenient extension registry for Command Palette extensions.
 
-use crate::ext::Extension;
-use crate::ext_factory::ExtensionClassFactory;
 use windows::Win32::System::Com::{
     CLSCTX_INPROC_SERVER, CLSCTX_LOCAL_SERVER, CLSID_GlobalOptions, COINIT_MULTITHREADED,
     COMGLB_FAST_RUNDOWN, COMGLB_RO_SETTINGS, CoCreateInstance, CoInitializeEx,
@@ -13,9 +11,11 @@ use windows::Win32::UI::WindowsAndMessaging::{
 };
 use windows_core::{ComObject, GUID, Result};
 
+use crate::{ext::Extension, ext_factory::ExtensionClassFactory};
+
 /// A registry for extensions that can be registered and served.
 /// Convenient for building a extension executable that can host multiple extensions.
-///
+#[derive(Default)]
 pub struct ExtRegistry {
     pub(crate) factories: Vec<(GUID, ComObject<ExtensionClassFactory>)>,
 }
@@ -23,9 +23,7 @@ pub struct ExtRegistry {
 impl ExtRegistry {
     /// Create a new extension registry.
     pub fn new() -> Self {
-        ExtRegistry {
-            factories: Vec::new(),
-        }
+        Self::default()
     }
 
     /// Register an extension with the given GUID.
